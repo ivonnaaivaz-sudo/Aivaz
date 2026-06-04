@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo } from "react";
@@ -25,7 +24,8 @@ import {
   DollarSign, 
   MapPin,
   Calendar,
-  Loader2
+  Loader2,
+  Link as LinkIcon
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -98,14 +98,17 @@ export default function AccountsPage() {
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex flex-col gap-2">
           <h1 className="font-headline text-4xl font-bold tracking-tight">Financial & Physical Holdings</h1>
           <p className="text-muted-foreground">Comprehensive overview of linked institutions and manual generational assets.</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <Button variant="outline" size="sm" className="glass-card">
             <RefreshCw className="mr-2 h-4 w-4" /> Sync All
+          </Button>
+          <Button variant="secondary" size="sm" className="border border-white/5">
+            <LinkIcon className="mr-2 h-4 w-4" /> Link Account
           </Button>
           <Dialog open={isAddAssetOpen} onOpenChange={setIsAddAssetOpen}>
             <DialogTrigger asChild>
