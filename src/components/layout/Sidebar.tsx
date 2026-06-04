@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -6,23 +7,22 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { 
-  LayoutDashboard, 
-  Wallet, 
-  Lightbulb, 
-  Cpu, 
+  HeartPulse, 
+  History, 
+  Dna, 
+  Target, 
   MessageSquare, 
-  Milestone, 
-  ShieldCheck 
+  ShieldCheck,
+  BrainCircuit
 } from "lucide-react";
 
 const navigation = [
-  { name: "Portfolio", href: "/portfolio", icon: LayoutDashboard },
-  { name: "Accounts", href: "/accounts", icon: Wallet },
-  { name: "Insights", href: "/insights", icon: Lightbulb },
-  { name: "Simulator", href: "/simulator", icon: Cpu },
+  { name: "Legacy Command", href: "/portfolio", icon: HeartPulse },
+  { name: "Family DNA", href: "/dna", icon: Dna },
+  { name: "Heritage Timeline", href: "/timeline", icon: History },
+  { name: "Legacy Alignment", href: "/strategy", icon: Target },
   { name: "Messenger", href: "/messenger", icon: MessageSquare },
-  { name: "Strategy", href: "/strategy", icon: Milestone },
-  { name: "Vault", href: "/vault", icon: ShieldCheck },
+  { name: "Digital Vault", href: "/vault", icon: ShieldCheck },
 ];
 
 export function Sidebar() {
@@ -32,7 +32,7 @@ export function Sidebar() {
   return (
     <aside className="fixed left-0 top-0 bottom-0 w-[280px] bg-sidebar border-r border-sidebar-border z-40 flex flex-col">
       <div className="p-8 flex items-center gap-4">
-        <div className="relative w-14 h-14 rounded-2xl bg-white/5 border border-white/10 shadow-[0_0_30px_rgba(75,163,199,0.2)] overflow-hidden transition-all duration-700 hover:shadow-[0_0_50px_rgba(75,163,199,0.4)] hover:border-primary/40 group">
+        <div className="relative w-14 h-14 rounded-full bg-white/5 border border-white/10 shadow-[0_0_30px_rgba(75,163,199,0.3)] overflow-hidden transition-all duration-700 hover:shadow-[0_0_50px_rgba(75,163,199,0.4)] group">
           {logo && (
             <Image 
               src={logo.imageUrl} 
@@ -55,7 +55,7 @@ export function Sidebar() {
 
       <nav className="flex-1 px-4 py-4 space-y-1">
         {navigation.map((item) => {
-          const isActive = pathname === item.href || (pathname === "/" && item.href === "/portfolio");
+          const isActive = pathname === item.href;
           return (
             <Link
               key={item.name}
@@ -80,7 +80,7 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="p-6 border-t border-sidebar-border">
+      <div className="p-6 border-t border-sidebar-border space-y-4">
         <div className="flex items-center gap-3 glass-card p-3 rounded-xl border-white/5 bg-white/[0.02]">
           <div className="w-10 h-10 rounded-full bg-muted border border-white/10 overflow-hidden relative">
             <Image 
@@ -96,6 +96,14 @@ export function Sidebar() {
             <p className="text-[10px] text-muted-foreground truncate uppercase font-bold tracking-widest">Principal Head</p>
           </div>
         </div>
+        
+        <Link 
+          href="/onboarding"
+          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/5 border border-primary/20 text-[10px] font-bold uppercase tracking-widest text-primary hover:bg-primary/10 transition-colors"
+        >
+          <BrainCircuit className="h-3 w-3" />
+          Re-Synthesize DNA
+        </Link>
       </div>
     </aside>
   );

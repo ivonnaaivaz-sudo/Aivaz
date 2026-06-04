@@ -1,0 +1,59 @@
+
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Core user data including onboarding status and psychological profiling results.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "hasCompletedProfiling": { "type": "boolean" },
+        "generationalStage": { "type": "string", "enum": ["Gen 1 Founder", "Gen 2 Transition", "Gen 3+ Stewardship", "Hybrid"] },
+        "onboardingData": { "type": "object" }
+      },
+      "required": ["uid", "hasCompletedProfiling"]
+    },
+    "FamilyDNA": {
+      "title": "Family DNA",
+      "description": "AI-extracted insights regarding family dynamics, friction points, and legacy values.",
+      "type": "object",
+      "properties": {
+        "coreValues": { "type": "array", "items": { "type": "string" } },
+        "frictionPoints": { "type": "array", "items": { "type": "string" } },
+        "legacyGoals": { "type": "array", "items": { "type": "string" } },
+        "psychologicalSummary": { "type": "string" }
+      }
+    },
+    "TimelineEvent": {
+      "title": "Timeline Event",
+      "description": "A human-centric milestone in the family legacy timeline.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "type": { "type": "string", "enum": ["financial", "personal", "succession", "philanthropy"] },
+        "description": { "type": "string" },
+        "impactScore": { "type": "number" }
+      }
+    }
+  },
+  "auth": {
+    "providers": ["google.com", "password"]
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Root user document"
+    },
+    "/users/{userId}/dna/current": {
+      "schema": "FamilyDNA",
+      "description": "Extracted family DNA insights"
+    },
+    "/users/{userId}/timeline/{eventId}": {
+      "schema": "TimelineEvent",
+      "description": "Generational timeline milestones"
+    }
+  }
+}
