@@ -30,11 +30,11 @@ const mainNavigation = [
 ];
 
 const legacyNavigation = [
-  { name: "Family DNA", href: "/dna", icon: Fingerprint },
   { name: "Simulator", href: "/simulator", icon: Cpu },
   { name: "Strategy", href: "/strategy", icon: Target },
   { name: "Heritage Timeline", href: "/heritage-timeline", icon: History },
   { name: "Legacy Command", href: "/legacy-command", icon: ShieldCheck },
+  { name: "Family DNA", href: "/dna", icon: Fingerprint },
 ];
 
 const toolNavigation = [
@@ -74,13 +74,14 @@ export function Sidebar() {
   return (
     <aside className="fixed left-0 top-0 bottom-0 w-[280px] bg-sidebar border-r border-sidebar-border z-40 flex flex-col">
       <div className="p-8 flex items-center gap-4">
-        <div className="relative w-12 h-12 rounded-full bg-white/5 border border-white/10 shadow-[0_0_30px_rgba(75,163,199,0.3)] overflow-hidden">
+        <div className="relative w-14 h-14 rounded-full bg-black/40 border border-white/20 shadow-[0_0_30px_rgba(75,163,199,0.4)] overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
           {logo && (
             <Image 
               src={logo.imageUrl} 
               alt={logo.description}
               fill
-              className="object-cover"
+              className="object-cover transform group-hover:scale-110 transition-transform duration-700"
               data-ai-hint={logo.imageHint}
             />
           )}
