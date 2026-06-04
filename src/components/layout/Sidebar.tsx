@@ -18,7 +18,6 @@ import {
   Fingerprint,
   User
 } from "lucide-react";
-import Image from "next/image";
 
 const mainNavigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -40,34 +39,57 @@ const toolNavigation = [
   { name: "Family", href: "/family", icon: Users },
 ];
 
-const CrystalTurtleLogo = () => (
-  <svg viewBox="0 0 100 100" className="w-20 h-20 drop-shadow-[0_0_15px_rgba(75,163,199,0.5)]">
+const GlassStampLogo = () => (
+  <svg viewBox="0 0 100 100" className="w-24 h-24 drop-shadow-[0_8px_16px_rgba(0,0,0,0.4)]">
     <defs>
-      <linearGradient id="crystalGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" style={{ stopColor: 'hsl(var(--primary))', stopOpacity: 0.8 }} />
-        <stop offset="100%" style={{ stopColor: 'hsl(var(--accent))', stopOpacity: 0.4 }} />
+      <linearGradient id="stampBase" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style={{ stopColor: 'white', stopOpacity: 0.15 }} />
+        <stop offset="100%" style={{ stopColor: 'white', stopOpacity: 0.05 }} />
       </linearGradient>
-      <filter id="glass">
-        <feGaussianBlur in="SourceGraphic" stdDeviation="1" />
+      <linearGradient id="stampEdge" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style={{ stopColor: 'white', stopOpacity: 0.4 }} />
+        <stop offset="50%" style={{ stopColor: 'white', stopOpacity: 0.05 }} />
+        <stop offset="100%" style={{ stopColor: 'white', stopOpacity: 0.4 }} />
+      </linearGradient>
+      <filter id="glassBlur" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" />
       </filter>
     </defs>
-    {/* Shell */}
+    
+    {/* The Outer Stamp Ring */}
+    <circle cx="50" cy="50" r="46" fill="none" stroke="url(#stampEdge)" strokeWidth="0.5" strokeOpacity="0.2" />
+    
+    {/* The Glass Disc */}
+    <circle cx="50" cy="50" r="43" fill="url(#stampBase)" stroke="white" strokeWidth="0.5" strokeOpacity="0.1" />
+    
+    {/* Inner "Pressed" Bezel */}
+    <circle cx="50" cy="50" r="38" fill="none" stroke="black" strokeWidth="0.5" strokeOpacity="0.1" />
+    <circle cx="50" cy="50" r="37.5" fill="none" stroke="white" strokeWidth="0.5" strokeOpacity="0.05" />
+
+    {/* Stamped Turtle Icon */}
+    <g transform="translate(32, 32) scale(0.36)" fill="none" stroke="hsl(var(--primary))" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      {/* Shell */}
+      <path 
+        d="M50 15 C75 15 95 35 95 60 C95 85 75 98 50 98 C25 98 5 85 5 60 C5 35 25 15 50 15Z" 
+        strokeOpacity="0.8"
+      />
+      {/* Etched Pattern */}
+      <path d="M50 20 V90 M20 60 H80 M30 35 L70 85 M70 35 L30 85" strokeOpacity="0.3" />
+      {/* Head */}
+      <circle cx="50" cy="8" r="7" strokeOpacity="0.8" />
+      {/* Flippers */}
+      <path d="M15 35 L5 25 M85 35 L95 25 M15 85 L5 95 M85 85 L95 95" strokeOpacity="0.5" />
+    </g>
+
+    {/* Surface Reflection */}
     <path 
-      d="M50 20 C70 20 85 35 85 55 C85 75 70 85 50 85 C30 85 15 75 15 55 C15 35 30 20 50 20Z" 
-      fill="url(#crystalGradient)" 
+      d="M25 35 Q35 25 50 25 Q65 25 75 35" 
+      fill="none" 
       stroke="white" 
       strokeWidth="0.5" 
-      strokeOpacity="0.3"
+      strokeOpacity="0.1" 
+      filter="url(#glassBlur)"
     />
-    {/* Shell Patterns */}
-    <path d="M50 25 L50 80 M25 55 L75 55 M35 35 L65 75 M65 35 L35 75" stroke="white" strokeWidth="0.2" strokeOpacity="0.5" />
-    {/* Head */}
-    <circle cx="50" cy="15" r="7" fill="url(#crystalGradient)" stroke="white" strokeWidth="0.5" strokeOpacity="0.3" />
-    {/* Fins/Legs */}
-    <ellipse cx="20" cy="35" rx="8" ry="4" fill="url(#crystalGradient)" transform="rotate(-30 20 35)" />
-    <ellipse cx="80" cy="35" rx="8" ry="4" fill="url(#crystalGradient)" transform="rotate(30 80 35)" />
-    <ellipse cx="25" cy="75" rx="7" ry="3" fill="url(#crystalGradient)" transform="rotate(30 25 75)" />
-    <ellipse cx="75" cy="75" rx="7" ry="3" fill="url(#crystalGradient)" transform="rotate(-30 75 75)" />
   </svg>
 );
 
@@ -102,10 +124,10 @@ export function Sidebar() {
     <aside className="fixed left-0 top-0 bottom-0 w-[280px] bg-sidebar border-r border-sidebar-border z-40 flex flex-col">
       <div className="p-8 flex flex-col items-center gap-4">
         <div className="relative group flex flex-col items-center cursor-default">
-          <div className="relative w-[120px] h-[120px] mb-2 flex items-center justify-center">
-            <div className="relative w-full h-full rounded-full overflow-hidden border border-white/5 glass-panel bg-white/[0.02] flex items-center justify-center group-hover:border-primary/30 transition-all duration-700">
-              <CrystalTurtleLogo />
-              <div className="absolute inset-0 bg-primary/5 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+          <div className="relative w-[130px] h-[130px] mb-2 flex items-center justify-center">
+            <div className="relative w-full h-full rounded-full flex items-center justify-center transition-all duration-700">
+              <GlassStampLogo />
+              <div className="absolute inset-0 bg-primary/5 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
             </div>
           </div>
           <div className="flex flex-col items-center text-center">
