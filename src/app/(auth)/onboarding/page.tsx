@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -24,6 +23,17 @@ const steps = [
       { id: "Founder", label: "Founder / Principal", icon: UserCircle2, description: "The primary builder and decision-maker." },
       { id: "Next Generation", label: "Next Generation Successor", icon: Sparkles, description: "Preparing for or managing the transition of leadership." },
       { id: "Advisor", label: "Trusted Family Advisor", icon: Shield, description: "Supporting the family's strategic legacy goals." }
+    ]
+  },
+  {
+    id: "accountFor",
+    title: "Stakeholder Scope",
+    question: "Who is this legacy account primarily for?",
+    type: "radio",
+    options: [
+      { id: "Just me", label: "Individual Principal", icon: UserCircle2, description: "Focused on my personal legacy and planning." },
+      { id: "Family", label: "The Whole Family", icon: Sparkles, description: "Collaborative hub for all generational stakeholders." },
+      { id: "Trustee", label: "Trust or Trustee", icon: Shield, description: "Management and governance focus for entities." }
     ]
   },
   {
@@ -72,7 +82,10 @@ export default function OnboardingPage() {
       try {
         if (user && db) {
           // 1. Run AI Extraction
-          const dnaResult = await extractFamilyDNA({ surveyData: answers });
+          const dnaResult = await extractFamilyDNA({ 
+            surveyData: answers,
+            userName: user.displayName || undefined
+          });
 
           // 2. Persist to Firestore
           const batch = writeBatch(db);
@@ -83,6 +96,7 @@ export default function OnboardingPage() {
             uid: user.uid,
             hasCompletedProfiling: true,
             role: answers.role,
+            generationalStage: dnaResult.personalProfile.generationalStage,
             onboardingData: answers,
             updatedAt: new Date().toISOString()
           }, { merge: true });
@@ -169,7 +183,7 @@ export default function OnboardingPage() {
               <div className="space-y-4">
                 <Textarea 
                   placeholder={step.placeholder}
-                  className="min-h-[150px] bg-white/[0.02] border-white/10"
+                  className="min-h-[150px] bg-white/[0.02] border-white/10 focus-visible:ring-primary/30"
                   value={answers[step.id] || ""}
                   onChange={(e) => setAnswers(prev => ({ ...prev, [step.id]: e.target.value }))}
                 />

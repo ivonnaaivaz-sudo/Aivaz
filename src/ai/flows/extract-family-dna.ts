@@ -1,11 +1,7 @@
-
 'use server';
 /**
- * @fileOverview A Genkit flow for extracting the "Core DNA" of a family legacy based on psychological profiling.
- *
- * - extractFamilyDNA - A function that handles the DNA extraction process.
- * - ExtractFamilyDNAInput - The input type for the extractFamilyDNA function.
- * - ExtractFamilyDNAOutput - The return type for the extractFamilyDNA function.
+ * @fileOverview A Genkit flow for extracting the comprehensive "Family DNA" profile.
+ * Acts as a hyper-personalized Wikipedia generator for the family legacy.
  */
 
 import {ai} from '@/ai/genkit';
@@ -13,25 +9,66 @@ import {z} from 'genkit';
 
 const ExtractFamilyDNAInputSchema = z.object({
   surveyData: z.record(z.string()).describe('Raw survey responses from the user onboarding.'),
+  userName: z.string().optional().describe('The user\'s name if available.'),
 });
 export type ExtractFamilyDNAInput = z.infer<typeof ExtractFamilyDNAInputSchema>;
 
+const MemberSchema = z.object({
+  name: z.string(),
+  relationship: z.string(),
+  generationalStage: z.string(),
+  role: z.string(),
+});
+
 const ExtractFamilyDNAOutputSchema = z.object({
-  generationalStage: z.enum(["Gen 1 Founder", "Gen 2 Transition", "Gen 3+ Stewardship"]),
-  coreValues: z.array(z.string()).describe('The fundamental principles driving the family.'),
-  frictionPoints: z.array(z.string()).describe('Identified emotional or structural bottlenecks.'),
-  legacyGoals: z.array(z.string()).describe('Primary long-term objectives for the heritage.'),
-  geographicDistribution: z.string().describe('Analysis of how family locations impact dynamics.'),
-  assetComplexity: z.string().describe('Level of complexity and its psychological impact.'),
-  narrativeSummary: z.string().describe('A synthesized narrative of the family identity.'),
-  overlookedFactors: z.array(z.string()).describe('What traditional advisors usually miss for this profile.'),
+  personalProfile: z.object({
+    roleInFamily: z.string(),
+    generationalStage: z.string(),
+    primaryLocation: z.string(),
+    otherLocations: z.array(z.string()),
+    psychologicalProfile: z.object({
+      biggestHeadache: z.string(),
+      currentPriorities: z.array(z.string()),
+      emotionalFrictionPoints: z.array(z.string()),
+      advisorBlindSpots: z.array(z.string()),
+    }),
+    financialSnapshot: z.object({
+      estimatedNetWorth: z.string(),
+      primaryAssetClasses: z.array(z.string()),
+    }),
+    aiSummary: z.string().describe('2-3 sentence personalized summary.'),
+  }),
+  familyProfile: z.object({
+    familyName: z.string(),
+    currentGenerationalStage: z.string(),
+    geographicFootprint: z.array(z.string()),
+    wealthSource: z.string(),
+    estimatedTotalNetWorth: z.string(),
+    history: z.object({
+      summary: z.string().describe('Summary of family history and wealth creation.'),
+      keyHoldings: z.array(z.string()),
+      notableTransitions: z.array(z.string()),
+    }),
+    identifiedMembers: z.array(MemberSchema),
+    socialCapital: z.object({
+      reputationIndicators: z.array(z.string()),
+      keyNetworks: z.array(z.string()),
+      mobilityProfile: z.string(),
+    }),
+    relationalDynamics: z.object({
+      keyFrictionPoints: z.array(z.string()),
+      alignmentLevel: z.enum(["Low", "Medium", "High"]),
+      successionReadinessScore: z.number().min(0).max(100),
+    }),
+    familyLegacyNarrative: z.string().describe('Neutral, Wikipedia-style summary of the legacy.'),
+  }),
   initialTimeline: z.array(z.object({
     title: z.string(),
     date: z.string(),
     type: z.enum(["financial", "personal", "succession", "philanthropy", "vision"]),
     description: z.string(),
     status: z.enum(["completed", "in-progress", "upcoming", "target"]),
-  })).describe('Proposed initial milestones for the legacy timeline.'),
+  })).describe('Proposed initial milestones for the legacy journey.'),
 });
 export type ExtractFamilyDNAOutput = z.infer<typeof ExtractFamilyDNAOutputSchema>;
 
@@ -43,17 +80,18 @@ const prompt = ai.definePrompt({
   name: 'extractFamilyDNAPrompt',
   input: {schema: ExtractFamilyDNAInputSchema},
   output: {schema: ExtractFamilyDNAOutputSchema},
-  prompt: `You are an expert legacy strategist and family psychologist. 
-Your task is to analyze raw psychological profiling survey data and extract the "Core DNA" of the family.
+  prompt: `You are an expert legacy strategist, family office advisor, and biographer. 
+Your task is to analyze raw psychological profiling survey data and generate a "Family DNA" profile that reads like a premium, hyper-personalized Wikipedia page.
 
-The input data contains answers to questions about family roles, asset locations, current friction points, priorities, and overlooked factors by advisors.
+The input data contains answers to questions about family roles, asset locations, current friction points, priorities, and gaps left by traditional advisors.
 
 Focus on:
-1. Deep psychological insight: What is the underlying fear or motivation?
-2. Generational context: Categorize the family into "Gen 1 Founder", "Gen 2 Transition", or "Gen 3+ Stewardship".
-3. Actionable gaps: What human-centric issues need addressing immediately?
-4. Timeline Synthesis: Propose 4-6 key milestones for their heritage journey.
+1. Deep psychological insight: Synthesize the underlying motivations and fears.
+2. Generational context: Clearly distinguish between the Founder (Gen 1) and successive generations.
+3. Wikipedia Style: Use neutral, sophisticated, and analytical language for the legacy narratives.
+4. Social Capital: Infuse insights about their global footprint and reputation.
 
+User Name: {{{userName}}}
 Survey Data:
 {{{surveyData}}}`,
 });

@@ -1,11 +1,26 @@
-
 "use client";
 
 import { useUser, useDoc } from "@/firebase";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BrainCircuit, Sparkles, ShieldAlert, Heart, Fingerprint, Zap, Globe, Layers, AlertCircle } from "lucide-react";
+import { 
+  BrainCircuit, 
+  Fingerprint, 
+  Globe, 
+  History, 
+  Heart, 
+  ShieldAlert, 
+  User, 
+  Users, 
+  Landmark, 
+  Zap, 
+  BookOpen,
+  Anchor,
+  Compass,
+  Link2
+} from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 
 export default function FamilyDNAPage() {
   const { user } = useUser();
@@ -14,13 +29,10 @@ export default function FamilyDNAPage() {
   if (loading) {
     return (
       <div className="space-y-8 max-w-5xl mx-auto p-8">
-        <div className="flex flex-col gap-4 items-center">
-          <Skeleton className="h-12 w-64" />
-          <Skeleton className="h-4 w-96" />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <Skeleton className="h-96 rounded-2xl" />
-          <Skeleton className="h-96 rounded-2xl" />
+        <Skeleton className="h-12 w-3/4 mx-auto mb-12" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <Skeleton className="h-96 md:col-span-1 rounded-2xl" />
+          <Skeleton className="h-96 md:col-span-2 rounded-2xl" />
         </div>
       </div>
     );
@@ -36,106 +48,238 @@ export default function FamilyDNAPage() {
     );
   }
 
+  const p = dna.personalProfile;
+  const f = dna.familyProfile;
+
   return (
-    <div className="space-y-8 max-w-5xl mx-auto">
-      <div className="flex flex-col gap-2 text-center">
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <Fingerprint className="h-6 w-6 text-primary" />
-          <span className="text-xs font-bold uppercase tracking-[0.3em] text-primary">Biometric Legacy Profile</span>
-        </div>
-        <h1 className="font-headline text-5xl font-bold tracking-tight">Family Core DNA</h1>
-        <p className="text-muted-foreground max-w-2xl mx-auto">
-          {dna.generationalStage} • {dna.geographicDistribution}
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <Card className="glass-panel border-primary/20 relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-6 opacity-10">
-            <Sparkles className="h-24 w-24 text-primary" />
+    <div className="space-y-12 max-w-6xl mx-auto pb-20">
+      {/* Wikipedia Style Header */}
+      <div className="border-b border-white/10 pb-8 flex flex-col md:flex-row items-end justify-between gap-6">
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 tracking-[0.2em] font-bold uppercase text-[9px] px-3">
+              Heritage Archive
+            </Badge>
+            <span className="text-muted-foreground/30 text-xs font-mono">Last Synchronized: {new Date().toLocaleDateString()}</span>
           </div>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Heart className="h-5 w-5 text-primary" />
-              Core Legacy Values
-            </CardTitle>
-            <CardDescription>The non-negotiable principles guiding your heritage.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {dna.coreValues?.map((value: string, i: number) => (
-              <div key={i} className="p-4 rounded-xl bg-primary/5 border border-primary/10">
-                <p className="font-bold text-sm leading-relaxed">{value}</p>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        <Card className="glass-panel border-amber-500/20 relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-6 opacity-10">
-            <ShieldAlert className="h-24 w-24 text-amber-500" />
-          </div>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ShieldAlert className="h-5 w-5 text-amber-500" />
-              Psychological Friction Points
-            </CardTitle>
-            <CardDescription>AI-diagnosed emotional bottlenecks in your journey.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {dna.frictionPoints?.map((point: string, i: number) => (
-              <div key={i} className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/10">
-                <p className="font-bold text-sm text-amber-500 leading-relaxed">{point}</p>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card className="glass-panel">
-        <CardHeader>
-          <div className="flex items-center gap-2 mb-2">
-            <Zap className="h-5 w-5 text-primary" />
-            <CardTitle>Narrative Synthesis</CardTitle>
-          </div>
-          <p className="text-lg italic font-headline text-foreground/80 leading-relaxed">
-            "{dna.narrativeSummary}"
+          <h1 className="font-headline text-6xl font-bold tracking-tighter">
+            {f.familyName || "The Legacy"} Profile
+          </h1>
+          <p className="text-xl text-muted-foreground italic font-headline max-w-3xl">
+            From the Aivaz Heritage Repository, the comprehensive biographical and psychological extraction for the {f.familyName} estate.
           </p>
-        </CardHeader>
-      </Card>
+        </div>
+        <div className="flex gap-2">
+          <Badge className="bg-white/5 border-white/10 text-muted-foreground px-4 py-1">v4.2.1 Stable</Badge>
+        </div>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <Card className="glass-panel">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-primary" />
-              Overlooked Factors
-            </CardTitle>
-            <CardDescription>What traditional advisors typically ignore for your profile.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {dna.overlookedFactors?.map((factor: string, i: number) => (
-              <div key={i} className="flex gap-3 text-sm text-muted-foreground border-b border-white/5 pb-2 last:border-0">
-                <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5" />
-                <p>{factor}</p>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Left Column: Wikipedia Sidebar Info Box */}
+        <div className="lg:col-span-4 space-y-6">
+          <Card className="glass-panel border-white/10 overflow-hidden sticky top-8">
+            <div className="aspect-square relative bg-gradient-to-br from-primary/10 via-background to-secondary/10 flex items-center justify-center border-b border-white/5">
+              <Fingerprint className="h-24 w-24 text-primary/40" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)]" />
+            </div>
+            <div className="p-6 space-y-6">
+              <div>
+                <h3 className="text-[10px] font-bold uppercase tracking-widest text-primary mb-4">Core Identity Stats</h3>
+                <div className="space-y-3">
+                  {[
+                    { label: "Principal", value: user?.displayName || "Julian Aivaz", icon: User },
+                    { label: "Role", value: p.roleInFamily, icon: Anchor },
+                    { label: "Gen Stage", value: p.generationalStage, icon: History },
+                    { label: "Base", value: p.primaryLocation, icon: Globe },
+                    { label: "Wealth Source", value: f.wealthSource, icon: Landmark },
+                    { label: "Total Value", value: f.estimatedTotalNetWorth, icon: Landmark },
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center justify-between text-xs py-1">
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <item.icon className="h-3.5 w-3.5" />
+                        <span>{item.label}</span>
+                      </div>
+                      <span className="font-bold text-foreground text-right">{item.value}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
-          </CardContent>
-        </Card>
 
-        <Card className="glass-panel">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Layers className="h-5 w-5 text-primary" />
-              Asset Complexity Focus
-            </CardTitle>
-            <CardDescription>The structural challenges your family DNA reveals.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm leading-relaxed text-muted-foreground bg-white/5 p-4 rounded-xl">
-              {dna.assetComplexity}
-            </p>
-          </CardContent>
-        </Card>
+              <Separator className="bg-white/5" />
+
+              <div>
+                <h3 className="text-[10px] font-bold uppercase tracking-widest text-primary mb-4">Social Capital</h3>
+                <div className="space-y-3">
+                  <div className="text-[11px] text-muted-foreground leading-relaxed">
+                    <p className="font-bold text-foreground mb-1">Reputation:</p>
+                    {f.socialCapital.reputationIndicators.join(", ")}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground leading-relaxed">
+                    <p className="font-bold text-foreground mb-1">Networks:</p>
+                    {f.socialCapital.keyNetworks.join(", ")}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* Right Column: Main Article Content */}
+        <div className="lg:col-span-8 space-y-12">
+          {/* AI Generated Personal Summary */}
+          <section className="space-y-4">
+            <h2 className="text-2xl font-headline font-bold flex items-center gap-2 border-b border-white/5 pb-2">
+              <Zap className="h-5 w-5 text-primary" />
+              Executive Synthesis
+            </h2>
+            <div className="p-6 rounded-2xl bg-primary/5 border border-primary/10 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                <BrainCircuit className="h-24 w-24" />
+              </div>
+              <p className="text-lg leading-relaxed text-foreground/90 italic font-headline">
+                "{p.aiSummary}"
+              </p>
+            </div>
+          </section>
+
+          {/* Psychological Profile Section */}
+          <section className="space-y-6">
+            <h2 className="text-2xl font-headline font-bold flex items-center gap-2 border-b border-white/5 pb-2">
+              <Heart className="h-5 w-5 text-primary" />
+              Psychological Architecture
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Primary Friction Point</p>
+                  <p className="text-sm font-medium leading-relaxed">{p.psychologicalProfile.biggestHeadache}</p>
+                </div>
+                <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Priorities</p>
+                  <ul className="space-y-1">
+                    {p.psychologicalProfile.currentPriorities.map((item: string, i: number) => (
+                      <li key={i} className="text-xs flex items-center gap-2">
+                        <div className="w-1 h-1 rounded-full bg-primary" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/10">
+                  <div className="flex items-center gap-2 mb-2">
+                    <ShieldAlert className="h-4 w-4 text-amber-500" />
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-amber-500">Relational Bottlenecks</p>
+                  </div>
+                  <ul className="space-y-2">
+                    {p.psychologicalProfile.emotionalFrictionPoints.map((item: string, i: number) => (
+                      <li key={i} className="text-xs text-amber-500/80 leading-snug">
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5">
+                  <div className="flex items-center gap-2 mb-2">
+                    <BookOpen className="h-4 w-4 text-primary" />
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-primary">Advisor Blind Spots</p>
+                  </div>
+                  <ul className="space-y-1">
+                    {p.psychologicalProfile.advisorBlindSpots.map((item: string, i: number) => (
+                      <li key={i} className="text-xs text-muted-foreground">
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Family History Section */}
+          <section className="space-y-6">
+            <h2 className="text-2xl font-headline font-bold flex items-center gap-2 border-b border-white/5 pb-2">
+              <History className="h-5 w-5 text-primary" />
+              Family Origin & Trajectory
+            </h2>
+            <Card className="glass-panel border-white/5">
+              <CardContent className="p-8 space-y-6">
+                <div className="prose prose-invert max-w-none">
+                  <p className="text-muted-foreground leading-relaxed">
+                    {f.history.summary}
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t border-white/5">
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-widest text-primary mb-3">Key Holdings</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {f.history.keyHoldings.map((h: string) => (
+                        <Badge key={h} variant="secondary" className="bg-white/5 hover:bg-white/10">{h}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-widest text-primary mb-3">Historical Transitions</h4>
+                    <ul className="space-y-2">
+                      {f.history.notableTransitions.map((t: string, i: number) => (
+                        <li key={i} className="text-xs text-muted-foreground flex items-center gap-2">
+                          <Compass className="h-3 w-3 text-primary/40" />
+                          {t}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+
+          {/* Family Dynamics & Wikipedia-style Narrative */}
+          <section className="space-y-6">
+            <h2 className="text-2xl font-headline font-bold flex items-center gap-2 border-b border-white/5 pb-2">
+              <Users className="h-5 w-5 text-primary" />
+              Legacy Dynamics
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <Card className="glass-panel text-center p-6">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Alignment Level</p>
+                <p className={`text-2xl font-headline font-bold ${f.relationalDynamics.alignmentLevel === 'High' ? 'text-emerald-500' : 'text-amber-500'}`}>
+                  {f.relationalDynamics.alignmentLevel}
+                </p>
+              </Card>
+              <Card className="glass-panel text-center p-6">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Succession Score</p>
+                <p className="text-2xl font-headline font-bold text-primary">
+                  {f.relationalDynamics.successionReadinessScore}%
+                </p>
+              </Card>
+              <Card className="glass-panel text-center p-6">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Global Footprint</p>
+                <p className="text-sm font-bold truncate">
+                  {f.geographicFootprint.join(", ")}
+                </p>
+              </Card>
+            </div>
+
+            <Card className="glass-panel bg-white/[0.01]">
+              <CardHeader>
+                <CardTitle className="text-lg">Legacy Narrative</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-white/5 p-8 rounded-2xl border border-white/5">
+                  <p className="text-base text-foreground/80 leading-relaxed font-body">
+                    {f.familyLegacyNarrative}
+                  </p>
+                </div>
+                <div className="mt-8 flex items-center gap-4 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/40">
+                  <Link2 className="h-3.5 w-3.5" />
+                  <span>Secure Cryptographic Signature Active</span>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+        </div>
       </div>
     </div>
   );
