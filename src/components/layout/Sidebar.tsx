@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -32,23 +31,23 @@ export function Sidebar() {
 
   return (
     <aside className="fixed left-0 top-0 bottom-0 w-[280px] bg-sidebar border-r border-sidebar-border z-40 flex flex-col">
-      <div className="p-8 flex items-center gap-3">
-        <div className="relative w-12 h-12 rounded-full bg-primary/5 flex items-center justify-center border border-primary/20 shadow-[0_0_25px_rgba(75,163,199,0.15)] overflow-hidden transition-all duration-700 hover:shadow-[0_0_40px_rgba(75,163,199,0.3)] hover:border-primary/40 group">
+      <div className="p-8 flex items-center gap-4">
+        <div className="relative w-14 h-14 rounded-2xl bg-white/5 border border-white/10 shadow-[0_0_30px_rgba(75,163,199,0.2)] overflow-hidden transition-all duration-700 hover:shadow-[0_0_50px_rgba(75,163,199,0.4)] hover:border-primary/40 group">
           {logo && (
             <Image 
               src={logo.imageUrl} 
               alt={logo.description}
               fill
-              className="object-contain transition-transform duration-700 group-hover:scale-110"
+              className="object-cover transition-transform duration-1000 group-hover:scale-110"
               data-ai-hint={logo.imageHint}
             />
           )}
         </div>
         <div className="flex flex-col">
-          <span className="font-headline font-bold text-xl tracking-tight text-foreground leading-none">
+          <span className="font-headline font-bold text-2xl tracking-tighter text-foreground leading-none">
             AIVAZ
           </span>
-          <span className="text-[10px] font-bold tracking-[0.3em] text-primary uppercase mt-1">
+          <span className="text-[9px] font-bold tracking-[0.4em] text-primary uppercase mt-1.5 opacity-80">
             Heritage
           </span>
         </div>
@@ -74,7 +73,7 @@ export function Sidebar() {
               )} />
               {item.name}
               {isActive && (
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-l-full shadow-[0_0_10px_rgba(75,163,199,0.5)]" />
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-l-full shadow-[0_0_15px_rgba(75,163,199,0.6)]" />
               )}
             </Link>
           );
