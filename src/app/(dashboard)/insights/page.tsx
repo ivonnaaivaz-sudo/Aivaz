@@ -1,119 +1,178 @@
+
 "use client";
 
-import { useState } from "react";
-import { personalizedWealthStrategy, type PersonalizedWealthStrategyOutput } from "@/ai/flows/personalized-wealth-strategy";
+import { useState, useMemo } from "react";
+import { useUser, useFirestore, useDoc, useCollection } from "@/firebase";
+import { collection, doc, setDoc, query, orderBy, serverTimestamp, writeBatch } from "firebase/firestore";
+import { generateFamilyRecommendations } from "@/ai/flows/family-recommendations";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Loader2, ShieldAlert, CheckCircle2, RefreshCw } from "lucide-react";
+import { Sparkles, Loader2, ShieldAlert, CheckCircle2, RefreshCw, MessageSquare, ExternalLink } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function InsightsPage() {
+  const { user } = useUser();
+  const db = useFirestore();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<PersonalizedWealthStrategyOutput | null>(null);
 
-  const generateInsights = async () => {
+  const { data: dna } = useDoc(user ? `users/${user.uid}/dna/current` : null);
+  
+  const recommendationsQuery = useMemo(() => {
+    if (!user || !db) return null;
+    return query(collection(db, "users", user.uid, "recommendations"), orderBy("createdAt", "desc"));
+  }, [user, db]);
+
+  const { data: recommendations } = useCollection(recommendationsQuery);
+
+  const runDiscovery = async () => {
+    if (!user || !db || !dna) return;
     setLoading(true);
     try {
-      const output = await personalizedWealthStrategy({
-        financialData: "Portfolio value $142M. 26% liquidity. High concentration in tech equity. Irrevocable family trust established 2021. 3 dependent beneficiaries. Tax residency in New York.",
-        existingEstatePlan: "Standard will and revocable living trust. No specific provisions for digital assets or cross-border inheritance."
+      const result = await generateFamilyRecommendations({
+        familyDNA: dna,
+        portfolioSummary: "Aggregate Net Worth: $142.4M. Equities: 60%, Real Estate: 20%. Primary owner Julian (G1) 65%, Marcus (G2) 20%."
       });
-      setResult(output);
+
+      const batch = writeBatch(db);
+      result.recommendations.forEach((rec) => {
+        const recRef = doc(collection(db, "users", user.uid, "recommendations"));
+        batch.set(recRef, {
+          ...rec,
+          createdAt: new Date().toISOString()
+        });
+      });
+      await batch.commit();
+
+      toast({
+        title: "Intelligence Updated",
+        description: "Aivaz has synthesized new family-level recommendations.",
+      });
     } catch (error) {
       console.error(error);
+      toast({
+        variant: "destructive",
+        title: "Discovery Failed",
+        description: "Could not synthesize family intelligence at this time.",
+      });
     } finally {
       setLoading(false);
     }
   };
 
+  const handleDiscuss = async (rec: any) => {
+    if (!user || !db) return;
+    
+    try {
+      const msgRef = doc(collection(db, "users", user.uid, "messages"));
+      await setDoc(msgRef, {
+        senderId: user.uid,
+        senderName: user.displayName || "Principal",
+        text: `Shared a recommendation: ${rec.title}. Target: ${rec.targetMember}. Impact: ${rec.impact}`,
+        type: "recommendation",
+        recommendationId: rec.id,
+        timestamp: new Date().toISOString()
+      });
+
+      toast({
+        title: "Shared with Family",
+        description: "The recommendation has been posted to the Family Group Chat.",
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   return (
-    <div className="space-y-8 max-w-5xl mx-auto">
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-2">
-          <Badge className="bg-primary/20 text-primary border-primary/30 hover:bg-primary/20">Legacy Intelligence</Badge>
-          <div className="h-px flex-1 bg-white/5" />
+    <div className="space-y-8 max-w-6xl mx-auto">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <Badge className="bg-primary/20 text-primary border-primary/30">Legacy Intelligence</Badge>
+            <div className="h-px flex-1 bg-white/5 min-w-[50px]" />
+          </div>
+          <h1 className="font-headline text-4xl font-bold tracking-tight">AI Discovery Command</h1>
+          <p className="text-muted-foreground">Actionable, family-level strategic insights synthesized from your DNA.</p>
         </div>
-        <h1 className="font-headline text-4xl font-bold tracking-tight">AI Discovery Command</h1>
-        <p className="text-muted-foreground">Synthesized account analysis for personalized wealth strategies.</p>
+        <Button size="lg" onClick={runDiscovery} disabled={loading || !dna} className="shadow-2xl">
+          {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+          Run Legacy Discovery
+        </Button>
       </div>
 
-      {!result && !loading && (
-        <Card className="glass-panel border-primary/20 overflow-hidden relative group">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-50" />
-          <CardHeader className="relative text-center py-12">
-            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center border border-primary/30 mx-auto mb-6 shadow-[0_0_30px_rgba(75,163,199,0.2)] group-hover:shadow-[0_0_50px_rgba(75,163,199,0.3)] transition-all">
-              <Sparkles className="h-8 w-8 text-primary" />
-            </div>
-            <CardTitle className="text-2xl font-headline mb-2">Initialize Intelligent Discovery</CardTitle>
-            <CardDescription className="max-w-md mx-auto">
-              Aivaz AI will analyze all linked accounts, trust documents, and market data to identify hidden opportunities and estate blind spots.
-            </CardDescription>
-          </CardHeader>
-          <CardFooter className="relative justify-center pb-12">
-            <Button size="lg" onClick={generateInsights} className="px-8 shadow-2xl">
-              Begin AI Synthesis
-            </Button>
-          </CardFooter>
+      {!recommendations?.length && !loading && (
+        <Card className="glass-panel border-dashed border-white/10 p-12 text-center">
+          <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-6">
+            <Sparkles className="h-8 w-8 text-muted-foreground/30" />
+          </div>
+          <CardTitle className="mb-2">No Active Intelligence</CardTitle>
+          <CardDescription className="max-w-md mx-auto mb-6">
+            Run a Discovery session to generate hyper-personalized recommendations based on your family's unique generational dynamics.
+          </CardDescription>
+          <Button variant="outline" onClick={runDiscovery}>Initialize Synthesis</Button>
         </Card>
       )}
 
       {loading && (
         <div className="flex flex-col items-center justify-center py-20 space-y-4">
-          <Loader2 className="h-12 w-12 text-primary animate-spin" />
-          <p className="text-muted-foreground animate-pulse">Analyzing portfolio data and estate structures...</p>
+          <div className="relative">
+            <div className="w-20 h-20 rounded-full border-2 border-primary/20 animate-ping absolute inset-0" />
+            <div className="w-20 h-20 rounded-full border-2 border-primary flex items-center justify-center bg-primary/5">
+              <Sparkles className="h-10 w-10 text-primary animate-pulse" />
+            </div>
+          </div>
+          <div className="text-center">
+            <p className="font-headline font-bold text-xl">Synthesizing DNA & Portfolio...</p>
+            <p className="text-sm text-muted-foreground">Aivaz is mapping generational alignment and estate opportunities.</p>
+          </div>
         </div>
       )}
 
-      {result && (
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <Card className="glass-panel">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
-                  <Sparkles className="h-5 w-5 text-primary" />
-                </div>
-                <CardTitle>Strategy Synthesis</CardTitle>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {recommendations?.map((rec) => (
+          <Card key={rec.id} className="glass-panel border-white/5 hover:border-primary/20 transition-all flex flex-col group">
+            <CardHeader>
+              <div className="flex items-center justify-between mb-2">
+                <Badge variant="outline" className={`text-[10px] font-bold uppercase tracking-widest ${rec.priority === 'High' ? 'border-amber-500/50 text-amber-500' : 'text-primary'}`}>
+                  {rec.priority} Priority • {rec.category}
+                </Badge>
+                <span className="text-[10px] text-muted-foreground font-mono">{new Date(rec.createdAt).toLocaleDateString()}</span>
               </div>
-              <Button variant="ghost" size="sm" onClick={generateInsights}>
-                <RefreshCw className="h-4 w-4 mr-2" /> Re-sync
-              </Button>
+              <CardTitle className="text-xl group-hover:text-primary transition-colors">{rec.title}</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="p-4 rounded-xl bg-primary/5 border border-primary/10">
-                <p className="text-sm leading-relaxed text-foreground italic">{result.summary}</p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <h3 className="text-sm font-bold uppercase tracking-widest text-primary flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4" /> Strategic Moves
-                  </h3>
-                  <ul className="space-y-2">
-                    {result.recommendations.map((rec, i) => (
-                      <li key={i} className="text-sm p-3 rounded-lg bg-white/5 border border-white/5 hover:border-white/10 transition-colors">
-                        {rec}
-                      </li>
-                    ))}
-                  </ul>
+            <CardContent className="flex-1 space-y-4">
+              <p className="text-sm leading-relaxed text-muted-foreground">{rec.description}</p>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Target Stakeholder</p>
+                  <p className="text-sm font-bold text-foreground truncate">{rec.targetMember}</p>
                 </div>
-
-                <div className="space-y-4">
-                  <h3 className="text-sm font-bold uppercase tracking-widest text-amber-500 flex items-center gap-2">
-                    <ShieldAlert className="h-4 w-4" /> Estate Blind Spots
-                  </h3>
-                  <ul className="space-y-2">
-                    {result.blindSpots.map((spot, i) => (
-                      <li key={i} className="text-sm p-3 rounded-lg bg-amber-500/5 border border-amber-500/10 hover:border-amber-500/20 transition-colors">
-                        {spot}
-                      </li>
-                    ))}
-                  </ul>
+                <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Legacy Impact</p>
+                  <p className="text-sm font-bold text-primary truncate">{rec.impact}</p>
                 </div>
               </div>
             </CardContent>
+            <CardFooter className="border-t border-white/5 pt-4 gap-3">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex-1 bg-primary/5 text-primary border-primary/20 hover:bg-primary/10"
+                onClick={() => handleDiscuss(rec)}
+              >
+                <MessageSquare className="mr-2 h-4 w-4" /> Discuss with Family
+              </Button>
+              {rec.link && (
+                <Button variant="ghost" size="sm" className="px-3" onClick={() => window.location.href = rec.link}>
+                  <ExternalLink className="h-4 w-4" />
+                </Button>
+              )}
+            </CardFooter>
           </Card>
-        </div>
-      )}
+        ))}
+      </div>
     </div>
   );
 }

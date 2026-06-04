@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "UserProfile": {
@@ -18,47 +19,12 @@
     },
     "FamilyDNA": {
       "title": "Family DNA",
-      "description": "AI-extracted insights regarding family dynamics, friction points, and legacy values. Acts as a Wikipedia-style profile.",
+      "description": "AI-extracted insights regarding family dynamics, friction points, and legacy values.",
       "type": "object",
       "properties": {
-        "personalProfile": {
-          "type": "object",
-          "properties": {
-            "roleInFamily": { "type": "string" },
-            "generationalStage": { "type": "string" },
-            "primaryLocation": { "type": "string" },
-            "otherLocations": { "type": "array", "items": { "type": "string" } },
-            "psychologicalProfile": { "type": "object" },
-            "financialSnapshot": { "type": "object" },
-            "aiSummary": { "type": "string" }
-          }
-        },
-        "familyProfile": {
-          "type": "object",
-          "properties": {
-            "familyName": { "type": "string" },
-            "currentGenerationalStage": { "type": "string" },
-            "geographicFootprint": { "type": "array", "items": { "type": "string" } },
-            "wealthSource": { "type": "string" },
-            "estimatedTotalNetWorth": { "type": "string" },
-            "history": { "type": "object" },
-            "identifiedMembers": { "type": "array", "items": { "$ref": "#/entities/FamilyMember" } },
-            "socialCapital": { "type": "object" },
-            "relationalDynamics": { "type": "object" },
-            "familyLegacyNarrative": { "type": "string" }
-          }
-        },
+        "personalProfile": { "type": "object" },
+        "familyProfile": { "type": "object" },
         "initialTimeline": { "type": "array", "items": { "$ref": "#/entities/TimelineEvent" } }
-      }
-    },
-    "FamilyMember": {
-      "title": "Family Member",
-      "type": "object",
-      "properties": {
-        "name": { "type": "string" },
-        "relationship": { "type": "string" },
-        "generationalStage": { "type": "string" },
-        "role": { "type": "string" }
       }
     },
     "TimelineEvent": {
@@ -87,6 +53,34 @@
         "documentCount": { "type": "number" }
       },
       "required": ["name", "type", "appraisalValue"]
+    },
+    "Recommendation": {
+      "title": "Family Recommendation",
+      "description": "AI-generated actionable advice for the family ecosystem.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "targetMember": { "type": "string" },
+        "impact": { "type": "string" },
+        "category": { "type": "string" },
+        "priority": { "type": "string", "enum": ["High", "Medium", "Low"] },
+        "link": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "ChatMessage": {
+      "title": "Chat Message",
+      "description": "A secure message within the family group chat.",
+      "type": "object",
+      "properties": {
+        "senderId": { "type": "string" },
+        "senderName": { "type": "string" },
+        "text": { "type": "string" },
+        "type": { "type": "string", "enum": ["text", "recommendation"] },
+        "recommendationId": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      }
     }
   },
   "auth": {
@@ -108,6 +102,14 @@
     "/users/{userId}/assets/{assetId}": {
       "schema": "PhysicalAsset",
       "description": "Manual physical assets and appraisals"
+    },
+    "/users/{userId}/recommendations/{recId}": {
+      "schema": "Recommendation",
+      "description": "AI-generated family recommendations"
+    },
+    "/users/{userId}/messages/{msgId}": {
+      "schema": "ChatMessage",
+      "description": "Secure chat history"
     }
   }
 }
