@@ -1,3 +1,22 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "brand-logo",
+      "description": "Glass turtle heritage logo",
+      "imageUrl": "https://picsum.photos/seed/aivaz-turtle-glass/200/200",
+      "imageHint": "glass turtle"
+    },
+    {
+      "id": "portfolio-hero",
+      "description": "Abstract wealth and data visualization",
+      "imageUrl": "https://picsum.photos/seed/aivaz-portfolio/1200/400",
+      "imageHint": "wealth abstract"
+    },
+    {
+      "id": "advisor-avatar",
+      "description": "Professional financial advisor",
+      "imageUrl": "https://picsum.photos/seed/advisor/100/100",
+      "imageHint": "professional person"
+    }
+  ]
 }

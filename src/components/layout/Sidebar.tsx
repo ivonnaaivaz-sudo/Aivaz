@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -33,21 +32,25 @@ export function Sidebar() {
   return (
     <aside className="fixed left-0 top-0 bottom-0 w-[280px] bg-sidebar border-r border-sidebar-border z-40 flex flex-col">
       <div className="p-8 flex items-center gap-3">
-        <div className="relative w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center border border-primary/40 shadow-[0_0_15px_rgba(75,163,199,0.3)] overflow-hidden">
+        <div className="relative w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-[0_0_20px_rgba(75,163,199,0.2)] overflow-hidden transition-all duration-500 hover:shadow-[0_0_30px_rgba(75,163,199,0.4)]">
           {logo && (
             <Image 
               src={logo.imageUrl} 
               alt={logo.description}
-              width={40}
-              height={40}
-              className="object-cover"
+              fill
+              className="object-cover p-1.5"
               data-ai-hint={logo.imageHint}
             />
           )}
         </div>
-        <span className="font-headline font-semibold text-xl tracking-tight text-foreground">
-          AIVAZ <span className="text-primary">HERITAGE</span>
-        </span>
+        <div className="flex flex-col">
+          <span className="font-headline font-bold text-xl tracking-tight text-foreground leading-none">
+            AIVAZ
+          </span>
+          <span className="text-[10px] font-bold tracking-[0.3em] text-primary uppercase mt-1">
+            Heritage
+          </span>
+        </div>
       </div>
 
       <nav className="flex-1 px-4 py-4 space-y-1">
@@ -60,7 +63,7 @@ export function Sidebar() {
               className={cn(
                 "group flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 relative",
                 isActive 
-                  ? "text-primary bg-primary/5" 
+                  ? "text-primary bg-primary/10" 
                   : "text-muted-foreground hover:text-foreground hover:bg-white/5"
               )}
             >
@@ -81,7 +84,7 @@ export function Sidebar() {
         <div className="flex items-center gap-3 glass-card p-3 rounded-xl">
           <div className="w-10 h-10 rounded-full bg-muted border border-white/10 overflow-hidden relative">
             <Image 
-              src="https://picsum.photos/seed/user/100/100" 
+              src="https://picsum.photos/seed/user-julian/100/100" 
               alt="User" 
               fill
               className="object-cover"
@@ -90,7 +93,7 @@ export function Sidebar() {
           </div>
           <div className="flex-1 overflow-hidden">
             <p className="text-sm font-semibold truncate">Julian Aivaz</p>
-            <p className="text-xs text-muted-foreground truncate">Principal Head</p>
+            <p className="text-[10px] text-muted-foreground truncate uppercase font-bold tracking-widest">Principal Head</p>
           </div>
         </div>
       </div>
