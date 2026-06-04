@@ -16,7 +16,8 @@ import {
   Users,
   Settings,
   Fingerprint,
-  User
+  User,
+  Shield
 } from "lucide-react";
 
 const mainNavigation = [
@@ -37,6 +38,7 @@ const legacyNavigation = [
 const toolNavigation = [
   { name: "Messenger", href: "/messenger", icon: MessageSquare },
   { name: "Family", href: "/family", icon: Users },
+  { name: "Digital Vault", href: "/vault", icon: Shield },
 ];
 
 export function Sidebar() {
