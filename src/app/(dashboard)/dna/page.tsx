@@ -13,7 +13,7 @@ export default function FamilyDNAPage() {
 
   if (loading) {
     return (
-      <div className="space-y-8 max-w-5xl mx-auto">
+      <div className="space-y-8 max-w-5xl mx-auto p-8">
         <div className="flex flex-col gap-4 items-center">
           <Skeleton className="h-12 w-64" />
           <Skeleton className="h-4 w-96" />

@@ -50,8 +50,9 @@ The input data contains answers to questions about family roles, asset locations
 
 Focus on:
 1. Deep psychological insight: What is the underlying fear or motivation?
-2. Generational context: Are they building, transitioning, or preserving?
+2. Generational context: Categorize the family into "Gen 1 Founder", "Gen 2 Transition", or "Gen 3+ Stewardship".
 3. Actionable gaps: What human-centric issues need addressing immediately?
+4. Timeline Synthesis: Propose 4-6 key milestones for their heritage journey.
 
 Survey Data:
 {{{surveyData}}}`,

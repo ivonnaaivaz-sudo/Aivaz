@@ -19,7 +19,7 @@ import {
   Users,
   Lock,
   Settings,
-  BrainCircuit
+  Fingerprint
 } from "lucide-react";
 
 const mainNavigation = [
@@ -30,6 +30,7 @@ const mainNavigation = [
 ];
 
 const legacyNavigation = [
+  { name: "Family DNA", href: "/dna", icon: Fingerprint },
   { name: "Simulator", href: "/simulator", icon: Cpu },
   { name: "Strategy", href: "/strategy", icon: Target },
   { name: "Heritage Timeline", href: "/heritage-timeline", icon: History },

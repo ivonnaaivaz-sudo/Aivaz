@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -6,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Cpu, Loader2, LineChart, TrendingUp, Landmark, Calculator } from "lucide-react";
+import { Cpu, Loader2, LineChart, TrendingUp, Landmark, Calculator, Users } from "lucide-react";
 
 export default function SimulatorPage() {
   const [scenario, setScenario] = useState("");
@@ -32,8 +33,8 @@ export default function SimulatorPage() {
   return (
     <div className="space-y-8 max-w-6xl mx-auto">
       <div className="flex flex-col gap-2">
-        <h1 className="font-headline text-4xl font-bold tracking-tight">Scenario Simulator</h1>
-        <p className="text-muted-foreground">AI-driven modeling for potential financial outcomes and tax implications.</p>
+        <h1 className="font-headline text-4xl font-bold tracking-tight">Generational Simulation Matrix</h1>
+        <p className="text-muted-foreground">AI-driven modeling for financial outcomes, tax implications, and family social dynamics.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -41,17 +42,17 @@ export default function SimulatorPage() {
           <Card className="glass-panel sticky top-8">
             <CardHeader>
               <CardTitle className="text-lg">Input Scenario</CardTitle>
-              <CardDescription>Describe a specific event or market condition.</CardDescription>
+              <CardDescription>Describe a market event or a family social dynamic transition.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <Textarea 
-                placeholder="e.g., 'Model a 20% market downturn over 18 months coupled with a 5% increase in capital gains tax...'" 
+                placeholder="e.g., 'Model a 20% market downturn alongside a 3rd generation succession conflict...'" 
                 className="min-h-[150px] bg-background/50 border-white/10"
                 value={scenario}
                 onChange={(e) => setScenario(e.target.value)}
               />
               <div className="flex flex-wrap gap-2">
-                {['Inflation Spike', 'Tech Rally', 'Tax Reform', 'Trust Dissolution'].map((tag) => (
+                {['Inflation Spike', 'Tech Rally', 'Tax Reform', 'Trust Dissolution', 'Family Feud', 'Succession Gap'].map((tag) => (
                   <Button 
                     key={tag} 
                     variant="outline" 
@@ -69,7 +70,7 @@ export default function SimulatorPage() {
                 disabled={loading || !scenario}
               >
                 {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Cpu className="mr-2 h-4 w-4" />}
-                Execute Simulation
+                Execute Matrix Simulation
               </Button>
             </CardContent>
           </Card>
@@ -90,15 +91,15 @@ export default function SimulatorPage() {
                 </div>
               </div>
               <div className="text-center space-y-2">
-                <p className="font-headline font-semibold text-lg">AI Core Processing</p>
-                <p className="text-sm text-muted-foreground">Calculating Monte Carlo projections and tax vectors...</p>
+                <p className="font-headline font-semibold text-lg">AI Matrix Processing</p>
+                <p className="text-sm text-muted-foreground">Calculating financial projections and family dynamic impacts...</p>
               </div>
             </div>
           ) : (
             <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
               <Card className="glass-panel border-primary/10">
                 <CardHeader>
-                  <Badge className="w-fit mb-2">Simulated Result</Badge>
+                  <Badge className="w-fit mb-2">Matrix Output</Badge>
                   <CardTitle className="text-2xl">{result?.scenarioSummary}</CardTitle>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6">
@@ -122,8 +123,8 @@ export default function SimulatorPage() {
               <Card className="glass-panel">
                 <CardHeader className="pb-2">
                   <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                    <Calculator className="h-4 w-4" />
-                    <span className="text-xs font-bold uppercase tracking-widest">In-Depth Analysis</span>
+                    <Users className="h-4 w-4" />
+                    <span className="text-xs font-bold uppercase tracking-widest">Generational Impact Analysis</span>
                   </div>
                 </CardHeader>
                 <CardContent>
