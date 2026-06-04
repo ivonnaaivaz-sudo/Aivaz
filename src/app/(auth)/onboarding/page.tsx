@@ -4,44 +4,56 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser, useFirestore } from "@/firebase";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, setDoc, collection, addDoc, writeBatch } from "firebase/firestore";
+import { extractFamilyDNA } from "@/ai/flows/extract-family-dna";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
-import { Shield, Sparkles, BrainCircuit, ArrowRight, Loader2 } from "lucide-react";
+import { Shield, Sparkles, BrainCircuit, ArrowRight, Loader2, UserCircle2, Globe, AlertTriangle, Target, Search } from "lucide-react";
 
 const steps = [
   {
-    id: "stage",
-    title: "Generational Context",
-    question: "Where does your family currently stand in its wealth journey?",
+    id: "role",
+    title: "Your Role",
+    question: "What is your primary role in the family ecosystem?",
+    type: "radio",
     options: [
-      { id: "gen1", label: "First Generation Founder-Led", description: "Currently building and controlling the primary assets." },
-      { id: "gen2", label: "Second Generation Transition", description: "In the process of transferring leadership or assets." },
-      { id: "gen3", label: "Multi-Generational Stewardship", description: "Managing legacy across three or more generations." }
+      { id: "Founder", label: "Founder / Principal", icon: UserCircle2, description: "The primary builder and decision-maker." },
+      { id: "Next Generation", label: "Next Generation Successor", icon: Sparkles, description: "Preparing for or managing the transition of leadership." },
+      { id: "Advisor", label: "Trusted Family Advisor", icon: Shield, description: "Supporting the family's strategic legacy goals." }
     ]
+  },
+  {
+    id: "locations",
+    title: "Geography & Assets",
+    question: "Where are the family members and primary assets located?",
+    type: "textarea",
+    placeholder: "e.g., Family in NY and Singapore, assets in Switzerland and Cayman..."
   },
   {
     id: "friction",
-    title: "Legacy Psychology",
-    question: "What is your primary concern regarding the future of your family legacy?",
-    options: [
-      { id: "alignment", label: "Successor Alignment", description: "Concern that the next generation doesn't share core family values." },
-      { id: "complexity", label: "Asset Complexity", description: "Worried that the structure has become too fragmented to manage." },
-      { id: "control", label: "Maintaining Control", description: "Hesitant to relinquish decision-making power." }
-    ]
+    title: "Current Friction",
+    question: "What is the biggest 'headache' or friction point right now?",
+    type: "textarea",
+    placeholder: "e.g., Hesitation to pass control, conflicting values between generations..."
   },
   {
-    id: "values",
-    title: "Core Drivers",
-    question: "What defines 'success' for your family legacy over the next 50 years?",
-    options: [
-      { id: "growth", label: "Continued Exponential Growth", description: "Expanding the family enterprise and footprint." },
-      { id: "harmony", label: "Family Unity & Harmony", description: "Prioritizing relational health over pure financial returns." },
-      { id: "impact", label: "Philanthropic Impact", description: "Being defined by social contribution and legacy works." }
-    ]
+    id: "priorities",
+    title: "Legacy Priorities",
+    question: "What defines success for your family over the next 50 years?",
+    type: "textarea",
+    placeholder: "e.g., Unity, social impact, exponential growth of intellectual capital..."
+  },
+  {
+    id: "overlooked",
+    title: "Advisor Gaps",
+    question: "What have your traditional advisors (banks, lawyers) overlooked?",
+    type: "textarea",
+    placeholder: "e.g., They focus on tax but ignore the emotional dynamics between siblings..."
   }
 ];
 
@@ -60,16 +72,39 @@ export default function OnboardingPage() {
       setLoading(true);
       try {
         if (user && db) {
-          await setDoc(doc(db, "users", user.uid), {
+          // 1. Run AI Extraction
+          const dnaResult = await extractFamilyDNA({ surveyData: answers });
+
+          // 2. Persist to Firestore
+          const batch = writeBatch(db);
+          
+          // User Profile
+          const userRef = doc(db, "users", user.uid);
+          batch.set(userRef, {
             uid: user.uid,
             hasCompletedProfiling: true,
+            role: answers.role,
             onboardingData: answers,
             updatedAt: new Date().toISOString()
           }, { merge: true });
+
+          // Family DNA
+          const dnaRef = doc(db, "users", user.uid, "dna", "current");
+          batch.set(dnaRef, dnaResult);
+
+          // Initial Timeline Events
+          if (dnaResult.initialTimeline) {
+            dnaResult.initialTimeline.forEach((event) => {
+              const eventRef = doc(collection(db, "users", user.uid, "timeline"));
+              batch.set(eventRef, event);
+            });
+          }
+
+          await batch.commit();
           router.push("/portfolio");
         }
       } catch (e) {
-        console.error(e);
+        console.error("Onboarding failed:", e);
       } finally {
         setLoading(false);
       }
@@ -107,24 +142,40 @@ export default function OnboardingPage() {
             <CardTitle className="text-2xl font-headline">{step.question}</CardTitle>
           </CardHeader>
           <CardContent>
-            <RadioGroup 
-              value={answers[step.id]} 
-              onValueChange={(val) => setAnswers(prev => ({ ...prev, [step.id]: val }))}
-              className="space-y-4"
-            >
-              {step.options.map((opt) => (
-                <div key={opt.id} className="relative">
-                  <RadioGroupItem value={opt.id} id={opt.id} className="peer sr-only" />
-                  <Label
-                    htmlFor={opt.id}
-                    className="flex flex-col gap-1 p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 peer-data-[state=checked]:border-primary/50 peer-data-[state=checked]:bg-primary/5 cursor-pointer transition-all"
-                  >
-                    <span className="font-bold text-base">{opt.label}</span>
-                    <span className="text-xs text-muted-foreground">{opt.description}</span>
-                  </Label>
-                </div>
-              ))}
-            </RadioGroup>
+            {step.type === "radio" ? (
+              <RadioGroup 
+                value={answers[step.id]} 
+                onValueChange={(val) => setAnswers(prev => ({ ...prev, [step.id]: val }))}
+                className="grid grid-cols-1 gap-4"
+              >
+                {step.options?.map((opt) => (
+                  <div key={opt.id} className="relative">
+                    <RadioGroupItem value={opt.id} id={opt.id} className="peer sr-only" />
+                    <Label
+                      htmlFor={opt.id}
+                      className="flex items-center gap-4 p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/5 peer-data-[state=checked]:border-primary/50 peer-data-[state=checked]:bg-primary/5 cursor-pointer transition-all"
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center">
+                        <opt.icon className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-bold text-base">{opt.label}</span>
+                        <span className="text-xs text-muted-foreground">{opt.description}</span>
+                      </div>
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            ) : (
+              <div className="space-y-4">
+                <Textarea 
+                  placeholder={step.placeholder}
+                  className="min-h-[150px] bg-white/[0.02] border-white/10"
+                  value={answers[step.id] || ""}
+                  onChange={(e) => setAnswers(prev => ({ ...prev, [step.id]: e.target.value }))}
+                />
+              </div>
+            )}
           </CardContent>
           <CardFooter className="flex justify-between border-t border-white/5 pt-6">
             <Button 
@@ -140,10 +191,13 @@ export default function OnboardingPage() {
               className="px-8 shadow-xl"
             >
               {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Extracting DNA...</span>
+                </div>
               ) : (
                 <>
-                  {currentStep === steps.length - 1 ? "Complete Synthesis" : "Continue"}
+                  {currentStep === steps.length - 1 ? "Begin Synthesis" : "Continue"}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </>
               )}
