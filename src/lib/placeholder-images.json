@@ -2,8 +2,8 @@
   "placeholderImages": [
     {
       "id": "brand-logo",
-      "description": "Premium crystal turtle heritage emblem",
-      "imageUrl": "https://picsum.photos/seed/aivaz-glass-turtle/120/120",
+      "description": "Premium AIVAZ glass turtle heritage emblem",
+      "imageUrl": "/images/aivaz-logo.png",
       "imageHint": "glass turtle"
     },
     {

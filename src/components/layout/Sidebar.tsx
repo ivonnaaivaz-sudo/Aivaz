@@ -74,23 +74,27 @@ export function Sidebar() {
   return (
     <aside className="fixed left-0 top-0 bottom-0 w-[280px] bg-sidebar border-r border-sidebar-border z-40 flex flex-col">
       <div className="p-8 flex flex-col items-center gap-4">
-        <div className="relative group">
-          <Image 
-            src={logo?.imageUrl || "/images/aivaz-logo.png"} 
-            alt="AIVAZ Logo" 
-            width={120} 
-            height={120}
-            className="transform group-hover:scale-105 transition-transform duration-700"
-            data-ai-hint="glass turtle"
-          />
-        </div>
-        <div className="flex flex-col items-center text-center">
-          <span className="font-headline font-bold text-2xl tracking-tighter text-foreground leading-none">
-            AIVAZ
-          </span>
-          <span className="text-[10px] font-bold tracking-[0.4em] text-primary uppercase mt-1 opacity-80">
-            Heritage
-          </span>
+        <div className="relative group flex flex-col items-center">
+          <div className="relative w-[120px] h-[120px] mb-4">
+            <Image 
+              src="/images/aivaz-logo.png" 
+              alt="AIVAZ Logo" 
+              width={120} 
+              height={120}
+              className="transform group-hover:scale-105 transition-transform duration-700 relative z-10"
+              priority
+            />
+            {/* Subtle glassmorphism glow behind the logo */}
+            <div className="absolute inset-0 bg-primary/20 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+          </div>
+          <div className="flex flex-col items-center text-center">
+            <span className="font-headline font-bold text-2xl tracking-tighter text-foreground leading-none">
+              AIVAZ
+            </span>
+            <span className="text-[10px] font-bold tracking-[0.4em] text-primary uppercase mt-1 opacity-80">
+              Heritage
+            </span>
+          </div>
         </div>
       </div>
 
