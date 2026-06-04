@@ -18,14 +18,14 @@ export default function Home() {
     if (authLoading || (user && profileLoading)) return;
 
     if (!user) {
-      router.push("/portfolio"); // Public landing or redirect to dash which handles auth
+      router.push("/dashboard"); // Use dashboard as the landing for authenticated/unauth dash
       return;
     }
 
     if (profile && !profile.hasCompletedProfiling) {
       router.push("/onboarding");
     } else {
-      router.push("/portfolio");
+      router.push("/dashboard");
     }
   }, [user, profile, authLoading, profileLoading, router]);
 
