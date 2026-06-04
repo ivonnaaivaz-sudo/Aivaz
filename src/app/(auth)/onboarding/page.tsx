@@ -4,16 +4,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser, useFirestore } from "@/firebase";
-import { doc, setDoc, collection, addDoc, writeBatch } from "firebase/firestore";
+import { doc, setDoc, collection, writeBatch } from "firebase/firestore";
 import { extractFamilyDNA } from "@/ai/flows/extract-family-dna";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
-import { Shield, Sparkles, BrainCircuit, ArrowRight, Loader2, UserCircle2, Globe, AlertTriangle, Target, Search } from "lucide-react";
+import { Shield, Sparkles, BrainCircuit, ArrowRight, Loader2, UserCircle2 } from "lucide-react";
 
 const steps = [
   {
@@ -101,7 +100,7 @@ export default function OnboardingPage() {
           }
 
           await batch.commit();
-          router.push("/portfolio");
+          router.push("/dashboard");
         }
       } catch (e) {
         console.error("Onboarding failed:", e);

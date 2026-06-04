@@ -18,7 +18,7 @@ export default function Home() {
     if (authLoading || (user && profileLoading)) return;
 
     if (!user) {
-      router.push("/dashboard"); // Use dashboard as the landing for authenticated/unauth dash
+      router.push("/dashboard"); 
       return;
     }
 
