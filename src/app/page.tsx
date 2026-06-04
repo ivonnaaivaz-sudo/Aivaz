@@ -15,14 +15,21 @@ export default function Home() {
   );
 
   useEffect(() => {
-    if (authLoading || (user && profileLoading)) return;
-
+    // Wait for auth and profile to load if user exists
+    if (authLoading) return;
+    
     if (!user) {
-      router.push("/dashboard"); 
+      // In a real app, you'd go to /login here. 
+      // For this prototype, we'll default to the dashboard which shows public/mock data
+      // but the profiling gate will trigger once they are logged in.
+      router.push("/dashboard");
       return;
     }
 
-    if (profile && !profile.hasCompletedProfiling) {
+    if (profileLoading) return;
+
+    // Redirection Gate: Mandatory Profiling
+    if (!profile || !profile.hasCompletedProfiling) {
       router.push("/onboarding");
     } else {
       router.push("/dashboard");
@@ -32,8 +39,16 @@ export default function Home() {
   return (
     <div className="h-screen w-full flex items-center justify-center bg-background">
       <div className="flex flex-col items-center gap-4">
-        <Loader2 className="h-8 w-8 text-primary animate-spin" />
-        <p className="text-sm font-headline tracking-widest uppercase opacity-50">Initializing Aivaz Core</p>
+        <div className="relative">
+          <div className="w-16 h-16 rounded-full border-2 border-primary/20 animate-ping absolute inset-0" />
+          <div className="w-16 h-16 rounded-full border-2 border-primary flex items-center justify-center">
+            <Loader2 className="h-8 w-8 text-primary animate-spin" />
+          </div>
+        </div>
+        <div className="text-center">
+          <p className="text-sm font-headline font-bold tracking-[0.3em] uppercase text-primary">Aivaz Core</p>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1">Establishing Heritage Sync</p>
+        </div>
       </div>
     </div>
   );
