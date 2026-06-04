@@ -1,5 +1,12 @@
+
 {
   "placeholderImages": [
+    {
+      "id": "brand-logo",
+      "description": "Glass turtle heritage logo",
+      "imageUrl": "https://picsum.photos/seed/aivaz-turtle/200/200",
+      "imageHint": "glass turtle logo"
+    },
     {
       "id": "portfolio-hero",
       "description": "Abstract wealth and data visualization",

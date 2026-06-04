@@ -1,8 +1,11 @@
+
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { 
   LayoutDashboard, 
   Wallet, 
@@ -25,27 +28,22 @@ const navigation = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const logo = PlaceHolderImages.find(img => img.id === 'brand-logo');
 
   return (
     <aside className="fixed left-0 top-0 bottom-0 w-[280px] bg-sidebar border-r border-sidebar-border z-40 flex flex-col">
       <div className="p-8 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center border border-primary/40 shadow-[0_0_15px_rgba(75,163,199,0.3)]">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="w-6 h-6 text-primary"
-          >
-            <path d="M12 3a6 6 0 0 0-9 6c0 4.97 4.03 9 9 9s9-4.03 9-9a6 6 0 0 0-9-6Z" />
-            <path d="M12 18v3" />
-            <path d="M15 17.5c.5.5 1 0 1-1" />
-            <path d="M9 17.5c-.5.5-1 0-1-1" />
-            <path d="M18 9h2.5" />
-            <path d="M3.5 9H6" />
-          </svg>
+        <div className="relative w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center border border-primary/40 shadow-[0_0_15px_rgba(75,163,199,0.3)] overflow-hidden">
+          {logo && (
+            <Image 
+              src={logo.imageUrl} 
+              alt={logo.description}
+              width={40}
+              height={40}
+              className="object-cover"
+              data-ai-hint={logo.imageHint}
+            />
+          )}
         </div>
         <span className="font-headline font-semibold text-xl tracking-tight text-foreground">
           AIVAZ <span className="text-primary">HERITAGE</span>
@@ -81,8 +79,14 @@ export function Sidebar() {
 
       <div className="p-6 border-t border-sidebar-border">
         <div className="flex items-center gap-3 glass-card p-3 rounded-xl">
-          <div className="w-10 h-10 rounded-full bg-muted border border-white/10 overflow-hidden">
-            <img src="https://picsum.photos/seed/user/100/100" alt="User" />
+          <div className="w-10 h-10 rounded-full bg-muted border border-white/10 overflow-hidden relative">
+            <Image 
+              src="https://picsum.photos/seed/user/100/100" 
+              alt="User" 
+              fill
+              className="object-cover"
+              data-ai-hint="person profile"
+            />
           </div>
           <div className="flex-1 overflow-hidden">
             <p className="text-sm font-semibold truncate">Julian Aivaz</p>
