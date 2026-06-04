@@ -74,23 +74,22 @@ export function Sidebar() {
       <div className="p-8 flex flex-col items-center gap-4">
         <div className="relative group flex flex-col items-center">
           <div className="relative w-[120px] h-[120px] mb-4 flex items-center justify-center">
-            {/* The actual brand logo from public/images/aivaz-logo.png */}
-            <Image 
-              src="/images/aivaz-logo.png" 
-              alt="AIVAZ Logo" 
-              width={120} 
-              height={120}
-              className="transform group-hover:scale-105 transition-transform duration-700 relative z-10"
-              priority
-              onError={(e) => {
-                // Fallback style if image is missing
-                const target = e.target as HTMLImageElement;
-                target.src = "https://picsum.photos/seed/aivaz/120/120";
-              }}
-            />
-            {/* High-end decorative glow */}
-            <div className="absolute inset-0 bg-primary/10 rounded-full blur-2xl opacity-50 group-hover:opacity-100 transition-opacity duration-700" />
-            <div className="absolute inset-0 border border-white/5 rounded-full backdrop-blur-[2px]" />
+            {/* The brand logo - ensures premium presentation */}
+            <div className="relative w-full h-full rounded-full overflow-hidden border border-white/5 glass-panel bg-white/[0.02] flex items-center justify-center group-hover:border-primary/30 transition-all duration-700">
+              <Image 
+                src="/images/aivaz-logo.png" 
+                alt="AIVAZ Logo" 
+                width={120} 
+                height={120}
+                className="transform group-hover:scale-105 transition-transform duration-700 relative z-10 p-2"
+                priority
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = "https://picsum.photos/seed/aivaz-crystal/120/120";
+                }}
+              />
+              <div className="absolute inset-0 bg-primary/5 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+            </div>
           </div>
           <div className="flex flex-col items-center text-center">
             <span className="font-headline font-bold text-2xl tracking-tighter text-foreground leading-none">
