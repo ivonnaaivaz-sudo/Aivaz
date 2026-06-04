@@ -3,13 +3,57 @@
 
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useUser, useFirestore, useCollection } from "@/firebase";
-import { collection, doc, setDoc, query, orderBy, limit, serverTimestamp } from "firebase/firestore";
+import { collection, doc, setDoc, query, orderBy, limit } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Shield, User, MoreVertical, Search, Paperclip, Send, Sparkles, ExternalLink, MessageSquare } from "lucide-react";
+
+const MOCK_MESSAGES = [
+  {
+    id: "m1",
+    senderId: "advisor-1",
+    senderName: "Robert Chen (Advisor)",
+    text: "Julian, I've updated the roadmap with the EU Golden Visa eligibility targets for 2025. We should coordinate the side-letter renewal for the PE fund soon.",
+    type: "text",
+    timestamp: new Date(Date.now() - 3600000 * 5).toISOString(), // 5 hours ago
+  },
+  {
+    id: "m2",
+    senderId: "julian-1",
+    senderName: "Julian Aivaz",
+    text: "Thanks Robert. Marcus, have you had a chance to look at the Aivaz Foundation bylaws? We want to ensure G3 is properly integrated into the philanthropic mission.",
+    type: "text",
+    timestamp: new Date(Date.now() - 3600000 * 4).toISOString(), // 4 hours ago
+  },
+  {
+    id: "m3",
+    senderId: "marcus-1",
+    senderName: "Marcus Aivaz",
+    text: "I'm reviewing them now. I agree with the focus on intellectual capital growth. I'm also curious about the Liquidity Bridge recommendation Aivaz flagged today.",
+    type: "text",
+    timestamp: new Date(Date.now() - 3600000 * 3).toISOString(), // 3 hours ago
+  },
+  {
+    id: "m4",
+    senderId: "aivaz-ai",
+    senderName: "Aivaz AI",
+    text: "Shared a recommendation: Generational Liquidity Bridge. Target: @Marcus & Next Gen. Impact: Strategic Stability",
+    type: "recommendation",
+    recommendationId: "rec-1",
+    timestamp: new Date(Date.now() - 3600000 * 2).toISOString(), // 2 hours ago
+  },
+  {
+    id: "m5",
+    senderId: "julian-1",
+    senderName: "Julian Aivaz",
+    text: "The bridge makes sense. Let's move 5% of the tech holdings as suggested. It buffers the education trust against the volatility we're seeing in the supply chain sector.",
+    type: "text",
+    timestamp: new Date(Date.now() - 3600000 * 1).toISOString(), // 1 hour ago
+  }
+];
 
 export default function MessengerPage() {
   const { user } = useUser();
@@ -22,11 +66,22 @@ export default function MessengerPage() {
     return query(collection(db, "users", user.uid, "messages"), orderBy("timestamp", "asc"), limit(50));
   }, [user, db]);
 
-  const { data: messages } = useCollection(messagesQuery);
+  const { data: realMessages } = useCollection(messagesQuery);
+
+  const messages = useMemo(() => {
+    if (!realMessages || realMessages.length === 0) return MOCK_MESSAGES;
+    // If we have real messages, we could potentially merge them, but for the demo, 
+    // we'll just prepend mock messages to show a history
+    return [...MOCK_MESSAGES, ...realMessages];
+  }, [realMessages]);
 
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      // Find the viewport inside ScrollArea to scroll
+      const viewport = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      if (viewport) {
+        viewport.scrollTop = viewport.scrollHeight;
+      }
     }
   }, [messages]);
 
@@ -37,7 +92,7 @@ export default function MessengerPage() {
       const msgRef = doc(collection(db, "users", user.uid, "messages"));
       await setDoc(msgRef, {
         senderId: user.uid,
-        senderName: user.displayName || "Principal",
+        senderName: user.displayName || "Julian Aivaz",
         text: inputText,
         type: "text",
         timestamp: new Date().toISOString()
@@ -50,6 +105,7 @@ export default function MessengerPage() {
 
   return (
     <div className="h-[calc(100vh-100px)] flex gap-6 max-w-7xl mx-auto">
+      {/* Contacts Sidebar */}
       <Card className="w-80 glass-panel flex flex-col border-white/5">
         <CardHeader className="border-b border-white/5 pb-4">
           <div className="flex items-center justify-between mb-4">
@@ -75,22 +131,33 @@ export default function MessengerPage() {
                 <p className="text-xs text-muted-foreground truncate">End-to-end heritage channel</p>
               </div>
             </div>
-            {/* Demo sub-chats */}
-            {["Robert Chen (Advisor)", "Marcus Aivaz"].map((name, i) => (
-              <div key={i} className="p-3 rounded-xl flex gap-3 cursor-pointer hover:bg-white/5 transition-colors">
-                <div className="w-10 h-10 rounded-full bg-muted flex-shrink-0 border border-white/10" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold truncate">{name}</p>
-                  <p className="text-xs text-muted-foreground truncate">Secure line ready</p>
-                </div>
+            
+            <div className="p-3 rounded-xl flex gap-3 cursor-pointer hover:bg-white/5 transition-colors">
+              <div className="w-10 h-10 rounded-full bg-secondary/20 flex-shrink-0 border border-white/10 flex items-center justify-center">
+                <User className="h-5 w-5 text-secondary" />
               </div>
-            ))}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold truncate">Robert Chen (Advisor)</p>
+                <p className="text-xs text-muted-foreground truncate">Tax report uploaded</p>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-xl flex gap-3 cursor-pointer hover:bg-white/5 transition-colors">
+              <div className="w-10 h-10 rounded-full bg-accent/20 flex-shrink-0 border border-white/10 flex items-center justify-center">
+                <User className="h-5 w-5 text-accent" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold truncate">Marcus Aivaz</p>
+                <p className="text-xs text-muted-foreground truncate">Reviewing bylaws...</p>
+              </div>
+            </div>
           </div>
         </ScrollArea>
       </Card>
 
-      <Card className="flex-1 glass-panel flex flex-col border-white/5">
-        <CardHeader className="border-b border-white/5 flex flex-row items-center justify-between py-4">
+      {/* Main Chat Area */}
+      <Card className="flex-1 glass-panel flex flex-col border-white/5 overflow-hidden">
+        <CardHeader className="border-b border-white/5 flex flex-row items-center justify-between py-4 shrink-0">
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 rounded-full bg-primary/20 border border-primary/20 flex items-center justify-center">
               <Sparkles className="h-5 w-5 text-primary" />
@@ -109,65 +176,64 @@ export default function MessengerPage() {
         </CardHeader>
         
         <ScrollArea className="flex-1 p-6" ref={scrollRef}>
-          <div className="space-y-6">
+          <div className="space-y-8">
             <div className="flex flex-col items-center justify-center space-y-2 opacity-30 pb-4">
               <Shield className="h-6 w-6 text-primary" />
               <p className="text-[10px] uppercase font-bold tracking-tighter">Secure multi-generational session established</p>
             </div>
             
-            {!messages?.length && (
-              <div className="text-center py-20 text-muted-foreground/30">
-                <MessageSquare className="h-12 w-12 mx-auto mb-4" />
-                <p className="text-sm font-bold uppercase tracking-widest">Beginning of Secure Heritage History</p>
-              </div>
-            )}
-
-            {messages?.map((msg) => (
-              <div 
-                key={msg.id} 
-                className={`flex gap-4 max-w-[85%] ${msg.senderId === user?.uid ? 'ml-auto flex-row-reverse' : ''}`}
-              >
-                <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center border ${msg.senderId === user?.uid ? 'bg-primary/20 border-primary/20' : 'bg-muted border-white/10'}`}>
-                  <User className={`h-4 w-4 ${msg.senderId === user?.uid ? 'text-primary' : 'text-muted-foreground'}`} />
-                </div>
-                
-                <div className="space-y-1 flex flex-col">
-                  <span className={`text-[9px] font-bold uppercase tracking-widest text-muted-foreground px-1 ${msg.senderId === user?.uid ? 'text-right' : ''}`}>
-                    {msg.senderName} • {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'now'}
-                  </span>
+            {messages.map((msg) => {
+              const isCurrentUser = msg.senderId === user?.uid || msg.senderName === "Julian Aivaz";
+              return (
+                <div 
+                  key={msg.id} 
+                  className={`flex gap-4 max-w-[85%] ${isCurrentUser ? 'ml-auto flex-row-reverse' : ''}`}
+                >
+                  <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center border ${
+                    msg.senderName.includes('AI') ? 'bg-primary/20 border-primary/40' : 
+                    isCurrentUser ? 'bg-primary/20 border-primary/20' : 'bg-muted border-white/10'
+                  }`}>
+                    {msg.senderName.includes('AI') ? <Sparkles className="h-4 w-4 text-primary" /> : <User className={`h-4 w-4 ${isCurrentUser ? 'text-primary' : 'text-muted-foreground'}`} />}
+                  </div>
                   
-                  {msg.type === "recommendation" ? (
-                    <div className="p-4 rounded-2xl bg-primary/10 border border-primary/20 space-y-3 relative group overflow-hidden">
-                      <div className="absolute top-0 right-0 p-2 opacity-10">
-                        <Sparkles className="h-8 w-8 text-primary" />
+                  <div className={`space-y-1 flex flex-col ${isCurrentUser ? 'items-end' : 'items-start'}`}>
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground px-1">
+                      {msg.senderName} • {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'now'}
+                    </span>
+                    
+                    {msg.type === "recommendation" ? (
+                      <div className="p-4 rounded-2xl bg-primary/10 border border-primary/20 space-y-3 relative group overflow-hidden max-w-sm">
+                        <div className="absolute top-0 right-0 p-2 opacity-10">
+                          <Sparkles className="h-8 w-8 text-primary" />
+                        </div>
+                        <Badge className="bg-primary/20 text-primary border-primary/30 text-[9px] font-bold uppercase">AI Recommendation Shared</Badge>
+                        <p className="text-sm font-bold leading-relaxed">{msg.text.split('recommendation: ')[1] || msg.text}</p>
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm" className="h-7 text-[9px] font-bold bg-white/5 border-white/10" onClick={() => window.location.href = '/insights'}>
+                            <ExternalLink className="mr-1.5 h-3 w-3" /> View Insight
+                          </Button>
+                          <Button variant="outline" size="sm" className="h-7 text-[9px] font-bold bg-white/5 border-white/10" onClick={() => window.location.href = '/simulator'}>
+                            <Sparkles className="mr-1.5 h-3 w-3" /> Run Simulator
+                          </Button>
+                        </div>
                       </div>
-                      <Badge className="bg-primary/20 text-primary border-primary/30 text-[9px] font-bold uppercase">AI Recommendation Shared</Badge>
-                      <p className="text-sm font-bold leading-relaxed">{msg.text.split('Shared a recommendation: ')[1]}</p>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm" className="h-7 text-[9px] font-bold bg-white/5 border-white/10" onClick={() => window.location.href = '/insights'}>
-                          <ExternalLink className="mr-1.5 h-3 w-3" /> View Insight
-                        </Button>
-                        <Button variant="outline" size="sm" className="h-7 text-[9px] font-bold bg-white/5 border-white/10" onClick={() => window.location.href = '/simulator'}>
-                          <Sparkles className="mr-1.5 h-3 w-3" /> Run Simulator
-                        </Button>
+                    ) : (
+                      <div className={`p-4 rounded-2xl text-sm leading-relaxed border ${
+                        isCurrentUser 
+                          ? 'bg-primary/10 border-primary/20 text-foreground rounded-tr-none' 
+                          : 'bg-white/5 border-white/5 rounded-tl-none'
+                      }`}>
+                        {msg.text}
                       </div>
-                    </div>
-                  ) : (
-                    <div className={`p-4 rounded-2xl text-sm leading-relaxed border ${
-                      msg.senderId === user?.uid 
-                        ? 'bg-primary/10 border-primary/20 text-foreground' 
-                        : 'bg-white/5 border-white/5'
-                    }`}>
-                      {msg.text}
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </ScrollArea>
 
-        <div className="p-4 border-t border-white/5">
+        <div className="p-4 border-t border-white/5 bg-background/30 shrink-0">
           <div className="flex items-center gap-2 bg-background/50 border border-white/5 rounded-2xl px-4 py-2">
             <Button variant="ghost" size="icon" className="text-muted-foreground">
               <Paperclip className="h-5 w-5" />
@@ -183,6 +249,9 @@ export default function MessengerPage() {
               <Send className="h-4 w-4" />
             </Button>
           </div>
+          <p className="text-[9px] text-center text-muted-foreground/40 mt-3 font-bold uppercase tracking-widest">
+            End-to-end multi-generational encryption active
+          </p>
         </div>
       </Card>
     </div>
