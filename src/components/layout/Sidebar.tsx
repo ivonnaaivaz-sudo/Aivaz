@@ -1,9 +1,7 @@
-
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { 
   LayoutDashboard,
@@ -16,10 +14,11 @@ import {
   ShieldCheck,
   MessageSquare,
   Users,
-  Lock,
   Settings,
-  Fingerprint
+  Fingerprint,
+  User
 } from "lucide-react";
+import Image from "next/image";
 
 const mainNavigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -39,8 +38,38 @@ const legacyNavigation = [
 const toolNavigation = [
   { name: "Messenger", href: "/messenger", icon: MessageSquare },
   { name: "Family", href: "/family", icon: Users },
-  { name: "Digital Vault", href: "/vault", icon: Lock },
 ];
+
+const CrystalTurtleLogo = () => (
+  <svg viewBox="0 0 100 100" className="w-20 h-20 drop-shadow-[0_0_15px_rgba(75,163,199,0.5)]">
+    <defs>
+      <linearGradient id="crystalGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style={{ stopColor: 'hsl(var(--primary))', stopOpacity: 0.8 }} />
+        <stop offset="100%" style={{ stopColor: 'hsl(var(--accent))', stopOpacity: 0.4 }} />
+      </linearGradient>
+      <filter id="glass">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="1" />
+      </filter>
+    </defs>
+    {/* Shell */}
+    <path 
+      d="M50 20 C70 20 85 35 85 55 C85 75 70 85 50 85 C30 85 15 75 15 55 C15 35 30 20 50 20Z" 
+      fill="url(#crystalGradient)" 
+      stroke="white" 
+      strokeWidth="0.5" 
+      strokeOpacity="0.3"
+    />
+    {/* Shell Patterns */}
+    <path d="M50 25 L50 80 M25 55 L75 55 M35 35 L65 75 M65 35 L35 75" stroke="white" strokeWidth="0.2" strokeOpacity="0.5" />
+    {/* Head */}
+    <circle cx="50" cy="15" r="7" fill="url(#crystalGradient)" stroke="white" strokeWidth="0.5" strokeOpacity="0.3" />
+    {/* Fins/Legs */}
+    <ellipse cx="20" cy="35" rx="8" ry="4" fill="url(#crystalGradient)" transform="rotate(-30 20 35)" />
+    <ellipse cx="80" cy="35" rx="8" ry="4" fill="url(#crystalGradient)" transform="rotate(30 80 35)" />
+    <ellipse cx="25" cy="75" rx="7" ry="3" fill="url(#crystalGradient)" transform="rotate(30 25 75)" />
+    <ellipse cx="75" cy="75" rx="7" ry="3" fill="url(#crystalGradient)" transform="rotate(-30 75 75)" />
+  </svg>
+);
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -72,22 +101,10 @@ export function Sidebar() {
   return (
     <aside className="fixed left-0 top-0 bottom-0 w-[280px] bg-sidebar border-r border-sidebar-border z-40 flex flex-col">
       <div className="p-8 flex flex-col items-center gap-4">
-        <div className="relative group flex flex-col items-center">
-          <div className="relative w-[120px] h-[120px] mb-4 flex items-center justify-center">
-            {/* The brand logo - ensures premium presentation */}
+        <div className="relative group flex flex-col items-center cursor-default">
+          <div className="relative w-[120px] h-[120px] mb-2 flex items-center justify-center">
             <div className="relative w-full h-full rounded-full overflow-hidden border border-white/5 glass-panel bg-white/[0.02] flex items-center justify-center group-hover:border-primary/30 transition-all duration-700">
-              <Image 
-                src="/images/aivaz-logo.png" 
-                alt="AIVAZ Logo" 
-                width={120} 
-                height={120}
-                className="transform group-hover:scale-105 transition-transform duration-700 relative z-10 p-2"
-                priority
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.src = "https://picsum.photos/seed/aivaz-crystal/120/120";
-                }}
-              />
+              <CrystalTurtleLogo />
               <div className="absolute inset-0 bg-primary/5 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
             </div>
           </div>
@@ -138,14 +155,8 @@ export function Sidebar() {
         </Link>
         
         <div className="flex items-center gap-3 glass-card p-3 rounded-xl border-white/5 bg-white/[0.02]">
-          <div className="w-8 h-8 rounded-full bg-muted border border-white/10 overflow-hidden relative">
-            <Image 
-              src="https://picsum.photos/seed/user-julian/100/100" 
-              alt="User" 
-              fill
-              className="object-cover"
-              data-ai-hint="person profile"
-            />
+          <div className="w-8 h-8 rounded-full bg-muted border border-white/10 overflow-hidden relative flex items-center justify-center">
+            <User className="h-4 w-4 text-muted-foreground" />
           </div>
           <div className="flex-1 overflow-hidden">
             <p className="text-xs font-semibold truncate">Julian Aivaz</p>
