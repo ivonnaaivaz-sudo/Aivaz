@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -32,13 +33,13 @@ export function Sidebar() {
   return (
     <aside className="fixed left-0 top-0 bottom-0 w-[280px] bg-sidebar border-r border-sidebar-border z-40 flex flex-col">
       <div className="p-8 flex items-center gap-3">
-        <div className="relative w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-[0_0_20px_rgba(75,163,199,0.2)] overflow-hidden transition-all duration-500 hover:shadow-[0_0_30px_rgba(75,163,199,0.4)]">
+        <div className="relative w-12 h-12 rounded-full bg-primary/5 flex items-center justify-center border border-primary/20 shadow-[0_0_25px_rgba(75,163,199,0.15)] overflow-hidden transition-all duration-700 hover:shadow-[0_0_40px_rgba(75,163,199,0.3)] hover:border-primary/40 group">
           {logo && (
             <Image 
               src={logo.imageUrl} 
               alt={logo.description}
               fill
-              className="object-cover p-1.5"
+              className="object-contain transition-transform duration-700 group-hover:scale-110"
               data-ai-hint={logo.imageHint}
             />
           )}
@@ -81,7 +82,7 @@ export function Sidebar() {
       </nav>
 
       <div className="p-6 border-t border-sidebar-border">
-        <div className="flex items-center gap-3 glass-card p-3 rounded-xl">
+        <div className="flex items-center gap-3 glass-card p-3 rounded-xl border-white/5 bg-white/[0.02]">
           <div className="w-10 h-10 rounded-full bg-muted border border-white/10 overflow-hidden relative">
             <Image 
               src="https://picsum.photos/seed/user-julian/100/100" 

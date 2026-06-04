@@ -1,9 +1,10 @@
+
 {
   "placeholderImages": [
     {
       "id": "brand-logo",
-      "description": "Glass turtle heritage logo",
-      "imageUrl": "https://picsum.photos/seed/aivaz-turtle-glass/200/200",
+      "description": "Premium glass turtle heritage emblem",
+      "imageUrl": "https://picsum.photos/seed/aivaz-glass-turtle-emblem/400/400",
       "imageHint": "glass turtle"
     },
     {
