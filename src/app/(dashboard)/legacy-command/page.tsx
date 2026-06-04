@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useMemo } from "react";
@@ -6,10 +5,31 @@ import { useUser, useFirestore, useDoc, useCollection } from "@/firebase";
 import { collection, query, orderBy, limit } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { HeartPulse, ShieldCheck, UserCircle2, BrainCircuit, AlertCircle, Sparkles, ArrowRight } from "lucide-react";
+import { HeartPulse, ShieldCheck, UserCircle2, BrainCircuit, AlertCircle, Sparkles, ArrowRight, Info } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+
+const MOCK_REC_ITEMS = [
+  {
+    id: "m-1",
+    title: "Generational Liquidity Bridge",
+    description: "Shift 5% of the primary technology equity holdings into a structured G2 educational trust.",
+    targetMember: "@Marcus",
+    impact: "Strategic Stability",
+    priority: "High",
+    isDemo: true
+  },
+  {
+    id: "m-2",
+    title: "Governance Charter Formalization",
+    description: "Establishing a formal Family Council charter to define decision-making thresholds.",
+    targetMember: "Family Council",
+    impact: "Conflict Reduction",
+    priority: "Medium",
+    isDemo: true
+  }
+];
 
 export default function LegacyCommandPage() {
   const { user } = useUser();
@@ -27,7 +47,9 @@ export default function LegacyCommandPage() {
     );
   }, [user, db]);
 
-  const { data: recommendations } = useCollection(highPriorityRecsQuery);
+  const { data: realRecommendations } = useCollection(highPriorityRecsQuery);
+  const isDemoMode = !realRecommendations || realRecommendations.length === 0;
+  const recommendations = isDemoMode ? MOCK_REC_ITEMS : realRecommendations;
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
@@ -101,15 +123,18 @@ export default function LegacyCommandPage() {
             </Link>
           </CardHeader>
           <CardContent className="space-y-4">
-            {recommendations?.length ? recommendations.map((rec) => (
-              <div key={rec.id} className="p-4 rounded-xl bg-white/[0.02] border border-white/5 hover:border-primary/20 transition-all group flex items-start gap-4">
+            {recommendations?.map((rec) => (
+              <div key={rec.id} className={`p-4 rounded-xl bg-white/[0.02] border border-white/5 hover:border-primary/20 transition-all group flex items-start gap-4 ${rec.isDemo ? 'opacity-70' : ''}`}>
                 <div className={`p-2 rounded-lg ${rec.priority === 'High' ? 'bg-amber-500/10 text-amber-500' : 'bg-primary/10 text-primary'}`}>
                   <AlertCircle className="h-4 w-4" />
                 </div>
                 <div className="flex-1">
                   <div className="flex justify-between items-start mb-1">
                     <p className="font-bold text-sm group-hover:text-primary transition-colors">{rec.title}</p>
-                    <Badge variant="outline" className="text-[8px] uppercase tracking-tighter">{rec.priority}</Badge>
+                    <div className="flex items-center gap-2">
+                      {rec.isDemo && <Badge variant="secondary" className="text-[7px] uppercase tracking-tighter bg-white/5">Demo</Badge>}
+                      <Badge variant="outline" className="text-[8px] uppercase tracking-tighter">{rec.priority}</Badge>
+                    </div>
                   </div>
                   <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{rec.description}</p>
                   <div className="mt-3 flex items-center gap-4 text-[9px] font-bold uppercase tracking-widest opacity-60">
@@ -118,12 +143,7 @@ export default function LegacyCommandPage() {
                   </div>
                 </div>
               </div>
-            )) : (
-              <div className="text-center py-12 border-2 border-dashed border-white/5 rounded-2xl">
-                <Sparkles className="h-8 w-8 text-muted-foreground/20 mx-auto mb-3" />
-                <p className="text-sm text-muted-foreground">Run Discovery in Insights to generate action items.</p>
-              </div>
-            )}
+            ))}
           </CardContent>
         </Card>
 
