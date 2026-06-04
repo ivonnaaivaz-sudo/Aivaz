@@ -42,6 +42,21 @@
         "description": { "type": "string" },
         "status": { "type": "string", "enum": ["completed", "in-progress", "upcoming", "target"] }
       }
+    },
+    "PhysicalAsset": {
+      "title": "Physical Asset",
+      "description": "Manually added asset such as real estate, art, or private holdings.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "type": { "type": "string", "enum": ["Real Estate", "Art", "Private Equity", "Collectibles", "Jewelry", "Other"] },
+        "appraisalValue": { "type": "number" },
+        "appraisalDate": { "type": "string", "format": "date" },
+        "location": { "type": "string" },
+        "description": { "type": "string" },
+        "documentCount": { "type": "number" }
+      },
+      "required": ["name", "type", "appraisalValue"]
     }
   },
   "auth": {
@@ -59,6 +74,10 @@
     "/users/{userId}/timeline/{eventId}": {
       "schema": "TimelineEvent",
       "description": "Generational timeline milestones"
+    },
+    "/users/{userId}/assets/{assetId}": {
+      "schema": "PhysicalAsset",
+      "description": "Manual physical assets and appraisals"
     }
   }
 }
