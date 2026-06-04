@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { 
   LayoutDashboard,
   PieChart,
@@ -45,7 +44,6 @@ const toolNavigation = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const logo = PlaceHolderImages.find(img => img.id === 'brand-logo');
 
   const NavItem = ({ item }: { item: any }) => {
     const isActive = pathname === item.href;
@@ -75,7 +73,8 @@ export function Sidebar() {
     <aside className="fixed left-0 top-0 bottom-0 w-[280px] bg-sidebar border-r border-sidebar-border z-40 flex flex-col">
       <div className="p-8 flex flex-col items-center gap-4">
         <div className="relative group flex flex-col items-center">
-          <div className="relative w-[120px] h-[120px] mb-4">
+          <div className="relative w-[120px] h-[120px] mb-4 flex items-center justify-center">
+            {/* The actual brand logo from public/images/aivaz-logo.png */}
             <Image 
               src="/images/aivaz-logo.png" 
               alt="AIVAZ Logo" 
@@ -83,9 +82,15 @@ export function Sidebar() {
               height={120}
               className="transform group-hover:scale-105 transition-transform duration-700 relative z-10"
               priority
+              onError={(e) => {
+                // Fallback style if image is missing
+                const target = e.target as HTMLImageElement;
+                target.src = "https://picsum.photos/seed/aivaz/120/120";
+              }}
             />
-            {/* Subtle glassmorphism glow behind the logo */}
-            <div className="absolute inset-0 bg-primary/20 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+            {/* High-end decorative glow */}
+            <div className="absolute inset-0 bg-primary/10 rounded-full blur-2xl opacity-50 group-hover:opacity-100 transition-opacity duration-700" />
+            <div className="absolute inset-0 border border-white/5 rounded-full backdrop-blur-[2px]" />
           </div>
           <div className="flex flex-col items-center text-center">
             <span className="font-headline font-bold text-2xl tracking-tighter text-foreground leading-none">
