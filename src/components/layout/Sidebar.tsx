@@ -73,24 +73,22 @@ export function Sidebar() {
 
   return (
     <aside className="fixed left-0 top-0 bottom-0 w-[280px] bg-sidebar border-r border-sidebar-border z-40 flex flex-col">
-      <div className="p-8 flex items-center gap-4">
-        <div className="relative w-14 h-14 rounded-full bg-black/40 border border-white/20 shadow-[0_0_30px_rgba(75,163,199,0.4)] overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
-          {logo && (
-            <Image 
-              src={logo.imageUrl} 
-              alt={logo.description}
-              fill
-              className="object-cover transform group-hover:scale-110 transition-transform duration-700"
-              data-ai-hint={logo.imageHint}
-            />
-          )}
+      <div className="p-8 flex flex-col items-center gap-4">
+        <div className="relative group">
+          <Image 
+            src={logo?.imageUrl || "/images/aivaz-logo.png"} 
+            alt="AIVAZ Logo" 
+            width={120} 
+            height={120}
+            className="transform group-hover:scale-105 transition-transform duration-700"
+            data-ai-hint="glass turtle"
+          />
         </div>
-        <div className="flex flex-col">
-          <span className="font-headline font-bold text-xl tracking-tighter text-foreground leading-none">
+        <div className="flex flex-col items-center text-center">
+          <span className="font-headline font-bold text-2xl tracking-tighter text-foreground leading-none">
             AIVAZ
           </span>
-          <span className="text-[8px] font-bold tracking-[0.4em] text-primary uppercase mt-1 opacity-80">
+          <span className="text-[10px] font-bold tracking-[0.4em] text-primary uppercase mt-1 opacity-80">
             Heritage
           </span>
         </div>
