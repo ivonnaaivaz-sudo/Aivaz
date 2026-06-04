@@ -2,14 +2,16 @@
 "use client";
 
 import { useUser } from "@/firebase";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
   PieChart as PieChartIcon, 
   TrendingUp, 
   Layers, 
   Globe,
-  Briefcase
+  Briefcase,
+  Users,
+  Percent
 } from "lucide-react";
 import { 
   PieChart, 
@@ -24,6 +26,7 @@ import {
   Tooltip,
   Legend
 } from "recharts";
+import { Progress } from "@/components/ui/progress";
 
 const assetAllocation = [
   { name: 'Equities', value: 60, color: 'hsl(var(--primary))' },
@@ -40,6 +43,41 @@ const performanceData = [
   { year: '2024 YTD', return: 6.2 },
 ];
 
+const generationalBreakdown = [
+  {
+    bucket: "Equities",
+    total: "$85.4M",
+    members: [
+      { name: "Julian (G1)", percent: 45, color: "bg-primary" },
+      { name: "Elena (G1)", percent: 35, color: "bg-primary/60" },
+      { name: "Marcus (G2)", percent: 20, color: "bg-primary/30" }
+    ]
+  },
+  {
+    bucket: "Real Estate",
+    total: "$28.5M",
+    members: [
+      { name: "Julian (G1)", percent: 70, color: "bg-primary" },
+      { name: "Elena (G1)", percent: 30, color: "bg-primary/60" }
+    ]
+  },
+  {
+    bucket: "Alternatives",
+    total: "$7.1M",
+    members: [
+      { name: "Marcus (G2)", percent: 50, color: "bg-primary/30" },
+      { name: "Sarah (G2)", percent: 50, color: "bg-accent" }
+    ]
+  },
+  {
+    bucket: "Fixed Income",
+    total: "$21.4M",
+    members: [
+      { name: "Elena (G1)", percent: 100, color: "bg-primary/60" }
+    ]
+  }
+];
+
 export default function PortfolioPage() {
   const { user } = useUser();
 
@@ -47,7 +85,7 @@ export default function PortfolioPage() {
     <div className="space-y-8 max-w-7xl mx-auto">
       <div className="flex flex-col gap-2">
         <h1 className="font-headline text-4xl font-bold tracking-tight">Portfolio Analytics</h1>
-        <p className="text-muted-foreground">Quantitative breakdown of asset allocation and historical performance.</p>
+        <p className="text-muted-foreground">Quantitative breakdown of asset allocation, performance, and generational ownership.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -104,6 +142,56 @@ export default function PortfolioPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Card className="glass-panel">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Users className="h-5 w-5 text-primary" />
+                Generational Ownership Breakdown
+              </CardTitle>
+              <CardDescription>Percentage of ownership per family member across major asset buckets.</CardDescription>
+            </div>
+            <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">
+              Aggregated Family View
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {generationalBreakdown.map((item) => (
+              <div key={item.bucket} className="space-y-4 p-4 rounded-xl bg-white/[0.02] border border-white/5">
+                <div className="flex justify-between items-center">
+                  <h4 className="font-bold text-sm">{item.bucket}</h4>
+                  <span className="text-xs font-headline font-bold text-primary">{item.total}</span>
+                </div>
+                <div className="flex h-3 w-full rounded-full overflow-hidden bg-white/5">
+                  {item.members.map((member, i) => (
+                    <div 
+                      key={i} 
+                      className={`${member.color} transition-all duration-500`} 
+                      style={{ width: `${member.percent}%` }}
+                      title={`${member.name}: ${member.percent}%`}
+                    />
+                  ))}
+                </div>
+                <div className="grid grid-cols-2 gap-y-2 gap-x-4">
+                  {item.members.map((member, i) => (
+                    <div key={i} className="flex items-center justify-between text-[10px]">
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <div className={`w-2 h-2 rounded-full ${member.color}`} />
+                        <span>{member.name}</span>
+                      </div>
+                      <span className="font-bold">{member.percent}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="glass-panel">
