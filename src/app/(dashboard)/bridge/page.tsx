@@ -1,98 +1,251 @@
 "use client";
 
-import Link from "next/link";
+import { useState, useMemo } from "react";
+import { useUser, useFirestore, useCollection } from "@/firebase";
+import { collection, doc, setDoc, query } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Compass, LayoutDashboard, PieChart, Landmark, ArrowRight, TrendingUp } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { 
+  PieChart as PieChartIcon, 
+  Landmark, 
+  Plus, 
+  Link as LinkIcon, 
+  Loader2,
+  Home,
+  Briefcase,
+  ChevronDown
+} from "lucide-react";
+import { 
+  PieChart, 
+  Pie, 
+  Cell, 
+  ResponsiveContainer, 
+  Tooltip as RechartsTooltip
+} from "recharts";
+import { useToast } from "@/hooks/use-toast";
+import Link from "next/link";
+
+const assetAllocation = [
+  { name: 'Equities', value: 60, color: 'hsl(var(--primary))' },
+  { name: 'Real Estate', value: 20, color: 'hsl(var(--secondary))' },
+  { name: 'Fixed Income', value: 15, color: 'hsl(var(--accent))' },
+  { name: 'Alternatives', value: 5, color: 'hsl(var(--muted-foreground))' },
+];
+
+const mockLinkedAccounts = [
+  { id: 1, name: "Aivaz Family Trust", institution: "Morgan Stanley", balance: "$45,200,000", status: "Active" },
+  { id: 2, name: "Offshore Reserve", institution: "UBS Zurich", balance: "$28,150,000", status: "Synced" },
+  { id: 3, name: "PE HoldCo", institution: "Goldman Sachs", balance: "$12,400,000", status: "Active" },
+];
 
 export default function BridgeHub() {
-  const sectors = [
-    {
-      title: "Command Center",
-      description: "Live oversight of family net worth, strategic alignment, and real-time risk telemetry.",
-      href: "/dashboard",
-      icon: LayoutDashboard,
-      color: "text-primary",
-      status: "Live"
-    },
-    {
-      title: "Portfolio Analytics",
-      description: "Deep quantitative analysis of asset allocation, annual returns, and sectoral weightings.",
-      href: "/portfolio",
-      icon: PieChart,
-      color: "text-secondary",
-      status: "Calculated"
-    },
-    {
-      title: "Holdings & Accounts",
-      description: "Comprehensive registry of institutional bank feeds and manual physical asset appraisals.",
-      href: "/accounts",
-      icon: Landmark,
-      color: "text-accent",
-      status: "Synced"
+  const { user } = useUser();
+  const db = useFirestore();
+  const { toast } = useToast();
+  const [isAddAssetOpen, setIsAddAssetOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [newAsset, setNewAsset] = useState({
+    name: "",
+    type: "Real Estate",
+    appraisalValue: "",
+    location: "",
+    appraisalDate: new Date().toISOString().split('T')[0],
+  });
+
+  const assetsQuery = useMemo(() => {
+    if (!user || !db) return null;
+    return query(collection(db, "users", user.uid, "assets"));
+  }, [user, db]);
+
+  const { data: manualAssets, loading: assetsLoading } = useCollection(assetsQuery);
+
+  const handleAddAsset = async () => {
+    if (!user || !db) return;
+    setIsSubmitting(true);
+    try {
+      const assetRef = doc(collection(db, "users", user.uid, "assets"));
+      await setDoc(assetRef, {
+        ...newAsset,
+        appraisalValue: parseFloat(newAsset.appraisalValue),
+        documentCount: 1,
+        createdAt: new Date().toISOString()
+      });
+      toast({ title: "Asset Registered", description: `${newAsset.name} added to the vault.` });
+      setIsAddAssetOpen(false);
+      setNewAsset({ name: "", type: "Real Estate", appraisalValue: "", location: "", appraisalDate: new Date().toISOString().split('T')[0] });
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsSubmitting(false);
     }
-  ];
+  };
 
   return (
-    <div className="space-y-12 max-w-6xl mx-auto pb-20">
+    <div className="space-y-8 max-w-7xl mx-auto pb-20">
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
-          <Badge className="bg-primary/20 text-primary border-primary/30 uppercase tracking-widest text-[9px] font-bold">Main Deck</Badge>
+          <Badge className="bg-primary/20 text-primary border-primary/30 uppercase tracking-widest text-[9px] font-bold">Operational Deck</Badge>
           <div className="h-px flex-1 bg-white/5" />
         </div>
-        <h1 className="font-headline text-5xl font-bold tracking-tight flex items-center gap-4">
-          <Compass className="h-10 w-10 text-primary" />
-          The Bridge
-        </h1>
-        <p className="text-xl text-muted-foreground italic font-headline max-w-2xl leading-relaxed">
-          The primary operational station for tracking wealth growth, allocation strategy, and multi-jurisdictional liquidity.
-        </p>
+        <h1 className="font-headline text-4xl font-bold tracking-tight">The Bridge</h1>
+        <p className="text-muted-foreground italic text-sm">Primary station for wealth growth, allocation, and multi-jurisdictional liquidity.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {sectors.map((sector) => (
-          <Link href={sector.href} key={sector.title} className="group">
-            <Card className="glass-panel border-white/5 hover:border-primary/30 transition-all duration-500 h-full flex flex-col overflow-hidden">
-              <div className="h-2 w-full bg-primary/10 group-hover:bg-primary/30 transition-colors" />
-              <CardHeader className="pb-4">
-                <div className="flex justify-between items-start mb-4">
-                  <div className={`p-3 rounded-2xl bg-white/5 border border-white/10 group-hover:border-primary/20 transition-all duration-500`}>
-                    <sector.icon className={`h-6 w-6 ${sector.color}`} />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Analytics Tile */}
+        <Card className="lg:col-span-1 glass-panel border-white/5 flex flex-col h-full">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-headline font-bold flex items-center gap-2">
+              <PieChartIcon className="h-4 w-4 text-primary" />
+              Portfolio Allocation
+            </CardTitle>
+            <CardDescription className="text-xs">Current exposure by asset class (%).</CardDescription>
+          </CardHeader>
+          <CardContent className="flex-1 flex flex-col justify-center min-h-[300px]">
+            <ResponsiveContainer width="100%" height={220}>
+              <PieChart>
+                <Pie
+                  data={assetAllocation}
+                  innerRadius={60}
+                  outerRadius={80}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {assetAllocation.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <RechartsTooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsla(var(--foreground), 0.1)', borderRadius: '12px' }} />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="grid grid-cols-2 gap-y-2 gap-x-4 mt-4 px-2">
+              {assetAllocation.map((item, i) => (
+                <div key={i} className="flex items-center justify-between text-[11px]">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: item.color }} />
+                    <span>{item.name}</span>
                   </div>
-                  <Badge variant="outline" className="text-[9px] uppercase tracking-widest opacity-50">{sector.status}</Badge>
+                  <span className="font-bold">{item.value}%</span>
                 </div>
-                <CardTitle className="text-2xl font-headline group-hover:text-primary transition-colors">{sector.title}</CardTitle>
-                <CardDescription className="text-sm leading-relaxed mt-2">{sector.description}</CardDescription>
-              </CardHeader>
-              <CardContent className="mt-auto pt-6 flex justify-end">
-                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-primary opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0">
-                  Access {sector.title.split(' ')[0]} <ArrowRight className="h-4 w-4" />
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
-      </div>
-
-      <Card className="glass-panel bg-primary/5 border-primary/20 overflow-hidden relative">
-        <div className="absolute top-0 right-0 p-12 opacity-5">
-          <TrendingUp className="h-48 w-48" />
-        </div>
-        <CardContent className="p-12 relative z-10 space-y-4">
-          <h3 className="text-2xl font-headline font-bold">Consolidated Performance</h3>
-          <p className="text-muted-foreground max-w-2xl text-lg leading-relaxed">
-            Your aggregate family net worth has increased by **2.4%** since the last institutional audit. Most growth is driven by the technology equity sector in the G1 primary portfolio.
-          </p>
-          <div className="pt-6">
-            <Link href="/dashboard">
-              <Button size="lg" className="px-8 shadow-xl">
-                Review Command Center
+              ))}
+            </div>
+            <div className="pt-6 mt-auto">
+              <Button variant="ghost" className="w-full text-[10px] uppercase font-bold tracking-widest text-primary" asChild>
+                <Link href="/portfolio">Open Full Analytics</Link>
               </Button>
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Accounts Tile */}
+        <Card className="lg:col-span-2 glass-panel border-white/5 flex flex-col h-full">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-headline font-bold flex items-center gap-2">
+                <Briefcase className="h-4 w-4 text-primary" />
+                Holdings & Accounts
+              </CardTitle>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" className="h-8 bg-white/5 border-white/10 text-[10px] font-bold uppercase tracking-widest">
+                  <LinkIcon className="mr-1.5 h-3 w-3" /> Link Account
+                </Button>
+                <Dialog open={isAddAssetOpen} onOpenChange={setIsAddAssetOpen}>
+                  <DialogTrigger asChild>
+                    <Button size="sm" className="h-8 text-[10px] font-bold uppercase tracking-widest shadow-lg">
+                      <Plus className="mr-1.5 h-3 w-3" /> Add Physical Asset
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="glass-panel border-white/10 sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>Register Manual Asset</DialogTitle>
+                      <DialogDescription>Add real estate, art, or private holdings to the vault.</DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <div className="grid gap-2">
+                        <Label>Asset Name</Label>
+                        <Input placeholder="e.g. London Office Tower" value={newAsset.name} onChange={(e) => setNewAsset({...newAsset, name: e.target.value})} />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="grid gap-2">
+                          <Label>Asset Type</Label>
+                          <Select value={newAsset.type} onValueChange={(val) => setNewAsset({...newAsset, type: val})}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Real Estate">Real Estate</SelectItem>
+                              <SelectItem value="Art">Fine Art</SelectItem>
+                              <SelectItem value="Private Equity">Private Equity</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="grid gap-2">
+                          <Label>Value ($)</Label>
+                          <Input type="number" value={newAsset.appraisalValue} onChange={(e) => setNewAsset({...newAsset, appraisalValue: e.target.value})} />
+                        </div>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button onClick={handleAddAsset} disabled={isSubmitting || !newAsset.name || !newAsset.appraisalValue}>
+                        {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Register Asset"}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
+            <CardDescription className="text-xs">Live feeds from global banking partners and manual assets.</CardDescription>
+          </CardHeader>
+          <CardContent className="p-0 flex-1 overflow-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-white/5 hover:bg-transparent">
+                  <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Account / Asset</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Status</TableHead>
+                  <TableHead className="text-right text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Value</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {mockLinkedAccounts.map((acc) => (
+                  <TableRow key={acc.id} className="border-white/5 hover:bg-white/5 transition-colors group">
+                    <TableCell className="py-4">
+                      <p className="text-sm font-medium">{acc.name}</p>
+                      <p className="text-[10px] text-muted-foreground uppercase">{acc.institution}</p>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="bg-emerald-500/5 text-emerald-500 border-emerald-500/20 text-[8px] font-bold">{acc.status}</Badge>
+                    </TableCell>
+                    <TableCell className="text-right font-headline font-bold text-primary">{acc.balance}</TableCell>
+                  </TableRow>
+                ))}
+                {manualAssets.map((asset) => (
+                  <TableRow key={asset.id} className="border-white/5 hover:bg-white/5 transition-colors">
+                    <TableCell className="py-4">
+                      <div className="flex items-center gap-2">
+                        <Home className="h-3 w-3 text-muted-foreground" />
+                        <p className="text-sm font-medium">{asset.name}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell><Badge variant="outline" className="text-[8px] font-bold uppercase">Manual</Badge></TableCell>
+                    <TableCell className="text-right font-headline font-bold text-primary">${asset.appraisalValue?.toLocaleString()}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <div className="p-4 flex justify-center border-t border-white/5">
+              <Link href="/accounts">
+                <Button variant="ghost" size="sm" className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground hover:text-primary transition-colors">
+                  View Detailed Holdings <ChevronDown className="ml-1 h-3 w-3" />
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
