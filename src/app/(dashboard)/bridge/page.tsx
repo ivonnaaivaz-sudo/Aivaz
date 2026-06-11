@@ -39,6 +39,7 @@ import {
   Tooltip as RechartsTooltip
 } from "recharts";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 import Link from "next/link";
 
 const assetAllocation = [
@@ -307,6 +308,7 @@ export default function BridgeHub() {
                       dataKey="value"
                       stroke="none"
                     >
+                      {assetAllocation}
                       {assetAllocation.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
