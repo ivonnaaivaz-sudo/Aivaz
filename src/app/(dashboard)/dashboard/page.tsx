@@ -15,12 +15,19 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { 
+  Carousel, 
+  CarouselContent, 
+  CarouselItem, 
+  CarouselNext, 
+  CarouselPrevious 
+} from "@/components/ui/carousel";
+import { 
   TrendingUp, 
   ShieldCheck, 
   ArrowUpRight, 
   Activity,
   Globe,
-  Calendar,
+  Calendar as CalendarIcon,
   HeartPulse,
   ChevronDown,
   RefreshCw,
@@ -32,9 +39,48 @@ import {
   Clock,
   Zap,
   UserPlus,
-  FileText
+  FileText,
+  Users
 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
+import { FamilyCalendar, type FamilyEvent } from "@/components/dashboard/FamilyCalendar";
+
+const MOCK_EVENTS: FamilyEvent[] = [
+  {
+    id: "1",
+    title: "Succession Charter Review",
+    date: "Nov 15",
+    eventType: "GOVERNANCE",
+    priority: "URGENT",
+    description: "Final walkthrough of the Gen-2 decision-making framework.",
+    memberAccess: ["julian", "marcus"]
+  },
+  {
+    id: "2",
+    title: "PE Distribution (Alpine Fund)",
+    date: "Dec 01",
+    eventType: "FINANCIAL",
+    priority: "NORMAL",
+    description: "Quarterly yield distribution scheduled for Aivaz Holding Co.",
+    memberAccess: ["julian", "elena"]
+  },
+  {
+    id: "3",
+    title: "Family Reunion (Aspen)",
+    date: "Dec 24",
+    eventType: "SOCIAL",
+    priority: "INFORMATIONAL",
+    description: "Annual heritage gathering and philanthropic mission update.",
+    memberAccess: ["all"]
+  }
+];
+
+const familyPhotos = [
+  { id: 1, url: "https://picsum.photos/seed/aspen1/1200/400", title: "Winter Estate 2024", hint: "luxury cabin" },
+  { id: 2, url: "https://picsum.photos/seed/yacht/1200/400", title: "Adriatic Expedition", hint: "luxury yacht" },
+  { id: 3, url: "https://picsum.photos/seed/london1/1200/400", title: "London Townhouse Gala", hint: "classic architecture" }
+];
 
 export default function DashboardPage() {
   const { user } = useUser();
@@ -43,11 +89,10 @@ export default function DashboardPage() {
   if (dnaLoading) {
     return (
       <div className="space-y-8 max-w-7xl mx-auto p-8">
-        <Skeleton className="h-10 w-64" />
+        <Skeleton className="h-[400px] w-full rounded-2xl" />
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
           {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-32" />)}
         </div>
-        <Skeleton className="h-[400px] w-full" />
       </div>
     );
   }
@@ -56,7 +101,35 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-32">
-      {/* Global Header / Top-Bar */}
+      {/* Hero Media Header */}
+      <div className="relative group">
+        <Carousel className="w-full rounded-3xl overflow-hidden border border-white/5 shadow-2xl">
+          <CarouselContent>
+            {familyPhotos.map((photo) => (
+              <CarouselItem key={photo.id}>
+                <div className="relative h-[400px] w-full">
+                  <Image 
+                    src={photo.url} 
+                    alt={photo.title} 
+                    fill 
+                    className="object-cover"
+                    data-ai-hint={photo.hint}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
+                  <div className="absolute bottom-8 left-8">
+                    <Badge className="mb-2 bg-primary/20 text-primary border-primary/30 backdrop-blur-md">Family Archive</Badge>
+                    <h2 className="text-3xl font-headline font-bold text-white drop-shadow-lg">{photo.title}</h2>
+                  </div>
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="left-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CarouselNext className="right-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+        </Carousel>
+      </div>
+
+      {/* Global Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-6">
         <div className="flex items-center gap-4">
           <DropdownMenu>
@@ -81,15 +154,16 @@ export default function DashboardPage() {
               <DropdownMenuSeparator />
               <DropdownMenuItem>Aivaz Family Trust</DropdownMenuItem>
               <DropdownMenuItem>Heritage Logistics Co.</DropdownMenuItem>
-              <DropdownMenuItem>Private Foundation</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
           <div className="h-8 w-px bg-white/10 hidden md:block" />
           <div className="hidden md:flex flex-col">
-            <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">
+            <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest flex items-center gap-1.5">
+              <div className="h-1 w-1 rounded-full bg-emerald-500 animate-pulse" />
               All 12 Entities Synced
             </span>
-            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">
+            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter flex items-center gap-1.5">
+              <Users className="h-3 w-3" />
               3 Members Online
             </span>
           </div>
@@ -104,84 +178,33 @@ export default function DashboardPage() {
           </div>
           <Badge className="bg-primary/10 text-primary border-primary/20 flex items-center gap-2 py-1.5 px-3 rounded-full">
             <Lock className="h-3 w-3" />
-            Privacy-First Mode Active
+            Privacy Mode Active
           </Badge>
         </div>
       </div>
 
-      <div className="flex flex-col gap-1">
-        <h1 className="font-headline text-4xl font-bold tracking-tight">Command Center</h1>
-        <p className="text-muted-foreground italic text-sm">Consolidated family net worth and strategic legacy alignment.</p>
-      </div>
-
-      {/* Executive Overview Row - 5 Tiles */}
+      {/* Executive Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
-        <Card className="glass-panel border-white/5">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Family Net Worth</CardTitle>
-            <TrendingUp className="h-3.5 w-3.5 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold font-headline">$142.4M</div>
-            <div className="flex items-center gap-1 text-[10px] text-emerald-500 font-bold mt-1">
-              <ArrowUpRight className="h-3 w-3" /> +2.4% vs last audit
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="glass-panel border-white/5">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Legacy Alignment</CardTitle>
-            <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold font-headline">78%</div>
-            <div className="flex items-center gap-1 text-[10px] text-amber-500 font-bold mt-1">
-              <Activity className="h-3 w-3" /> Gap detected in G2
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="glass-panel border-white/5">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Geopolitical Risk</CardTitle>
-            <Globe className="h-3.5 w-3.5 text-amber-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold font-headline text-amber-500">Moderate</div>
-            <div className="text-[10px] text-muted-foreground font-bold mt-1 uppercase tracking-widest">
-              Reviewing EU Treaties
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="glass-panel border-white/5">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Next Milestone</CardTitle>
-            <Calendar className="h-3.5 w-3.5 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-lg font-bold font-headline leading-tight">
-              Gen-2 Transition
-            </div>
-            <div className="text-[10px] text-primary font-bold mt-1 uppercase tracking-widest">
-              Target Window: 2028
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="glass-panel border-white/5">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Overall Health</CardTitle>
-            <HeartPulse className="h-3.5 w-3.5 text-emerald-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold font-headline text-emerald-500">84/100</div>
-            <div className="text-[10px] text-muted-foreground font-bold mt-1 uppercase tracking-widest">
-              Stable Stability Index
-            </div>
-          </CardContent>
-        </Card>
+        {[
+          { label: "Net Worth", value: "$142.4M", change: "+2.4%", icon: TrendingUp, color: "text-primary" },
+          { label: "Legacy Alignment", value: "78%", change: "Needs Engagement", icon: ShieldCheck, color: "text-amber-500" },
+          { label: "Geopolitical Risk", value: "Moderate", change: "Stable", icon: Globe, color: "text-emerald-500" },
+          { label: "Next Milestone", value: "Gen-2", change: "Target: 2028", icon: CalendarIcon, color: "text-primary" },
+          { label: "Overall Health", value: "84/100", change: "v4.2 Stable", icon: HeartPulse, color: "text-emerald-500" }
+        ].map((stat, i) => (
+          <Card key={i} className="glass-panel border-white/5 overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground">{stat.label}</CardTitle>
+              <stat.icon className={`h-3.5 w-3.5 ${stat.color}`} />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold font-headline">{stat.value}</div>
+              <div className={`text-[9px] font-bold mt-1 uppercase tracking-tighter ${stat.color}/80`}>
+                {stat.change}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -200,19 +223,21 @@ export default function DashboardPage() {
                 "{aiSummary}"
               </p>
               <div className="pt-4 flex gap-4">
-                <Button variant="outline" className="bg-white/5 border-white/10" asChild>
-                  <Link href="/house">Inside The House</Link>
-                </Button>
                 <Button className="shadow-xl" asChild>
                   <Link href="/insights">Review All Insights</Link>
+                </Button>
+                <Button variant="outline" className="bg-white/5 border-white/10" asChild>
+                  <Link href="/bridge">Operational Hub</Link>
                 </Button>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Principal Briefing Radio & Daily Snippets */}
+        {/* Governance Column */}
         <div className="lg:col-span-4 space-y-6">
+          <FamilyCalendar events={MOCK_EVENTS} />
+
           <Card className="glass-panel bg-primary/5 border-primary/20">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
@@ -230,9 +255,6 @@ export default function DashboardPage() {
                   <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Aivaz Synthetic Voice • 4:20</p>
                 </div>
               </div>
-              <p className="text-[10px] text-center text-muted-foreground/60 uppercase font-bold tracking-widest italic">
-                Daily briefing updated 2h ago
-              </p>
             </CardContent>
           </Card>
 
@@ -270,11 +292,6 @@ export default function DashboardPage() {
             <Button variant="outline" size="sm" className="bg-white/5 border-white/10 text-[10px] font-bold uppercase tracking-widest" asChild>
               <Link href="/simulator">
                 <BrainCircuit className="mr-2 h-3.5 w-3.5" /> Run New Simulation
-              </Link>
-            </Button>
-            <Button variant="outline" size="sm" className="bg-white/5 border-white/10 text-[10px] font-bold uppercase tracking-widest" asChild>
-              <Link href="/family">
-                <UserPlus className="mr-2 h-3.5 w-3.5" /> Invite Family
               </Link>
             </Button>
             <Button variant="outline" size="sm" className="bg-white/5 border-white/10 text-[10px] font-bold uppercase tracking-widest">

@@ -10,7 +10,8 @@ import {
   MessageSquare,
   Lock,
   Settings,
-  ShieldCheck
+  ShieldCheck,
+  LayoutDashboard
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -77,7 +78,7 @@ export function Sidebar() {
           <div className="w-14 h-14 rounded-2xl bg-primary/5 border border-primary/10 flex items-center justify-center mb-4 shadow-[0_0_30px_rgba(75,163,199,0.1)] group-hover:border-primary/30 transition-all duration-500">
             <TurtleIcon className="h-7 w-7 text-primary" />
           </div>
-          <span className="font-headline font-bold text-2xl tracking-tighter text-foreground leading-none">
+          <span className="font-headline font-bold text-2xl tracking-tighter text-foreground leading-none uppercase">
             AIVAZ
           </span>
           <span className="text-[9px] font-bold tracking-[0.4em] text-primary uppercase mt-2 opacity-60">

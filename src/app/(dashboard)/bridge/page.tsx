@@ -63,7 +63,7 @@ export default function BridgeHub() {
     return query(collection(db, "users", user.uid, "assets"));
   }, [user, db]);
 
-  const { data: manualAssets, loading: assetsLoading } = useCollection(assetsQuery);
+  const { data: manualAssets } = useCollection(assetsQuery);
 
   const handleAddAsset = async () => {
     if (!user || !db) return;
@@ -90,11 +90,11 @@ export default function BridgeHub() {
     <div className="space-y-8 max-w-7xl mx-auto pb-20">
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
-          <Badge className="bg-primary/20 text-primary border-primary/30 uppercase tracking-widest text-[9px] font-bold">Operational Deck</Badge>
+          <Badge className="bg-primary/20 text-primary border-primary/30 uppercase tracking-widest text-[9px] font-bold">Operational Hub</Badge>
           <div className="h-px flex-1 bg-white/5" />
         </div>
         <h1 className="font-headline text-4xl font-bold tracking-tight">The Bridge</h1>
-        <p className="text-muted-foreground italic text-sm">Primary station for wealth growth, allocation, and multi-jurisdictional liquidity.</p>
+        <p className="text-muted-foreground italic text-sm">Dedicated environment for portfolio performance and account management.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -103,9 +103,8 @@ export default function BridgeHub() {
           <CardHeader className="pb-2">
             <CardTitle className="text-lg font-headline font-bold flex items-center gap-2">
               <PieChartIcon className="h-4 w-4 text-primary" />
-              Portfolio Allocation
+              Allocation (%)
             </CardTitle>
-            <CardDescription className="text-xs">Current exposure by asset class (%).</CardDescription>
           </CardHeader>
           <CardContent className="flex-1 flex flex-col justify-center min-h-[300px]">
             <ResponsiveContainer width="100%" height={220}>
@@ -137,7 +136,7 @@ export default function BridgeHub() {
             </div>
             <div className="pt-6 mt-auto">
               <Button variant="ghost" className="w-full text-[10px] uppercase font-bold tracking-widest text-primary" asChild>
-                <Link href="/portfolio">Open Full Analytics</Link>
+                <Link href="/portfolio">Open Full Portfolio</Link>
               </Button>
             </div>
           </CardContent>
@@ -158,7 +157,7 @@ export default function BridgeHub() {
                 <Dialog open={isAddAssetOpen} onOpenChange={setIsAddAssetOpen}>
                   <DialogTrigger asChild>
                     <Button size="sm" className="h-8 text-[10px] font-bold uppercase tracking-widest shadow-lg">
-                      <Plus className="mr-1.5 h-3 w-3" /> Add Physical Asset
+                      <Plus className="mr-1.5 h-3 w-3" /> Add Asset
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="glass-panel border-white/10 sm:max-w-[425px]">
@@ -198,7 +197,7 @@ export default function BridgeHub() {
                 </Dialog>
               </div>
             </div>
-            <CardDescription className="text-xs">Live feeds from global banking partners and manual assets.</CardDescription>
+            <CardDescription className="text-xs">Consolidated institutional bank feeds and manual physical assets.</CardDescription>
           </CardHeader>
           <CardContent className="p-0 flex-1 overflow-auto">
             <Table>
@@ -222,7 +221,7 @@ export default function BridgeHub() {
                     <TableCell className="text-right font-headline font-bold text-primary">{acc.balance}</TableCell>
                   </TableRow>
                 ))}
-                {manualAssets.map((asset) => (
+                {manualAssets?.map((asset) => (
                   <TableRow key={asset.id} className="border-white/5 hover:bg-white/5 transition-colors">
                     <TableCell className="py-4">
                       <div className="flex items-center gap-2">
