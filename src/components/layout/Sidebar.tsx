@@ -42,8 +42,9 @@ export function Sidebar() {
     { name: "Chart Room", href: "/chart-room", icon: Map },
     { name: "Wardroom", href: "/wardroom", icon: MessageSquare },
     { name: "Strongroom", href: "/vault", icon: Lock },
-    { name: "Settings", href: "/settings", icon: Settings },
   ];
+
+  const settingsItem = { name: "Settings", href: "/settings", icon: Settings };
 
   const NavItem = ({ item }: { item: any }) => {
     const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
@@ -85,8 +86,13 @@ export function Sidebar() {
         </div>
       </Link>
 
-      <nav className="flex-1 px-6 py-4 overflow-y-auto scrollbar-hide">
-        {mainNav.map((item) => <NavItem key={item.name} item={item} />)}
+      <nav className="flex-1 px-6 py-4 overflow-y-auto scrollbar-hide flex flex-col">
+        <div className="flex-1">
+          {mainNav.map((item) => <NavItem key={item.name} item={item} />)}
+        </div>
+        <div className="mt-auto pt-4 border-t border-white/5">
+          <NavItem item={settingsItem} />
+        </div>
       </nav>
 
       <div className="p-6 border-t border-sidebar-border">
