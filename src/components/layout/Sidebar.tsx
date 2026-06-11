@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -13,6 +14,25 @@ import {
   Settings
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
+const TurtleIcon = ({ className }: { className?: string }) => (
+  <svg 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="1.5" 
+    strokeLinecap="round" 
+    strokeLinejoin="round" 
+    className={className}
+  >
+    <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
+    <path d="M12 2v20" />
+    <path d="M2 12h20" />
+    <path d="M19.07 4.93L4.93 19.07" />
+    <path d="M4.93 4.93l14.14 14.14" />
+    <path d="M12 7l5 5-5 5-5-5 5-5z" />
+  </svg>
+);
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -57,7 +77,7 @@ export function Sidebar() {
       <div className="p-10 flex flex-col items-center">
         <div className="flex flex-col items-center text-center cursor-default group">
           <div className="w-14 h-14 rounded-2xl bg-primary/5 border border-primary/10 flex items-center justify-center mb-4 shadow-[0_0_30px_rgba(75,163,199,0.1)] group-hover:border-primary/30 transition-all duration-500">
-            <Compass className="h-7 w-7 text-primary animate-pulse" />
+            <TurtleIcon className="h-7 w-7 text-primary" />
           </div>
           <span className="font-headline font-bold text-2xl tracking-tighter text-foreground leading-none">
             AIVAZ
