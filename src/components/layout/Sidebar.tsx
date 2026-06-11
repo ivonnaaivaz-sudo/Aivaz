@@ -6,38 +6,37 @@ import { cn } from "@/lib/utils";
 import { 
   LayoutDashboard,
   PieChart,
-  Landmark,
   Sparkles,
   Cpu,
   Target,
-  History,
-  ShieldCheck,
+  Fingerprint,
   MessageSquare,
   Users,
+  History,
+  Shield,
   Settings,
-  Fingerprint,
-  User,
-  Shield
+  User
 } from "lucide-react";
 
 const mainNavigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Portfolio", href: "/portfolio", icon: PieChart },
-  { name: "Accounts", href: "/accounts", icon: Landmark },
   { name: "Insights", href: "/insights", icon: Sparkles },
 ];
 
 const legacyNavigation = [
   { name: "Simulator", href: "/simulator", icon: Cpu },
   { name: "Strategy", href: "/strategy", icon: Target },
-  { name: "Heritage Timeline", href: "/heritage-timeline", icon: History },
-  { name: "Legacy Command", href: "/legacy-command", icon: ShieldCheck },
   { name: "Family DNA", href: "/dna", icon: Fingerprint },
 ];
 
-const toolNavigation = [
+const collaborationNavigation = [
   { name: "Messenger", href: "/messenger", icon: MessageSquare },
   { name: "Family", href: "/family", icon: Users },
+];
+
+const toolNavigation = [
+  { name: "Heritage Timeline", href: "/heritage-timeline", icon: History },
   { name: "Digital Vault", href: "/vault", icon: Shield },
 ];
 
@@ -83,21 +82,28 @@ export function Sidebar() {
 
       <div className="flex-1 px-4 py-4 overflow-y-auto space-y-6">
         <div>
-          <p className="px-4 text-[10px] font-bold text-muted-foreground/50 uppercase tracking-[0.2em] mb-2">Main Sections</p>
+          <p className="px-4 text-[10px] font-bold text-muted-foreground/50 uppercase tracking-[0.2em] mb-2">Main</p>
           <nav className="space-y-1">
             {mainNavigation.map((item) => <NavItem key={item.name} item={item} />)}
           </nav>
         </div>
 
         <div>
-          <p className="px-4 text-[10px] font-bold text-muted-foreground/50 uppercase tracking-[0.2em] mb-2">Legacy & Family</p>
+          <p className="px-4 text-[10px] font-bold text-muted-foreground/50 uppercase tracking-[0.2em] mb-2">Legacy & Planning</p>
           <nav className="space-y-1">
             {legacyNavigation.map((item) => <NavItem key={item.name} item={item} />)}
           </nav>
         </div>
 
         <div>
-          <p className="px-4 text-[10px] font-bold text-muted-foreground/50 uppercase tracking-[0.2em] mb-2">Collaboration & Tools</p>
+          <p className="px-4 text-[10px] font-bold text-muted-foreground/50 uppercase tracking-[0.2em] mb-2">Family & Collaboration</p>
+          <nav className="space-y-1">
+            {collaborationNavigation.map((item) => <NavItem key={item.name} item={item} />)}
+          </nav>
+        </div>
+
+        <div>
+          <p className="px-4 text-[10px] font-bold text-muted-foreground/50 uppercase tracking-[0.2em] mb-2">Tools</p>
           <nav className="space-y-1">
             {toolNavigation.map((item) => <NavItem key={item.name} item={item} />)}
           </nav>
