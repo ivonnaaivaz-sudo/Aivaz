@@ -1,13 +1,15 @@
+
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useUser, useFirestore, useDoc, useCollection } from "@/firebase";
-import { collection, doc, setDoc, query, orderBy, limit } from "firebase/firestore";
+import { collection, doc, setDoc, query, orderBy, limit, addDoc } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Shield, 
   User, 
@@ -20,8 +22,22 @@ import {
   MessageSquare,
   Search,
   ExternalLink,
-  Users2
+  Users2,
+  Gavel,
+  Zap,
+  Lock,
+  Video,
+  Phone,
+  Check,
+  X,
+  ChevronRight,
+  ShieldCheck,
+  History
 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+
+type TrackMode = 'governance' | 'direct';
 
 const STRATEGY_METRICS = [
   { label: "Consolidated Alignment", value: "78%", status: "Stable" },
@@ -29,37 +45,24 @@ const STRATEGY_METRICS = [
   { label: "G2 Engagement", value: "Low", status: "Focus" }
 ];
 
-const MOCK_MESSAGES = [
+const MOCK_STRATEGY_DECISIONS = [
   {
-    id: "m1",
-    senderId: "advisor-1",
-    senderName: "Robert Chen (Advisor)",
-    text: "Julian, we need to finalize the side-letter for the Alpine PE fund by Friday. Marcus has raised a few points regarding G3 inclusion.",
-    type: "text",
-    timestamp: "2024-11-06T08:00:00.000Z",
-  },
-  {
-    id: "m2",
-    senderId: "julian-1",
-    senderName: "Julian Aivaz",
-    text: "I've seen Marcus's notes. I agree with adding a provision for the educational trust, but we need to ensure it doesn't trigger a tax event in Singapore.",
-    type: "text",
-    timestamp: "2024-11-06T09:00:00.000Z",
-  },
-  {
-    id: "m3",
-    senderId: "aivaz-ai",
-    senderName: "Aivaz AI",
-    text: "Strategic Insight: Shifting 5% of tech holdings into the G2 trust would satisfy the tax threshold while securing the liquidity bridge.",
-    type: "recommendation",
-    timestamp: "2024-11-06T10:00:00.000Z",
+    id: "dec-1",
+    type: "PROPOSAL",
+    context: "Upcoming Q4 Payout: $5.2M (Aivaz Logistics)",
+    proposal: "Invest $3M into Fixed Income to hedge current Tech Equity over-concentration and improve alignment to 82%.",
+    delegation: "Execute via @Marcus (Successor Portfolio)",
+    status: "VOTING",
+    votes: { yes: 2, no: 0 }
   }
 ];
 
 export default function WardroomPage() {
   const { user } = useUser();
   const db = useFirestore();
+  const { toast } = useToast();
   const [inputText, setInputText] = useState("");
+  const [trackMode, setTrackMode] = useState<TrackMode>('governance');
   const [mounted, setMounted] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -69,15 +72,19 @@ export default function WardroomPage() {
 
   const messagesQuery = useMemo(() => {
     if (!user || !db) return null;
-    return query(collection(db, "users", user.uid, "messages"), orderBy("timestamp", "asc"), limit(50));
+    return query(
+      collection(db, "users", user.uid, "messages"), 
+      orderBy("timestamp", "asc"), 
+      limit(100)
+    );
   }, [user, db]);
 
   const { data: realMessages } = useCollection(messagesQuery);
   const { data: dna } = useDoc(user ? `users/${user.uid}/dna/current` : null);
 
   const messages = useMemo(() => {
-    if (!realMessages || realMessages.length === 0) return MOCK_MESSAGES;
-    return [...MOCK_MESSAGES, ...realMessages];
+    // Filter messages based on track if needed, but for now we'll just tag them
+    return realMessages;
   }, [realMessages]);
 
   useEffect(() => {
@@ -87,23 +94,31 @@ export default function WardroomPage() {
         viewport.scrollTop = viewport.scrollHeight;
       }
     }
-  }, [messages, mounted]);
+  }, [messages, trackMode, mounted]);
 
   const handleSendMessage = async () => {
     if (!inputText.trim() || !user || !db) return;
     try {
-      const msgRef = doc(collection(db, "users", user.uid, "messages"));
-      await setDoc(msgRef, {
+      const msgRef = collection(db, "users", user.uid, "messages");
+      await addDoc(msgRef, {
         senderId: user.uid,
         senderName: user.displayName || "Julian Aivaz",
         text: inputText,
         type: "text",
+        track: trackMode,
         timestamp: new Date().toISOString()
       });
       setInputText("");
     } catch (e) {
       console.error(e);
     }
+  };
+
+  const executeProposal = (id: string) => {
+    toast({
+      title: "Proposal Executed",
+      description: "Transfer initiated to Strongroom for final biometric authorization.",
+    });
   };
 
   const formatTime = (timestamp: string) => {
@@ -116,7 +131,7 @@ export default function WardroomPage() {
   };
 
   return (
-    <div className="h-[calc(100vh-100px)] flex gap-6 max-w-7xl mx-auto">
+    <div className="h-[calc(100vh-100px)] flex gap-6 max-w-[1800px] mx-auto">
       {/* Strategy Sidebar (Bloomberg Style) */}
       <div className="w-80 flex flex-col gap-6 shrink-0">
         <Card className="glass-panel border-white/5 bg-primary/5">
@@ -139,7 +154,7 @@ export default function WardroomPage() {
         <Card className="glass-panel border-white/5 flex-1 overflow-hidden">
           <CardHeader className="border-b border-white/5">
             <div className="flex items-center justify-between mb-4">
-              <CardTitle className="text-xs font-bold uppercase tracking-widest">Stakeholders</CardTitle>
+              <CardTitle className="text-xs font-bold uppercase tracking-widest text-glow">Stakeholders</CardTitle>
               <Users2 className="h-3 w-3 text-muted-foreground" />
             </div>
             <div className="relative">
@@ -176,47 +191,129 @@ export default function WardroomPage() {
       </div>
 
       {/* Main Terminal Chat */}
-      <Card className="flex-1 glass-panel flex flex-col border-white/5 overflow-hidden shadow-3xl">
+      <Card className={cn(
+        "flex-1 glass-panel flex flex-col border-white/5 overflow-hidden shadow-3xl transition-all duration-700",
+        trackMode === 'governance' ? "ring-2 ring-primary/20 shadow-[0_0_50px_rgba(75,163,199,0.1)]" : ""
+      )}>
         <CardHeader className="border-b border-white/5 py-4 flex flex-row items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
-              <MessageSquare className="h-4 w-4 text-primary" />
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
+                <MessageSquare className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-bold">Strategy Wardroom</p>
+                <span className="text-[9px] text-emerald-500 font-bold uppercase tracking-widest">Decision Terminal Active</span>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-bold">Strategy Wardroom</p>
-              <span className="text-[9px] text-emerald-500 font-bold uppercase tracking-widest">Secure Multi-Gen Terminal</span>
-            </div>
+
+            <Tabs value={trackMode} onValueChange={(v) => setTrackMode(v as TrackMode)} className="bg-white/5 p-1 rounded-xl">
+              <TabsList className="bg-transparent border-none">
+                <TabsTrigger value="governance" className="text-[9px] font-bold uppercase tracking-widest data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
+                  <Gavel className="mr-2 h-3 w-3" /> Governance Track
+                </TabsTrigger>
+                <TabsTrigger value="direct" className="text-[9px] font-bold uppercase tracking-widest data-[state=active]:bg-white/10 data-[state=active]:text-foreground">
+                  <ShieldCheck className="mr-2 h-3 w-3" /> Direct Track
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
-          <Badge variant="outline" className="bg-white/5 text-[9px] font-mono">ENCRYPTION: AES-256-GCM</Badge>
+
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="h-8 bg-white/5 border-white/10 text-[9px] font-bold uppercase tracking-widest">
+              <Video className="mr-2 h-3.5 w-3.5" /> Group Call
+            </Button>
+            <Button variant="outline" size="sm" className="h-8 bg-white/5 border-white/10 text-[9px] font-bold uppercase tracking-widest">
+              <Phone className="mr-2 h-3.5 w-3.5" /> Advisor Line
+            </Button>
+            <Badge variant="outline" className="bg-white/5 text-[9px] font-mono border-white/10">AES-256-GCM</Badge>
+          </div>
         </CardHeader>
 
-        <ScrollArea className="flex-1 p-6" ref={scrollRef}>
-          <div className="space-y-8">
-            <div className="flex flex-col items-center justify-center space-y-2 opacity-30 pb-4">
-              <Shield className="h-6 w-6 text-primary" />
-              <p className="text-[10px] uppercase font-bold tracking-tighter">Strategic session integrity verified</p>
-            </div>
+        <ScrollArea className="flex-1 p-8" ref={scrollRef}>
+          <div className="space-y-12">
+            {trackMode === 'governance' && (
+              <div className="flex flex-col items-center justify-center space-y-3 opacity-40 pb-4 border-b border-dashed border-white/5">
+                <ShieldCheck className="h-6 w-6 text-primary" />
+                <div className="text-center">
+                  <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-primary">Captain AI Active</p>
+                  <p className="text-[8px] uppercase font-bold tracking-widest text-muted-foreground">Monitoring Strategic Triggers & Voting Consensus</p>
+                </div>
+              </div>
+            )}
+
+            {/* Mock Governance Decisions if in Governance Track */}
+            {trackMode === 'governance' && MOCK_STRATEGY_DECISIONS.map((dec) => (
+              <Card key={dec.id} className="bg-primary/5 border-primary/20 max-w-2xl mx-auto shadow-[0_0_30px_rgba(75,163,199,0.1)] group relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-4 opacity-10">
+                  <Gavel className="h-12 w-12 text-primary" />
+                </div>
+                <CardHeader className="pb-2">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Sparkles className="h-3.5 w-3.5 text-primary animate-pulse" />
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-primary">Captain Strategy Proposal</span>
+                  </div>
+                  <CardTitle className="text-base font-headline font-bold">{dec.context}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <p className="text-sm leading-relaxed text-foreground/90 italic border-l-2 border-primary/30 pl-4 py-1">
+                    "{dec.proposal}"
+                  </p>
+                  <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-muted-foreground bg-black/20 p-3 rounded-lg">
+                    <span>Target Execution: {dec.delegation}</span>
+                    <span className="text-primary flex items-center gap-2">
+                      <Users2 className="h-3 w-3" />
+                      Voting: {dec.votes.yes} Yes / {dec.votes.no} No
+                    </span>
+                  </div>
+                </CardContent>
+                <div className="p-4 border-t border-white/5 flex gap-3 bg-primary/5">
+                  <Button size="sm" className="flex-1 h-9 text-[10px] font-bold uppercase tracking-widest shadow-lg" onClick={() => executeProposal(dec.id)}>
+                    <Check className="mr-2 h-3 w-3" /> Execute Proposal
+                  </Button>
+                  <Button size="sm" variant="secondary" className="flex-1 h-9 text-[10px] font-bold uppercase tracking-widest bg-white/5">
+                    <History className="mr-2 h-3 w-3" /> Modify Strategy
+                  </Button>
+                  <Button size="icon" variant="outline" className="h-9 w-9 bg-white/5 border-white/10" onClick={() => toast({ title: "Opening Wardroom Thread", description: "Tagging @Robert Chen and family stakeholders." })}>
+                    <MessageSquare className="h-4 w-4" />
+                  </Button>
+                </div>
+              </Card>
+            ))}
             
             {messages.map((msg) => {
               const isCurrentUser = msg.senderId === user?.uid || msg.senderName === "Julian Aivaz";
-              const isAI = msg.senderName.includes('AI');
+              const isAI = msg.senderName === "Captain" || msg.senderName.includes('AI');
+              
+              // Privacy rule: Direct track messages only show in direct track
+              if (trackMode === 'direct' && msg.track === 'governance') return null;
+              if (trackMode === 'governance' && msg.track === 'direct') return null;
+
               return (
-                <div key={msg.id} className={`flex gap-4 max-w-[85%] ${isCurrentUser ? 'ml-auto flex-row-reverse' : ''}`}>
-                  <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center border ${
+                <div key={msg.id} className={cn(
+                  "flex gap-4 max-w-[85%] group animate-in fade-in slide-in-from-bottom-2",
+                  isCurrentUser ? 'ml-auto flex-row-reverse' : ''
+                )}>
+                  <div className={cn(
+                    "w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center border transition-transform duration-300 group-hover:scale-110",
                     isAI ? 'bg-primary/20 border-primary/40' : 
                     isCurrentUser ? 'bg-primary/20 border-primary/20' : 'bg-muted border-white/10'
-                  }`}>
+                  )}>
                     {isAI ? <Sparkles className="h-4 w-4 text-primary" /> : <User className={`h-4 w-4 ${isCurrentUser ? 'text-primary' : 'text-muted-foreground'}`} />}
                   </div>
-                  <div className={`space-y-1 flex flex-col ${isCurrentUser ? 'items-end' : 'items-start'}`}>
+                  <div className={cn(
+                    "space-y-1 flex flex-col",
+                    isCurrentUser ? 'items-end' : 'items-start'
+                  )}>
                     <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground px-1">
-                      {msg.senderName} • {formatTime(msg.timestamp)}
+                      {isAI ? "Captain" : msg.senderName} • {formatTime(msg.timestamp)}
                     </span>
-                    <div className={`p-4 rounded-2xl text-sm leading-relaxed border ${
+                    <div className={cn(
+                      "p-4 rounded-2xl text-sm leading-relaxed border transition-all",
                       isAI ? 'bg-primary/5 border-primary/30 italic text-primary/90 rounded-tl-none' :
-                      isCurrentUser ? 'bg-primary/10 border-primary/20 text-foreground rounded-tr-none' : 
+                      isCurrentUser ? 'bg-primary/10 border-primary/20 text-foreground rounded-tr-none shadow-[0_4px_20px_rgba(75,163,199,0.05)]' : 
                       'bg-white/5 border-white/5 rounded-tl-none'
-                    }`}>
+                    )}>
                       {msg.text}
                     </div>
                   </div>
@@ -226,21 +323,29 @@ export default function WardroomPage() {
           </div>
         </ScrollArea>
 
-        <div className="p-4 border-t border-white/5 bg-background/30">
-          <div className="flex items-center gap-2 bg-background/50 border border-white/5 rounded-2xl px-4 py-2">
+        <div className="p-6 border-t border-white/5 bg-background/40">
+          <div className="flex items-center gap-3 bg-background/50 border border-white/5 rounded-2xl px-5 py-3 shadow-xl focus-within:border-primary/50 transition-colors">
             <Input 
-              placeholder="Type strategy message or command..." 
-              className="border-none bg-transparent shadow-none focus-visible:ring-0 text-sm" 
+              placeholder={trackMode === 'governance' ? "Propose a strategic move or vote..." : "Secure message to family..."} 
+              className="border-none bg-transparent shadow-none focus-visible:ring-0 text-sm placeholder:opacity-40" 
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
             />
-            <Button size="icon" className="rounded-full h-8 w-8" onClick={handleSendMessage} disabled={!inputText.trim()}>
+            <Button size="icon" className="rounded-full h-9 w-9 shadow-lg" onClick={handleSendMessage} disabled={!inputText.trim()}>
               <Send className="h-4 w-4" />
             </Button>
+          </div>
+          <div className="mt-3 flex items-center justify-center gap-3">
+             <div className="h-px flex-1 bg-white/5" />
+             <p className="text-[9px] text-muted-foreground/40 font-bold uppercase tracking-[0.3em]">
+               {trackMode === 'governance' ? "Strategic Audit Log Active" : "Private Encryption Path Established"}
+             </p>
+             <div className="h-px flex-1 bg-white/5" />
           </div>
         </div>
       </Card>
     </div>
   );
 }
+
