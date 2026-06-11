@@ -8,10 +8,11 @@ import { useUser, useDoc } from "@/firebase";
 import { 
   Compass,
   Map,
-  Anchor,
-  Radio,
+  MessageSquare,
+  Fingerprint,
   Lock,
-  Settings
+  Settings,
+  Anchor
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -37,13 +38,12 @@ const TurtleIcon = ({ className }: { className?: string }) => (
 export function Sidebar() {
   const pathname = usePathname();
   const { user } = useUser();
-  const { data: dna } = useDoc(user ? `users/${user.uid}/dna/current` : null);
 
   const mainNav = [
     { name: "Bridge", href: "/dashboard", icon: Compass },
     { name: "Chart Room", href: "/chart-room", icon: Map },
-    { name: "Wardroom", href: "/wardroom", icon: Anchor },
-    { name: "Signal Deck", href: "/messenger", icon: Radio },
+    { name: "Wardroom", href: "/wardroom", icon: MessageSquare },
+    { name: "House", href: "/house", icon: Fingerprint },
     { name: "Strongroom", href: "/vault", icon: Lock },
     { name: "Settings", href: "/settings", icon: Settings },
   ];

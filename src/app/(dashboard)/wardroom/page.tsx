@@ -1,360 +1,210 @@
 
 "use client";
 
-import { useUser, useDoc, useFirestore } from "@/firebase";
-import { useState, useMemo } from "react";
-import { doc, updateDoc } from "firebase/firestore";
+import { useState, useMemo, useEffect, useRef } from "react";
+import { useUser, useFirestore, useDoc, useCollection } from "@/firebase";
+import { collection, doc, setDoc, query, orderBy, limit } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 import { 
-  Fingerprint, 
-  Users, 
-  UserPlus, 
-  ShieldCheck, 
-  Anchor, 
-  History, 
-  Zap, 
-  Heart, 
-  ShieldAlert, 
-  BookOpen, 
-  Compass, 
-  Plus, 
-  MoreVertical,
-  Mail,
-  Shield,
-  Info
+  Shield, 
+  User, 
+  Send, 
+  Sparkles, 
+  TrendingUp, 
+  AlertCircle, 
+  ArrowRight,
+  BrainCircuit,
+  MessageSquare
 } from "lucide-react";
 
-const MOCK_DNA = {
-  personalProfile: {
-    roleInFamily: "Principal Founder",
-    generationalStage: "1st Generation",
-    primaryLocation: "Palm Beach, Florida",
-    otherLocations: ["Singapore", "Zurich", "London"],
-    psychologicalProfile: {
-      biggestHeadache: "Hesitation to pass decision-making control to an unaligned successor group.",
-      currentPriorities: ["Consolidation of offshore assets", "Succession readiness training", "Philanthropic legacy definition"],
-      emotionalFrictionPoints: ["Tension between Gen 1 speed and Gen 2 governance preference", "Concerns regarding wealth dilution over 50 years"],
-      advisorBlindSpots: ["Traditional banks focus on tax but ignore the emotional sibling dynamics between Julian and Marcus."]
-    },
-    financialSnapshot: {
-      estimatedNetWorth: "$142M",
-      primaryAssetClasses: ["Tech Equity", "European Real Estate", "Private Foundations"]
-    },
-    aiSummary: "Julian is a high-conviction principal focused on long-term preservation. His legacy is currently at a critical pivot point between builder-led growth and institutionalized family governance."
-  },
-  familyProfile: {
-    familyName: "Aivaz Heritage",
-    currentGenerationalStage: "1st Generation Transition",
-    geographicFootprint: ["United States", "Singapore", "Switzerland", "UK"],
-    wealthSource: "Semiconductor Infrastructure & Global Logistics",
-    estimatedTotalNetWorth: "$850M (Aggregated Family Group)",
-    history: {
-      summary: "Founded in the late 1980s as a specialized logistics firm, the Aivaz wealth was significantly expanded through early strategic investments in semiconductor supply chains. The family has since transitioned into a multi-jurisdictional investment office with a focus on deep tech and heritage assets.",
-      keyHoldings: ["Aivaz Logistics Global", "Alpine Strategic Real Estate", "Heritage Tech Fund"],
-      notableTransitions: ["1998 Global Expansion", "2015 Liquidity Event", "2021 Dynasty Trust Formation"]
-    },
-    identifiedMembers: [
-      { id: "1", name: "Julian Aivaz", relationship: "Self", generationalStage: "G1", role: "Founder", avatar: "https://picsum.photos/seed/julian/100/100" },
-      { id: "2", name: "Elena Aivaz", relationship: "Spouse", generationalStage: "G1", role: "Foundation Chair", avatar: "https://picsum.photos/seed/elena/100/100" },
-      { id: "3", name: "Marcus Aivaz", relationship: "Child", generationalStage: "G2", role: "Successor", avatar: "https://picsum.photos/seed/marcus/100/100" },
-      { id: "4", name: "Sarah Aivaz", relationship: "Child", generationalStage: "G2", role: "Investment Principal", avatar: "https://picsum.photos/seed/sarah/100/100" }
-    ],
-    socialCapital: {
-      reputationIndicators: ["Known for discretion", "Educational Philanthropy Leaders", "Global Mobility Pioneers"],
-      keyNetworks: ["World Heritage Forum", "Principals Circle", "Oxford Heritage Society"],
-      mobilityProfile: "Tier 1 (Global Passport Access + Private Air Infrastructure)"
-    },
-    relationalDynamics: {
-      keyFrictionPoints: ["Succession transparency", "Investment risk tolerance variance between G1 and G2"],
-      alignmentLevel: "Medium",
-      successionReadinessScore: 68
-    },
-    familyLegacyNarrative: "The Aivaz family represents a classic builder legacy currently navigating its most significant hurdle: the transition from an individual-led empire to a values-based family institution. Their 'DNA' is defined by high intellectual capital and a globalist perspective."
-  }
-};
+// Mock data for the strategy sidebar
+const STRATEGY_METRICS = [
+  { label: "Consolidated Alignment", value: "78%", status: "Stable" },
+  { label: "Succession Window", value: "Q4 2028", status: "Target" },
+  { label: "G2 Engagement", value: "Low", status: "Focus" }
+];
 
-const advisors = [
-  { name: "Robert Chen", role: "Trustee / Lead Advisor", firm: "Global Wealth Partners", status: "Active", avatar: "https://picsum.photos/seed/robert/100/100" },
-  { name: "Sarah Jenkins", role: "Tax Strategist", firm: "Swiss Private Bank", status: "Consulting", avatar: "https://picsum.photos/seed/jenkins/100/100" },
-  { name: "Michael Vance", role: "Estate Lawyer", firm: "Vance & Co.", status: "Active", avatar: "https://picsum.photos/seed/vance/100/100" },
+const MOCK_MESSAGES = [
+  {
+    id: "m1",
+    senderId: "advisor-1",
+    senderName: "Robert Chen (Advisor)",
+    text: "Julian, we need to finalize the side-letter for the Alpine PE fund by Friday. Marcus has raised a few points regarding G3 inclusion.",
+    type: "text",
+    timestamp: "2024-11-06T08:00:00.000Z",
+  },
+  {
+    id: "m2",
+    senderId: "julian-1",
+    senderName: "Julian Aivaz",
+    text: "I've seen Marcus's notes. I agree with adding a provision for the educational trust, but we need to ensure it doesn't trigger a tax event in Singapore.",
+    type: "text",
+    timestamp: "2024-11-06T09:00:00.000Z",
+  },
+  {
+    id: "m3",
+    senderId: "aivaz-ai",
+    senderName: "Aivaz AI",
+    text: "Strategic Insight: Shifting 5% of tech holdings into the G2 trust would satisfy the tax threshold while securing the liquidity bridge.",
+    type: "recommendation",
+    timestamp: "2024-11-06T10:00:00.000Z",
+  }
 ];
 
 export default function WardroomPage() {
   const { user } = useUser();
   const db = useFirestore();
-  const { data: realDna, loading } = useDoc(user ? `users/${user.uid}/dna/current` : null);
-  const [activeTab, setActiveTab] = useState("dna");
+  const [inputText, setInputText] = useState("");
+  const [mounted, setMounted] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  const dna = realDna || MOCK_DNA;
-  const isDemo = !realDna;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-  if (loading) {
-    return (
-      <div className="space-y-8 max-w-7xl mx-auto p-8">
-        <Skeleton className="h-10 w-64" />
-        <Skeleton className="h-[600px] w-full" />
-      </div>
-    );
-  }
+  const messagesQuery = useMemo(() => {
+    if (!user || !db) return null;
+    return query(collection(db, "users", user.uid, "messages"), orderBy("timestamp", "asc"), limit(50));
+  }, [user, db]);
 
-  const g1Members = dna.familyProfile.identifiedMembers.filter((m: any) => m.generationalStage === "G1");
-  const g2Members = dna.familyProfile.identifiedMembers.filter((m: any) => m.generationalStage === "G2");
+  const { data: realMessages } = useCollection(messagesQuery);
+  const { data: dna } = useDoc(user ? `users/${user.uid}/dna/current` : null);
+
+  const messages = useMemo(() => {
+    if (!realMessages || realMessages.length === 0) return MOCK_MESSAGES;
+    return [...MOCK_MESSAGES, ...realMessages];
+  }, [realMessages]);
+
+  const handleSendMessage = async () => {
+    if (!inputText.trim() || !user || !db) return;
+    try {
+      const msgRef = doc(collection(db, "users", user.uid, "messages"));
+      await setDoc(msgRef, {
+        senderId: user.uid,
+        senderName: user.displayName || "Julian Aivaz",
+        text: inputText,
+        type: "text",
+        timestamp: new Date().toISOString()
+      });
+      setInputText("");
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   return (
-    <div className="space-y-12 max-w-7xl mx-auto pb-32">
-      {/* Maritime Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/10 pb-8">
-        <div className="space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
-              <Anchor className="h-5 w-5 text-primary" />
-            </div>
-            <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 tracking-[0.2em] font-bold uppercase text-[9px] px-3">
-              Family Wardroom
-            </Badge>
-          </div>
-          <h1 className="font-headline text-5xl font-bold tracking-tighter">
-            {dna.familyProfile.familyName} Command
-          </h1>
-          <p className="text-xl text-muted-foreground italic font-headline max-w-2xl leading-relaxed">
-            The collaborative hub for human architecture, trust alignment, and multi-generational values.
-          </p>
-        </div>
-        <div className="flex gap-3">
-          <Button variant="outline" className="bg-white/5 border-white/10 text-xs font-bold uppercase tracking-widest">
-            <ShieldCheck className="mr-2 h-4 w-4" /> Governance Audit
-          </Button>
-          <Button className="shadow-[0_0_20px_rgba(75,163,199,0.3)] text-xs font-bold uppercase tracking-widest">
-            <UserPlus className="mr-2 h-4 w-4" /> Invite Stakeholder
-          </Button>
-        </div>
-      </div>
-
-      {/* Section 1: The Chain of Command (Family Tree) */}
-      <section className="space-y-8">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Users className="h-5 w-5 text-primary" />
-            <h2 className="text-2xl font-headline font-bold">The Chain of Command</h2>
-          </div>
-          <Badge variant="secondary" className="bg-white/5 text-[10px] uppercase font-bold tracking-tighter">
-            Generational Hierarchy View
-          </Badge>
-        </div>
-
-        <Card className="glass-panel border-white/5 bg-white/[0.01] overflow-hidden">
-          <CardContent className="p-12">
-            <div className="flex flex-col items-center space-y-16">
-              {/* Generation 1 */}
-              <div className="flex flex-col items-center space-y-6">
-                <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-muted-foreground/50">G1: Foundational Generation</span>
-                <div className="flex flex-wrap justify-center gap-8">
-                  {g1Members.map((member: any) => (
-                    <div key={member.id} className="flex flex-col items-center gap-4 group">
-                      <div className="relative">
-                        <Avatar className="h-24 w-24 border-2 border-primary/20 group-hover:border-primary transition-all duration-500 shadow-2xl">
-                          <AvatarImage src={member.avatar} />
-                          <AvatarFallback>{member.name[0]}</AvatarFallback>
-                        </Avatar>
-                        <div className="absolute -bottom-2 -right-2 bg-background border border-white/10 rounded-full p-1.5 shadow-lg">
-                          <ShieldCheck className="h-4 w-4 text-primary" />
-                        </div>
-                      </div>
-                      <div className="text-center">
-                        <p className="font-bold text-sm">{member.name}</p>
-                        <p className="text-[10px] text-primary uppercase font-bold tracking-widest">{member.role}</p>
-                      </div>
-                    </div>
-                  ))}
+    <div className="h-[calc(100vh-100px)] flex gap-6 max-w-7xl mx-auto">
+      {/* Strategy Feed (Bloomberg Side) */}
+      <div className="w-80 flex flex-col gap-6 shrink-0">
+        <Card className="glass-panel border-white/5 bg-primary/5">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Strategic Pulse</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {STRATEGY_METRICS.map((metric) => (
+              <div key={metric.label} className="flex justify-between items-end border-b border-white/5 pb-2">
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase font-bold">{metric.label}</p>
+                  <p className="text-lg font-headline font-bold">{metric.value}</p>
                 </div>
+                <Badge variant="outline" className="text-[8px] bg-white/5">{metric.status}</Badge>
               </div>
-
-              {/* Connecting Line */}
-              <div className="w-px h-16 bg-gradient-to-b from-primary/40 to-transparent" />
-
-              {/* Generation 2 */}
-              <div className="flex flex-col items-center space-y-6">
-                <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-muted-foreground/50">G2: Successor Generation</span>
-                <div className="flex flex-wrap justify-center gap-8">
-                  {g2Members.map((member: any) => (
-                    <div key={member.id} className="flex flex-col items-center gap-4 group">
-                      <Avatar className="h-20 w-20 border border-white/10 group-hover:border-primary/50 transition-all duration-500 shadow-xl">
-                        <AvatarImage src={member.avatar} />
-                        <AvatarFallback>{member.name[0]}</AvatarFallback>
-                      </Avatar>
-                      <div className="text-center">
-                        <p className="font-bold text-sm">{member.name}</p>
-                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">{member.role}</p>
-                      </div>
-                    </div>
-                  ))}
-                  {/* Add Member Placeholder */}
-                  <div className="flex flex-col items-center gap-4 cursor-pointer group">
-                    <div className="h-20 w-20 rounded-full border border-dashed border-white/20 flex items-center justify-center group-hover:border-primary/50 group-hover:bg-primary/5 transition-all">
-                      <Plus className="h-8 w-8 text-muted-foreground/50 group-hover:text-primary transition-colors" />
-                    </div>
-                    <div className="text-center">
-                      <p className="font-bold text-sm text-muted-foreground group-hover:text-primary transition-colors">Add Heir</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            ))}
           </CardContent>
         </Card>
-      </section>
 
-      {/* Main Grid: Advisors (Side) | DNA Content (Main) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-        
-        {/* DNA Content (Main) */}
-        <div className="lg:col-span-8 space-y-16">
-          {isDemo && (
-            <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/10 flex items-center gap-3 text-amber-500/80 text-sm">
-              <Info className="h-4 w-4" />
-              <span>Showing sample Family DNA. Run the Discovery Matrix to generate your unique heritage profile.</span>
-            </div>
-          )}
-
-          {/* Section: Synthesis */}
-          <section className="space-y-6">
-            <h2 className="text-2xl font-headline font-bold flex items-center gap-3 border-b border-white/5 pb-2">
-              <Zap className="h-5 w-5 text-primary" />
-              1. Hull Integrity: Personal Synthesis
-            </h2>
-            <div className="p-8 rounded-2xl bg-primary/5 border border-primary/10 relative overflow-hidden group">
-              <p className="text-xl leading-relaxed text-foreground/90 italic font-headline relative z-10">
-                "{dna.personalProfile.aiSummary}"
-              </p>
-            </div>
-          </section>
-
-          {/* Section: Psychological Architecture */}
-          <section className="space-y-8">
-            <h2 className="text-2xl font-headline font-bold flex items-center gap-3 border-b border-white/5 pb-2">
-              <Heart className="h-5 w-5 text-primary" />
-              2. Human Architecture & Dynamics
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="p-6 rounded-xl bg-white/[0.02] border border-white/5 space-y-4">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-primary mb-3">Primary Friction Points</p>
-                <ul className="space-y-4">
-                  {dna.personalProfile.psychologicalProfile.emotionalFrictionPoints.map((item: string, i: number) => (
-                    <li key={i} className="text-sm flex items-start gap-3 leading-relaxed">
-                      <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0 shadow-[0_0_8px_rgba(75,163,199,0.5)]" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="p-6 rounded-xl bg-white/[0.02] border border-white/5 space-y-4">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-primary mb-3">Legacy Priorities</p>
-                <ul className="space-y-4">
-                  {dna.personalProfile.psychologicalProfile.currentPriorities.map((item: string, i: number) => (
-                    <li key={i} className="text-sm flex items-start gap-3 leading-relaxed">
-                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </section>
-
-          {/* Section: Origin Story */}
-          <section className="space-y-8">
-            <h2 className="text-2xl font-headline font-bold flex items-center gap-3 border-b border-white/5 pb-2">
-              <History className="h-5 w-5 text-primary" />
-              3. Ship's Log: Family Origin & Heritage
-            </h2>
-            <Card className="glass-panel border-white/5 shadow-none bg-white/[0.01]">
-              <CardContent className="p-10 space-y-8">
-                <div className="prose prose-invert max-w-none">
-                  <p className="text-lg text-muted-foreground leading-relaxed first-letter:text-5xl first-letter:font-bold first-letter:mr-3 first-letter:float-left first-letter:text-primary">
-                    {dna.familyProfile.history.summary}
-                  </p>
-                </div>
-                <div className="pt-8 border-t border-white/5">
-                  <h4 className="text-[10px] font-bold uppercase tracking-widest text-primary mb-5">Historical Transitions</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {dna.familyProfile.history.notableTransitions.map((t: string, i: number) => (
-                      <div key={i} className="text-xs text-muted-foreground flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10">
-                        <Compass className="h-4 w-4 text-primary/40 shrink-0" />
-                        {t}
-                      </div>
-                    ))}
+        <Card className="glass-panel border-white/5 flex-1 overflow-hidden">
+          <CardHeader>
+            <CardTitle className="text-sm font-bold uppercase tracking-widest">Active Insights</CardTitle>
+          </CardHeader>
+          <ScrollArea className="h-full">
+            <CardContent className="space-y-4">
+              {[
+                { title: "Trust Optimization", impact: "High", icon: BrainCircuit },
+                { title: "Risk Variance Alert", impact: "Medium", icon: AlertCircle },
+                { title: "G2 Transition", impact: "Strategic", icon: TrendingUp }
+              ].map((insight, i) => (
+                <div key={i} className="p-3 rounded-lg bg-white/[0.02] border border-white/5 group hover:border-primary/30 transition-all cursor-pointer">
+                  <div className="flex items-center gap-3 mb-1">
+                    <insight.icon className="h-3.5 w-3.5 text-primary" />
+                    <p className="text-xs font-bold">{insight.title}</p>
                   </div>
+                  <p className="text-[10px] text-muted-foreground">Synthesized from family dynamics...</p>
+                  <Button variant="link" size="sm" className="h-auto p-0 text-[9px] mt-2 font-bold uppercase text-primary">
+                    Send to Wardroom <ArrowRight className="ml-1 h-3 w-3" />
+                  </Button>
                 </div>
-              </CardContent>
-            </Card>
-          </section>
-        </div>
+              ))}
+            </CardContent>
+          </ScrollArea>
+        </Card>
+      </div>
 
-        {/* Advisory Sidebar (Right) */}
-        <div className="lg:col-span-4 space-y-8">
-          <div className="sticky top-8 space-y-8">
-            <Card className="glass-panel border-white/10">
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <ShieldCheck className="h-5 w-5 text-primary" />
-                    The Advisory Deck
-                  </CardTitle>
-                </div>
-                <CardDescription className="text-xs uppercase tracking-widest font-bold">Authorized Trusted Crew</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-4">
-                  {advisors.map((advisor) => (
-                    <div key={advisor.name} className="flex items-center gap-4 p-4 rounded-xl bg-white/[0.02] border border-white/5 group hover:border-primary/30 transition-all">
-                      <Avatar className="h-10 w-10 border border-white/10">
-                        <AvatarImage src={advisor.avatar} />
-                        <AvatarFallback>{advisor.name[0]}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold truncate group-hover:text-primary transition-colors">{advisor.name}</p>
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-tighter font-bold">{advisor.role}</p>
-                      </div>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
+      {/* Main Terminal Chat */}
+      <Card className="flex-1 glass-panel flex flex-col border-white/5 overflow-hidden shadow-3xl">
+        <CardHeader className="border-b border-white/5 py-4 flex flex-row items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
+              <MessageSquare className="h-4 w-4 text-primary" />
+            </div>
+            <div>
+              <p className="text-sm font-bold">Strategy Wardroom</p>
+              <span className="text-[9px] text-emerald-500 font-bold uppercase tracking-widest">Secure Multi-Gen Terminal</span>
+            </div>
+          </div>
+          <Badge variant="outline" className="bg-white/5 text-[9px]">Aivaz Heritage Repository Active</Badge>
+        </CardHeader>
+
+        <ScrollArea className="flex-1 p-6" ref={scrollRef}>
+          <div className="space-y-8">
+            {messages.map((msg) => {
+              const isCurrentUser = msg.senderId === user?.uid || msg.senderName === "Julian Aivaz";
+              const isAI = msg.senderName.includes('AI');
+              return (
+                <div key={msg.id} className={`flex gap-4 max-w-[85%] ${isCurrentUser ? 'ml-auto flex-row-reverse' : ''}`}>
+                  <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center border ${
+                    isAI ? 'bg-primary/20 border-primary/40' : 
+                    isCurrentUser ? 'bg-primary/20 border-primary/20' : 'bg-muted border-white/10'
+                  }`}>
+                    {isAI ? <Sparkles className="h-4 w-4 text-primary" /> : <User className={`h-4 w-4 ${isCurrentUser ? 'text-primary' : 'text-muted-foreground'}`} />}
+                  </div>
+                  <div className={`space-y-1 flex flex-col ${isCurrentUser ? 'items-end' : 'items-start'}`}>
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground px-1">
+                      {msg.senderName}
+                    </span>
+                    <div className={`p-4 rounded-2xl text-sm leading-relaxed border ${
+                      isAI ? 'bg-primary/5 border-primary/30 italic text-primary/90' :
+                      isCurrentUser ? 'bg-primary/10 border-primary/20 text-foreground rounded-tr-none' : 
+                      'bg-white/5 border-white/5 rounded-tl-none'
+                    }`}>
+                      {msg.text}
                     </div>
-                  ))}
+                  </div>
                 </div>
-                
-                <Button variant="outline" className="w-full border-dashed border-white/10 bg-white/5 text-[10px] font-bold uppercase tracking-widest h-10">
-                  <Plus className="mr-2 h-3.5 w-3.5" /> Enlist New Advisor
-                </Button>
-              </CardContent>
-            </Card>
+              );
+            })}
+          </div>
+        </ScrollArea>
 
-            <Card className="glass-panel bg-primary/5 border-primary/20">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Governance Sync</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="p-4 rounded-xl bg-background/50 border border-white/5 space-y-2">
-                  <div className="flex justify-between items-center text-[10px] font-bold uppercase">
-                    <span className="text-muted-foreground">Compliance Rating</span>
-                    <span className="text-emerald-500">Tier 1 Secure</span>
-                  </div>
-                  <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                    <div className="h-full bg-emerald-500 w-[94%]" />
-                  </div>
-                </div>
-                <p className="text-[11px] text-muted-foreground italic leading-relaxed">
-                  "All family communication channels and document vaults are currently synchronized across 6 jurisdictions."
-                </p>
-              </CardContent>
-            </Card>
+        <div className="p-4 border-t border-white/5 bg-background/30">
+          <div className="flex items-center gap-2 bg-background/50 border border-white/5 rounded-2xl px-4 py-2">
+            <Input 
+              placeholder="Type strategy message..." 
+              className="border-none bg-transparent shadow-none focus-visible:ring-0 text-sm" 
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+            />
+            <Button size="icon" className="rounded-full h-8 w-8" onClick={handleSendMessage} disabled={!inputText.trim()}>
+              <Send className="h-4 w-4" />
+            </Button>
           </div>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

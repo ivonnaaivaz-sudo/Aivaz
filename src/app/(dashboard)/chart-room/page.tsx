@@ -1,35 +1,28 @@
+
 "use client";
 
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Map, Waves, Anchor, ArrowRight, Compass } from "lucide-react";
+import { Map, Waves, Anchor, ArrowRight, Compass, History } from "lucide-react";
 
 export default function ChartRoomHub() {
   const tools = [
-    {
-      title: "Heritage Strategy",
-      description: "Define long-term objectives, trust structures, and family mission protocols.",
-      href: "/strategy",
-      icon: Map,
-      color: "text-primary",
-      status: "Active"
-    },
     {
       title: "Matrix Simulator",
       description: "Run high-fidelity simulations of financial market events and social family transitions.",
       href: "/simulator",
       icon: Waves,
-      color: "text-secondary",
+      color: "text-primary",
       status: "Ready"
     },
     {
-      title: "Generational Timeline",
+      title: "Heritage Timeline",
       description: "Map the generational journey from current state to legacy ideal across 50+ years.",
       href: "/heritage-timeline",
-      icon: Anchor,
-      color: "text-accent",
+      icon: History,
+      color: "text-secondary",
       status: "Updated"
     }
   ];
@@ -38,7 +31,7 @@ export default function ChartRoomHub() {
     <div className="space-y-12 max-w-6xl mx-auto pb-20">
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
-          <Badge className="bg-primary/20 text-primary border-primary/30 uppercase tracking-widest text-[9px] font-bold">Navigation Deck</Badge>
+          <Badge className="bg-primary/20 text-primary border-primary/30 uppercase tracking-widest text-[9px] font-bold">Prognosis Deck</Badge>
           <div className="h-px flex-1 bg-white/5" />
         </div>
         <h1 className="font-headline text-5xl font-bold tracking-tight flex items-center gap-4">
@@ -46,11 +39,11 @@ export default function ChartRoomHub() {
           Chart Room
         </h1>
         <p className="text-xl text-muted-foreground italic font-headline max-w-2xl leading-relaxed">
-          The strategic center for mapping your family's multi-generational course and simulating future scenarios.
+          The tactical center for mapping future milestones and simulating the generational path based on agreed strategy.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {tools.map((tool) => (
           <Link href={tool.href} key={tool.title} className="group">
             <Card className="glass-panel border-white/5 hover:border-primary/30 transition-all duration-500 h-full flex flex-col overflow-hidden">
@@ -80,14 +73,14 @@ export default function ChartRoomHub() {
           <Map className="h-48 w-48" />
         </div>
         <CardContent className="p-12 relative z-10 space-y-4">
-          <h3 className="text-2xl font-headline font-bold">Institutional Readiness</h3>
+          <h3 className="text-2xl font-headline font-bold">Predictive Alignment</h3>
           <p className="text-muted-foreground max-w-2xl text-lg leading-relaxed">
-            Your family's strategic path is currently 78% aligned. Use the Matrix Simulator to identify emotional friction points in the upcoming Gen-2 transition window.
+            Based on the consensus reached in the **Wardroom**, your generational path is currently 78% aligned. Use the Matrix Simulator to project the impact of upcoming tax reforms on the G2 transition.
           </p>
           <div className="pt-6">
             <Link href="/simulator">
               <Button size="lg" className="px-8 shadow-xl">
-                Run Alignment Simulation
+                Run Simulation Matrix
               </Button>
             </Link>
           </div>
