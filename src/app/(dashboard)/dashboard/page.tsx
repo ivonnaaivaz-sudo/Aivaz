@@ -281,7 +281,10 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {/* Succession Engagement Module */}
+      {/* Primary Calendar View */}
+      <FamilyCalendar events={MOCK_EVENTS} />
+
+      {/* Succession Engagement Module (Strategic Insight) */}
       <Dialog open={showEngagement} onOpenChange={setShowEngagement}>
         <DialogTrigger asChild>
           <Card className="glass-panel border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer group overflow-hidden relative">
@@ -331,9 +334,6 @@ export default function DashboardPage() {
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* Primary Calendar View */}
-      <FamilyCalendar events={MOCK_EVENTS} />
 
       {/* Persistent Quick Actions Bar */}
       <div className="fixed bottom-0 left-[280px] right-0 p-6 bg-background/80 backdrop-blur-xl border-t border-white/5 z-30">
