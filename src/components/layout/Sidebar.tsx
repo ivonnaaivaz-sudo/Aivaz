@@ -8,7 +8,6 @@ import {
   Compass,
   Map,
   MessageSquare,
-  Radio,
   Lock,
   Settings,
   ShieldCheck
@@ -42,7 +41,6 @@ export function Sidebar() {
     { name: "Bridge", href: "/bridge", icon: Compass },
     { name: "Chart Room", href: "/chart-room", icon: Map },
     { name: "Wardroom", href: "/wardroom", icon: MessageSquare },
-    { name: "Radio", href: "/academy", icon: Radio },
     { name: "Strongroom", href: "/vault", icon: Lock },
     { name: "Settings", href: "/settings", icon: Settings },
   ];
