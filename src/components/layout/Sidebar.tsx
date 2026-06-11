@@ -39,10 +39,10 @@ export function Sidebar() {
   const { user } = useUser();
 
   const mainNav = [
-    { name: "Bridge", href: "/dashboard", icon: Compass },
+    { name: "Bridge", href: "/bridge", icon: Compass },
     { name: "Chart Room", href: "/chart-room", icon: Map },
     { name: "Wardroom", href: "/wardroom", icon: MessageSquare },
-    { name: "Signal Deck", href: "/messenger", icon: Radio },
+    { name: "Radio", href: "/academy", icon: Radio },
     { name: "Strongroom", href: "/vault", icon: Lock },
     { name: "Settings", href: "/settings", icon: Settings },
   ];
