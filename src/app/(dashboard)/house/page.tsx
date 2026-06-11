@@ -5,65 +5,53 @@ import { useUser, useDoc } from "@/firebase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
+  BrainCircuit, 
   Fingerprint, 
-  Users, 
-  ShieldCheck, 
+  Globe, 
   History, 
+  Heart, 
+  User, 
+  Landmark, 
   Zap, 
-  Plus,
-  Settings2
+  BookOpen,
+  Anchor,
+  Compass,
+  Link2
 } from "lucide-react";
-import Link from "next/link";
+import { Separator } from "@/components/ui/separator";
 
 const MOCK_DNA = {
   personalProfile: {
     roleInFamily: "Principal Founder",
     generationalStage: "1st Generation",
     primaryLocation: "Palm Beach, Florida",
-    otherLocations: ["Singapore", "Zurich", "London"],
+    riskAppetite: "Low / Preservation Focused",
     psychologicalProfile: {
-      biggestHeadache: "Hesitation to pass decision-making control to an unaligned successor group.",
+      biggestHeadache: "Ensuring succession readiness while maintaining operational speed.",
       currentPriorities: ["Consolidation of offshore assets", "Succession readiness training", "Philanthropic legacy definition"],
-      emotionalFrictionPoints: ["Tension between Gen 1 speed and Gen 2 governance preference", "Concerns regarding wealth dilution over 50 years"],
-      advisorBlindSpots: ["Traditional banks focus on tax but ignore the emotional sibling dynamics between Julian and Marcus."]
+      emotionalFrictionPoints: ["Tension between Gen 1 speed and Gen 2 governance preference"],
+      advisorBlindSpots: ["Traditional banks focus on tax but ignore the emotional sibling dynamics."]
     },
     financialSnapshot: {
       estimatedNetWorth: "$142M",
-      primaryAssetClasses: ["Tech Equity", "European Real Estate", "Private Foundations"]
+      primaryAssetClasses: ["Tech Equity", "European Real Estate"]
     },
-    aiSummary: "Julian is a high-conviction principal focused on long-term preservation. His legacy is currently at a critical pivot point between builder-led growth and institutionalized family governance."
+    aiSummary: "Julian is a high-conviction founder who built his wealth in semiconductor logistics. Currently, he is focused on institutionalizing his legacy for the next generation."
   },
   familyProfile: {
     familyName: "Aivaz Heritage",
-    currentGenerationalStage: "1st Generation Transition",
-    geographicFootprint: ["United States", "Singapore", "Switzerland", "UK"],
     wealthSource: "Semiconductor Infrastructure & Global Logistics",
-    estimatedTotalNetWorth: "$850M (Aggregated Family Group)",
+    estimatedTotalNetWorth: "$850M (Aggregated)",
     history: {
-      summary: "Founded in the late 1980s as a specialized logistics firm, the Aivaz wealth was significantly expanded through early strategic investments in semiconductor supply chains. The family has since transitioned into a multi-jurisdictional investment office with a focus on deep tech and heritage assets.",
-      keyHoldings: ["Aivaz Logistics Global", "Alpine Strategic Real Estate", "Heritage Tech Fund"],
-      notableTransitions: ["1998 Global Expansion", "2015 Liquidity Event", "2021 Dynasty Trust Formation"]
-    },
-    identifiedMembers: [
-      { id: "1", name: "Julian Aivaz", relationship: "Self", generationalStage: "G1", role: "Founder", avatar: "https://picsum.photos/seed/julian/100/100" },
-      { id: "2", name: "Elena Aivaz", relationship: "Spouse", generationalStage: "G1", role: "Foundation Chair", avatar: "https://picsum.photos/seed/elena/100/100" },
-      { id: "3", name: "Marcus Aivaz", relationship: "Child", generationalStage: "G2", role: "Successor", avatar: "https://picsum.photos/seed/marcus/100/100" },
-      { id: "4", name: "Sarah Aivaz", relationship: "Child", generationalStage: "G2", role: "Investment Principal", avatar: "https://picsum.photos/seed/sarah/100/100" }
-    ],
-    socialCapital: {
-      reputationIndicators: ["Known for discretion", "Educational Philanthropy Leaders", "Global Mobility Pioneers"],
-      keyNetworks: ["World Heritage Forum", "Principals Circle", "Oxford Heritage Society"],
-      mobilityProfile: "Tier 1 (Global Passport Access + Private Air Infrastructure)"
+      summary: "Founded in the late 1980s as a specialized logistics firm, the Aivaz wealth was significantly expanded through early strategic investments in semiconductor supply chains. The family has since transitioned into a multi-jurisdictional investment office.",
+      keyHoldings: ["Aivaz Logistics Global", "Alpine Strategic Real Estate"],
+      notableTransitions: ["1998 Global Expansion", "2015 Liquidity Event"]
     },
     relationalDynamics: {
-      keyFrictionPoints: ["Succession transparency", "Investment risk tolerance variance between G1 and G2"],
       alignmentLevel: "Medium",
       successionReadinessScore: 68
-    },
-    familyLegacyNarrative: "The Aivaz family represents a classic builder legacy currently navigating its most significant hurdle: the transition from an individual-led empire to a values-based family institution."
+    }
   }
 };
 
@@ -71,122 +59,107 @@ export default function HousePage() {
   const { user } = useUser();
   const { data: realDna, loading } = useDoc(user ? `users/${user.uid}/dna/current` : null);
 
-  const dna = realDna || MOCK_DNA;
-
   if (loading) {
     return (
-      <div className="space-y-8 max-w-7xl mx-auto p-8">
-        <Skeleton className="h-10 w-64" />
-        <Skeleton className="h-[600px] w-full" />
+      <div className="space-y-8 max-w-6xl mx-auto p-8">
+        <Skeleton className="h-12 w-3/4 mb-12" />
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <Skeleton className="lg:col-span-4 h-96 rounded-2xl" />
+          <Skeleton className="lg:col-span-8 h-96 rounded-2xl" />
+        </div>
       </div>
     );
   }
 
-  const g1Members = dna.familyProfile.identifiedMembers.filter((m: any) => m.generationalStage === "G1");
-  const g2Members = dna.familyProfile.identifiedMembers.filter((m: any) => m.generationalStage === "G2");
+  const dna = realDna || MOCK_DNA;
+  const p = dna.personalProfile;
+  const f = dna.familyProfile;
 
   return (
-    <div className="space-y-12 max-w-7xl mx-auto pb-32">
-      {/* Header: Purely Historical/Archive Focus */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/10 pb-8">
+    <div className="space-y-12 max-w-6xl mx-auto pb-20">
+      {/* Wikipedia Style Header */}
+      <div className="border-b border-white/10 pb-8 flex flex-col md:flex-row items-end justify-between gap-6">
         <div className="space-y-4">
           <div className="flex items-center gap-3">
-            <Fingerprint className="h-6 w-6 text-primary" />
             <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 tracking-[0.2em] font-bold uppercase text-[9px] px-3">
-              The House of {dna.familyProfile.familyName.split(' ')[0]}
+              Heritage Archive
             </Badge>
           </div>
-          <h1 className="font-headline text-5xl font-bold tracking-tighter">Family DNA & Heritage</h1>
-          <p className="text-xl text-muted-foreground italic font-headline max-w-2xl leading-relaxed">
-            The core repository of family history, psychological architecture, and generational lineage.
-          </p>
+          <h1 className="font-headline text-5xl font-bold tracking-tighter">
+            Family DNA
+          </h1>
         </div>
-        <div className="flex gap-3">
-          <Button variant="ghost" className="text-xs font-bold uppercase tracking-widest opacity-60 hover:opacity-100" asChild>
-            <Link href="/vault?tab=admin">
-              <Settings2 className="mr-2 h-4 w-4" /> Manage Lineage
-            </Link>
-          </Button>
-          <Button variant="outline" className="bg-white/5 border-white/10 text-xs font-bold uppercase tracking-widest">
-            <History className="mr-2 h-4 w-4" /> View Archive
-          </Button>
-        </div>
+        <Badge className="bg-white/5 border-white/10 text-muted-foreground px-4 py-1">Profile: Julian Aivaz</Badge>
       </div>
 
-      <section className="space-y-8">
-        <div className="flex items-center gap-2">
-          <Users className="h-5 w-5 text-primary" />
-          <h2 className="text-2xl font-headline font-bold">Generational Lineage</h2>
-        </div>
-
-        <Card className="glass-panel border-white/5 bg-white/[0.01]">
-          <CardContent className="p-12">
-            <div className="flex flex-col items-center space-y-16">
-              <div className="flex flex-col items-center space-y-6">
-                <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-muted-foreground/50">G1: Foundational</span>
-                <div className="flex flex-wrap justify-center gap-8">
-                  {g1Members.map((member: any) => (
-                    <div key={member.id} className="flex flex-col items-center gap-4">
-                      <Avatar className="h-24 w-24 border-2 border-primary/20 shadow-2xl">
-                        <AvatarImage src={member.avatar} />
-                        <AvatarFallback>{member.name[0]}</AvatarFallback>
-                      </Avatar>
-                      <div className="text-center">
-                        <p className="font-bold text-sm">{member.name}</p>
-                        <p className="text-[10px] text-primary uppercase font-bold tracking-widest">{member.role}</p>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        {/* Left Column: Wikipedia Sidebar Info Box */}
+        <div className="lg:col-span-4 space-y-6">
+          <Card className="glass-panel border-white/10 overflow-hidden sticky top-8">
+            <div className="aspect-square relative bg-gradient-to-br from-primary/10 via-background to-secondary/10 flex items-center justify-center border-b border-white/5 overflow-hidden">
+              <Fingerprint className="h-32 w-32 text-primary/30" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.6)_100%)]" />
+            </div>
+            <div className="p-6 space-y-6">
+              <div>
+                <h3 className="text-[10px] font-bold uppercase tracking-widest text-primary mb-4 border-b border-primary/20 pb-1">Core Identity Info</h3>
+                <div className="space-y-3">
+                  {[
+                    { label: "Principal", value: user?.displayName || "Julian Aivaz", icon: User },
+                    { label: "Role", value: p.roleInFamily, icon: Anchor },
+                    { label: "Gen Stage", value: p.generationalStage, icon: History },
+                    { label: "Base", value: p.primaryLocation, icon: Globe },
+                    { label: "Risk Appetite", value: p.riskAppetite, icon: Compass },
+                    { label: "Wealth Source", value: f.wealthSource, icon: Landmark },
+                    { label: "Net Worth", value: p.financialSnapshot.estimatedNetWorth, icon: Landmark },
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center justify-between text-[11px] py-1">
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <item.icon className="h-3 w-3" />
+                        <span>{item.label}</span>
                       </div>
+                      <span className="font-bold text-foreground text-right">{item.value}</span>
                     </div>
                   ))}
-                </div>
-              </div>
-
-              <div className="w-px h-16 bg-gradient-to-b from-primary/40 to-transparent" />
-
-              <div className="flex flex-col items-center space-y-6">
-                <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-muted-foreground/50">G2: Successor</span>
-                <div className="flex flex-wrap justify-center gap-8">
-                  {g2Members.map((member: any) => (
-                    <div key={member.id} className="flex flex-col items-center gap-4">
-                      <Avatar className="h-20 w-20 border border-white/10 shadow-xl">
-                        <AvatarImage src={member.avatar} />
-                        <AvatarFallback>{member.name[0]}</AvatarFallback>
-                      </Avatar>
-                      <div className="text-center">
-                        <p className="font-bold text-sm">{member.name}</p>
-                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">{member.role}</p>
-                      </div>
-                    </div>
-                  ))}
-                  {/* Visual placeholder for lineage without interactive 'Add' button */}
-                  <div className="h-20 w-20 rounded-full border border-dashed border-white/10 flex items-center justify-center opacity-30">
-                    <History className="h-6 w-6 text-muted-foreground" />
-                  </div>
                 </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      </section>
+          </Card>
+        </div>
 
-      <section className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        {/* Right Column: Main Article Content */}
         <div className="lg:col-span-8 space-y-16">
-          <div className="p-8 rounded-2xl bg-primary/5 border border-primary/10">
-            <h3 className="text-[10px] font-bold uppercase tracking-widest text-primary mb-4">AI Synthesis</h3>
-            <p className="text-xl leading-relaxed text-foreground/90 italic font-headline">
-              "{dna.personalProfile.aiSummary}"
-            </p>
-          </div>
-
-          <div className="space-y-8">
-            <h2 className="text-2xl font-headline font-bold flex items-center gap-3 border-b border-white/5 pb-2">
+          {/* AI Generated Personal Summary */}
+          <section className="space-y-6">
+            <h2 className="text-2xl font-headline font-bold flex items-center gap-2 border-b border-white/5 pb-2">
               <Zap className="h-5 w-5 text-primary" />
-              Psychological Architecture
+              1. Personal Synthesis
+            </h2>
+            <div className="p-8 rounded-2xl bg-primary/5 border border-primary/10 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                <BrainCircuit className="h-24 w-24" />
+              </div>
+              <p className="text-xl leading-relaxed text-foreground/90 italic font-headline relative z-10">
+                "{p.aiSummary}"
+              </p>
+            </div>
+          </section>
+
+          {/* Psychological Profile Section */}
+          <section className="space-y-8">
+            <h2 className="text-2xl font-headline font-bold flex items-center gap-2 border-b border-white/5 pb-2">
+              <Heart className="h-5 w-5 text-primary" />
+              2. Psychological Architecture
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="p-6 rounded-xl bg-white/[0.02] border border-white/5">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-primary mb-4">Emotional Friction Points</p>
-                <ul className="space-y-4">
-                  {dna.personalProfile.psychologicalProfile.emotionalFrictionPoints.map((item: string, i: number) => (
+              <div className="p-5 rounded-xl bg-white/[0.02] border border-white/5">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Primary Friction Point</p>
+                <p className="text-base font-medium leading-relaxed">{p.psychologicalProfile.biggestHeadache}</p>
+              </div>
+              <div className="p-5 rounded-xl bg-white/[0.02] border border-white/5">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-primary mb-3">Legacy Priorities</p>
+                <ul className="space-y-3">
+                  {p.psychologicalProfile.currentPriorities.map((item: string, i: number) => (
                     <li key={i} className="text-sm flex items-start gap-3">
                       <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
                       {item}
@@ -194,52 +167,64 @@ export default function HousePage() {
                   ))}
                 </ul>
               </div>
-              <div className="p-6 rounded-xl bg-white/[0.02] border border-white/5">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-primary mb-4">Legacy Priorities</p>
-                <ul className="space-y-4">
-                  {dna.personalProfile.psychologicalProfile.currentPriorities.map((item: string, i: number) => (
-                    <li key={i} className="text-sm flex items-start gap-3">
-                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+            </div>
+          </section>
+
+          {/* Family History Section */}
+          <section className="space-y-8">
+            <h2 className="text-2xl font-headline font-bold flex items-center gap-2 border-b border-white/5 pb-2">
+              <History className="h-5 w-5 text-primary" />
+              3. Family Origin & Heritage
+            </h2>
+            <Card className="glass-panel border-white/5 shadow-none bg-white/[0.01]">
+              <CardContent className="p-10 space-y-8">
+                <div className="prose prose-invert max-w-none">
+                  <p className="text-lg text-muted-foreground leading-relaxed first-letter:text-5xl first-letter:font-bold first-letter:mr-3 first-letter:float-left first-letter:text-primary">
+                    {f.history.summary}
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-10 border-t border-white/5">
+                  <div>
+                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-primary mb-5">Primary Entities & Holdings</h4>
+                    <div className="flex flex-wrap gap-3">
+                      {f.history.keyHoldings.map((h: string) => (
+                        <Badge key={h} variant="outline" className="bg-white/5 border-white/10 px-3 py-1">
+                          {h}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-primary mb-5">Historical Transitions</h4>
+                    <ul className="space-y-3">
+                      {f.history.notableTransitions.map((t: string, i: number) => (
+                        <li key={i} className="text-sm text-muted-foreground flex items-center gap-3">
+                          <Compass className="h-4 w-4 text-primary/40 shrink-0" />
+                          {t}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+
+          <div className="bg-white/[0.02] p-10 rounded-3xl border border-white/5 relative text-center">
+            <div className="absolute top-6 left-6 opacity-10">
+              <BookOpen className="h-12 w-12" />
+            </div>
+            <p className="text-lg text-foreground/80 leading-relaxed font-body italic max-w-2xl mx-auto">
+              "The Aivaz legacy is defined by a globalist perspective and a deep commitment to innovation as a means of wealth preservation."
+            </p>
+            <div className="mt-12 flex items-center justify-center gap-6 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/30">
+              <Link2 className="h-4 w-4" />
+              <span>SECURE ARCHIVE: AIVAZ-HERITAGE-STABLE</span>
+              <Link2 className="h-4 w-4" />
             </div>
           </div>
         </div>
-
-        <div className="lg:col-span-4 space-y-6">
-          <Card className="glass-panel border-white/10">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2 text-primary">
-                <ShieldCheck className="h-5 w-5" />
-                Heritage Scorecard
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <div className="flex justify-between text-xs font-bold uppercase tracking-widest">
-                  <span className="text-muted-foreground">Alignment</span>
-                  <span className="text-primary">{dna.relationalDynamics?.alignmentLevel || "Medium"}</span>
-                </div>
-                <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-                  <div className="h-full bg-primary w-[60%]" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <div className="flex justify-between text-xs font-bold uppercase tracking-widest">
-                  <span className="text-muted-foreground">Succession Readiness</span>
-                  <span className="text-primary">{dna.relationalDynamics?.successionReadinessScore || 68}%</span>
-                </div>
-                <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-                  <div className="h-full bg-primary w-[68%]" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
+      </div>
     </div>
   );
 }
