@@ -187,7 +187,7 @@ export default function BridgeHub() {
               <Dialog open={isAddAssetOpen} onOpenChange={setIsAddAssetOpen}>
                 <DialogTrigger asChild>
                   <Button size="sm" className="h-9 text-[10px] font-bold uppercase tracking-widest shadow-xl">
-                    <Plus className="mr-2 h-3.5 w-3.5" /> Add Physical Asset
+                    <Plus className="mr-2 h-3.5 w-3.5" /> Add Manual Asset (Appraised)
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="glass-panel border-white/10 sm:max-w-[425px]">
