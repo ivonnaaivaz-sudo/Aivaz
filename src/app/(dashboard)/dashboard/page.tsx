@@ -58,7 +58,7 @@ const MOCK_EVENTS: FamilyEvent[] = [
     date: "2024-11-12",
     eventType: "GOVERNANCE",
     priority: "URGENT",
-    description: "Reviewing year-end tax positions and G2 transition readiness with Robert Chen.",
+    description: "Reviewing year-end tax positions and G2 transition readiness with Robert Chen (Strategic Advisor).",
     memberAccess: ["Julian", "Marcus", "@Advisor"]
   },
   {
@@ -72,11 +72,11 @@ const MOCK_EVENTS: FamilyEvent[] = [
   },
   {
     id: "3",
-    title: "Global Portfolio Audit",
+    title: "Global Portfolio Performance Review",
     date: "2024-11-25",
     eventType: "FINANCIAL",
     priority: "NORMAL",
-    description: "Consolidated audit of all offshore holdings and physical real estate for Q4 reporting cycle.",
+    description: "Consolidated performance audit of all offshore holdings and physical real estate for Q4 reporting cycle.",
     memberAccess: ["@Advisor", "Julian"]
   },
   {
@@ -91,7 +91,7 @@ const MOCK_EVENTS: FamilyEvent[] = [
   {
     id: "5",
     title: "Succession Charter Review",
-    date: "2024-12-05",
+    date: "2024-11-05",
     eventType: "GOVERNANCE",
     priority: "URGENT",
     description: "Final walkthrough of the Gen-2 decision-making framework and risk-tolerance alignment.",
@@ -100,7 +100,7 @@ const MOCK_EVENTS: FamilyEvent[] = [
   {
     id: "6",
     title: "PE Distribution (Alpine Fund)",
-    date: "2024-12-01",
+    date: "2024-11-01",
     eventType: "FINANCIAL",
     priority: "NORMAL",
     description: "Quarterly yield distribution scheduled for Aivaz Strategic Reserve.",
@@ -109,11 +109,29 @@ const MOCK_EVENTS: FamilyEvent[] = [
   {
     id: "7",
     title: "G2 Governance Workshop",
-    date: "2024-12-10",
+    date: "2024-11-10",
     eventType: "MILESTONE",
     priority: "NORMAL",
     description: "Intensive training session for Next Gen principals on institutional investment vetting.",
     memberAccess: ["Marcus", "Sarah"]
+  },
+  {
+    id: "8",
+    title: "Advisor Compliance Call",
+    date: "2024-11-08",
+    eventType: "GOVERNANCE",
+    priority: "URGENT",
+    description: "Bi-weekly sync with legal team regarding EU Golden Visa residency and tax residency certificate updates.",
+    memberAccess: ["Julian", "@Legal"]
+  },
+  {
+    id: "9",
+    title: "Family Council: Foundation Vote",
+    date: "2024-11-15",
+    eventType: "GOVERNANCE",
+    priority: "URGENT",
+    description: "Official vote on the 2025 Philanthropic Budget and selection of target non-profits.",
+    memberAccess: ["All Stakeholders"]
   }
 ];
 
