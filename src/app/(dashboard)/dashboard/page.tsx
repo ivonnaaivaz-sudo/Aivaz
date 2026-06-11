@@ -103,8 +103,8 @@ export default function DashboardPage() {
 
       <FamilyCalendar events={MOCK_EVENTS} />
 
-      <Card className="glass-panel border-primary/20 bg-primary/5 p-8 flex items-center justify-between group cursor-pointer" asChild>
-        <Link href="/academy">
+      <Link href="/academy" className="block group">
+        <Card className="glass-panel border-primary/20 bg-primary/5 p-8 flex items-center justify-between transition-all hover:bg-primary/10 cursor-pointer">
           <div className="space-y-2">
             <div className="flex items-center gap-2 mb-2">
               <Sparkles className="h-4 w-4 text-primary" />
@@ -113,9 +113,11 @@ export default function DashboardPage() {
             <h3 className="text-xl font-headline font-bold">Review G2 Governance Framework</h3>
             <p className="text-sm text-muted-foreground">Transitioning from Founder-led to Values-based institutional governance.</p>
           </div>
-          <Button size="icon" className="rounded-full h-12 w-12"><ArrowRight className="h-6 w-6" /></Button>
-        </Link>
-      </Card>
+          <div className="bg-primary text-primary-foreground rounded-full h-12 w-12 flex items-center justify-center shadow-lg transition-transform group-hover:scale-110">
+            <ArrowRight className="h-6 w-6" />
+          </div>
+        </Card>
+      </Link>
     </div>
   );
 }
