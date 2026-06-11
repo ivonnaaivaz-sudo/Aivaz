@@ -1,12 +1,14 @@
 "use client";
 
-import { useUser, useDoc } from "@/firebase";
+import { useState, useMemo } from "react";
+import { useUser, useDoc, useCollection, useFirestore } from "@/firebase";
+import { collection, doc, setDoc, query, writeBatch } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Progress } from "@/components/ui/progress";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -16,81 +18,110 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger 
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { 
   TrendingUp, 
   ShieldCheck, 
-  Users, 
   ArrowUpRight, 
   Activity,
-  Fingerprint,
-  BookOpen,
-  Newspaper,
-  ArrowRight,
-  ExternalLink,
-  Users2,
-  ChevronDown,
-  RefreshCw,
   Globe,
   Calendar,
   HeartPulse,
-  AlertTriangle,
-  Sparkles,
-  UserPlus,
-  FileText,
-  Cpu,
+  ChevronDown,
+  RefreshCw,
   Lock,
-  BrainCircuit
+  Plus,
+  Link as LinkIcon,
+  Landmark,
+  PieChart as PieChartIcon,
+  Loader2,
+  Home,
+  Briefcase
 } from "lucide-react";
 import { 
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer
+  PieChart, 
+  Pie, 
+  Cell, 
+  ResponsiveContainer, 
+  Tooltip as RechartsTooltip,
+  Legend
 } from "recharts";
+import { useToast } from "@/hooks/use-toast";
+import Link from "next/link";
 
-const performanceData = [
-  { name: 'Jan', value: 138.2 },
-  { name: 'Feb', value: 140.5 },
-  { name: 'Mar', value: 139.8 },
-  { name: 'Apr', value: 142.1 },
-  { name: 'May', value: 145.4 },
-  { name: 'Jun', value: 142.4 },
+const assetAllocation = [
+  { name: 'Equities', value: 60, color: 'hsl(var(--primary))' },
+  { name: 'Real Estate', value: 20, color: 'hsl(var(--secondary))' },
+  { name: 'Fixed Income', value: 15, color: 'hsl(var(--accent))' },
+  { name: 'Alternatives', value: 5, color: 'hsl(var(--muted-foreground))' },
 ];
 
-const blindspots = [
-  { title: "China Tech Concentration", impact: "High", description: "Exposure to G2 direct equity holdings exceeds risk threshold." },
-  { title: "European Regulatory Shift", impact: "Moderate", description: "New EU side-letter requirements for private equity holdings." },
-  { title: "Succession Gap", impact: "Strategic", description: "G2 participation in trust governance remains below target level." }
-];
-
-const aiInsights = [
-  {
-    title: "Optimize Trust Liquidity",
-    description: "Move 5% of logistics equity to fixed income to buffer G3 educational payouts.",
-    action: "Review Strategy",
-    icon: Sparkles
-  },
-  {
-    title: "Tax Jurisdiction Alert",
-    description: "Singapore treaty update impacts offshore strategic reserves. Simulate impact.",
-    action: "Run Simulation",
-    icon: Globe
-  },
-  {
-    title: "Governance Alignment",
-    description: "Draft a formal Family Charter to resolve sibling variance in risk tolerance.",
-    action: "Draft Charter",
-    icon: ShieldCheck
-  }
+const mockLinkedAccounts = [
+  { id: 1, name: "Aivaz Family Trust", institution: "Morgan Stanley", balance: "$45,200,000", status: "Active" },
+  { id: 2, name: "Offshore Reserve", institution: "UBS Zurich", balance: "$28,150,000", status: "Synced" },
+  { id: 3, name: "PE HoldCo", institution: "Goldman Sachs", balance: "$12,400,000", status: "Active" },
 ];
 
 export default function DashboardPage() {
   const { user } = useUser();
-  const { data: dna, loading } = useDoc(user ? `users/${user.uid}/dna/current` : null);
+  const db = useFirestore();
+  const { toast } = useToast();
+  const { data: dna, loading: dnaLoading } = useDoc(user ? `users/${user.uid}/dna/current` : null);
+  
+  const [isAddAssetOpen, setIsAddAssetOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [newAsset, setNewAsset] = useState({
+    name: "",
+    type: "Real Estate",
+    appraisalValue: "",
+    location: "",
+    appraisalDate: new Date().toISOString().split('T')[0],
+  });
 
-  if (loading) {
+  const assetsQuery = useMemo(() => {
+    if (!user || !db) return null;
+    return query(collection(db, "users", user.uid, "assets"));
+  }, [user, db]);
+
+  const { data: manualAssets, loading: assetsLoading } = useCollection(assetsQuery);
+
+  const totalManualValue = useMemo(() => {
+    return manualAssets.reduce((sum, asset) => sum + (asset.appraisalValue || 0), 0);
+  }, [manualAssets]);
+
+  const handleAddAsset = async () => {
+    if (!user || !db) return;
+    setIsSubmitting(true);
+    try {
+      const assetRef = doc(collection(db, "users", user.uid, "assets"));
+      await setDoc(assetRef, {
+        ...newAsset,
+        appraisalValue: parseFloat(newAsset.appraisalValue),
+        documentCount: 1,
+        createdAt: new Date().toISOString()
+      });
+      toast({ title: "Asset Registered", description: `${newAsset.name} added to the vault.` });
+      setIsAddAssetOpen(false);
+      setNewAsset({ name: "", type: "Real Estate", appraisalValue: "", location: "", appraisalDate: new Date().toISOString().split('T')[0] });
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (dnaLoading) {
     return (
       <div className="space-y-8 max-w-7xl mx-auto p-8">
         <Skeleton className="h-10 w-64" />
@@ -104,7 +135,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-24">
-      {/* Top Header / Bar */}
+      {/* Global Header / Top-Bar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-6">
         <div className="flex items-center gap-4">
           <DropdownMenu>
@@ -135,36 +166,36 @@ export default function DashboardPage() {
           <div className="h-8 w-px bg-white/10 hidden md:block" />
           <div className="hidden md:flex flex-col">
             <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">
-              Live Connection Active
+              All 12 Entities Synced
             </span>
             <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">
-              12 Entities Synced • 3 Members Online
+              3 Members Online • AES-256 Active
             </span>
           </div>
         </div>
 
         <div className="flex items-center gap-6">
           <div className="text-right hidden sm:block">
-            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Last Intelligence Audit</p>
-            <p className="text-xs font-medium flex items-center gap-2 justify-end">
-              Today, 09:42 AM <RefreshCw className="h-3 w-3 text-primary" />
+            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Last Updated</p>
+            <p className="text-xs font-medium flex items-center gap-2 justify-end cursor-pointer group">
+              Today, 09:42 AM <RefreshCw className="h-3 w-3 text-primary group-hover:rotate-180 transition-transform duration-500" />
             </p>
           </div>
-          <Badge className="bg-primary/10 text-primary border-primary/20 flex items-center gap-2 py-1 px-3">
+          <Badge className="bg-primary/10 text-primary border-primary/20 flex items-center gap-2 py-1.5 px-3 rounded-full">
             <Lock className="h-3 w-3" />
             Privacy-First Mode Active
           </Badge>
         </div>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <h1 className="font-headline text-4xl font-bold tracking-tight">Family Command Center</h1>
-        <p className="text-muted-foreground italic">Consolidated family net worth and strategic legacy alignment.</p>
+      <div className="flex flex-col gap-1">
+        <h1 className="font-headline text-4xl font-bold tracking-tight">Main Bridge</h1>
+        <p className="text-muted-foreground italic text-sm">Consolidated family net worth and strategic legacy alignment.</p>
       </div>
 
-      {/* Executive Overview Cards */}
+      {/* Executive Overview Row - 5 Tiles */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
-        <Card className="glass-panel">
+        <Card className="glass-panel border-white/5">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Family Net Worth</CardTitle>
             <TrendingUp className="h-3.5 w-3.5 text-primary" />
@@ -177,7 +208,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="glass-panel">
+        <Card className="glass-panel border-white/5">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Legacy Alignment</CardTitle>
             <ShieldCheck className="h-3.5 w-3.5 text-primary" />
@@ -190,7 +221,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="glass-panel">
+        <Card className="glass-panel border-white/5">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Geopolitical Risk</CardTitle>
             <Globe className="h-3.5 w-3.5 text-amber-500" />
@@ -198,198 +229,211 @@ export default function DashboardPage() {
           <CardContent>
             <div className="text-3xl font-bold font-headline text-amber-500">Moderate</div>
             <div className="text-[10px] text-muted-foreground font-bold mt-1 uppercase tracking-widest">
-              Reviewing EU Side-letters
+              Reviewing EU Treaties
             </div>
           </CardContent>
         </Card>
 
-        <Card className="glass-panel">
+        <Card className="glass-panel border-white/5">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Next Milestone</CardTitle>
             <Calendar className="h-3.5 w-3.5 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-lg font-bold font-headline leading-tight">
-              Gen-2 Transition Window
+              Gen-2 Transition
             </div>
             <div className="text-[10px] text-primary font-bold mt-1 uppercase tracking-widest">
-              Target: Q4 2028
+              Target Window: 2028
             </div>
           </CardContent>
         </Card>
 
-        <Card className="glass-panel">
+        <Card className="glass-panel border-white/5">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Family Health</CardTitle>
+            <CardTitle className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Overall Health</CardTitle>
             <HeartPulse className="h-3.5 w-3.5 text-emerald-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold font-headline">84/100</div>
+            <div className="text-3xl font-bold font-headline text-emerald-500">84/100</div>
             <div className="text-[10px] text-muted-foreground font-bold mt-1 uppercase tracking-widest">
-              High Stability Index
+              Stable Stability Index
             </div>
           </CardContent>
         </Card>
       </div>
 
+      {/* Bridge Grid Implementation */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-8">
-          {/* Main Chart Card */}
-          <Card className="glass-panel border-white/5 shadow-3xl">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="text-lg font-headline font-bold">Aggregate Wealth Trajectory</CardTitle>
-                <CardDescription>Consolidated multi-jurisdictional growth performance (USD)</CardDescription>
-              </div>
-              <Badge variant="outline" className="bg-primary/5">Performance v4.1</Badge>
-            </CardHeader>
-            <CardContent className="h-[450px] pt-4">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={performanceData}>
-                  <defs>
-                    <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4}/>
-                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsla(var(--foreground), 0.05)" vertical={false} />
-                  <XAxis 
-                    dataKey="name" 
-                    stroke="hsla(var(--foreground), 0.4)" 
-                    fontSize={12} 
-                    axisLine={false}
-                    tickLine={false}
-                    dy={10}
-                  />
-                  <YAxis 
-                    stroke="hsla(var(--foreground), 0.4)" 
-                    fontSize={12} 
-                    tickFormatter={(v) => `$${v}M`} 
-                    axisLine={false}
-                    tickLine={false}
-                    dx={-10}
-                  />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsla(var(--foreground), 0.1)', borderRadius: '12px' }}
-                    itemStyle={{ color: 'hsl(var(--primary))', fontWeight: 'bold' }}
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="value" 
-                    stroke="hsl(var(--primary))" 
-                    fillOpacity={1} 
-                    fill="url(#colorValue)" 
-                    strokeWidth={3}
-                    animationDuration={2000}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          {/* Key Exposure Blindspots */}
-          <Card className="glass-panel border-white/5">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-amber-500" />
-                <CardTitle className="text-lg font-headline font-bold">Key Exposure Blindspots</CardTitle>
-              </div>
-              <CardDescription>Risks detected across the human and financial architecture.</CardDescription>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {blindspots.map((spot, i) => (
-                <div key={i} className="p-4 rounded-xl bg-white/[0.02] border border-white/5 group hover:border-amber-500/30 transition-all">
-                  <div className="flex justify-between items-start mb-2">
-                    <p className="text-sm font-bold group-hover:text-amber-500 transition-colors">{spot.title}</p>
-                    <Badge variant="outline" className={`text-[8px] uppercase ${spot.impact === 'High' ? 'text-amber-500 border-amber-500/20' : 'text-primary border-primary/20'}`}>
-                      {spot.impact} Impact
-                    </Badge>
+        {/* Analytics Tile */}
+        <Card className="lg:col-span-1 glass-panel border-white/5 flex flex-col">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-headline font-bold flex items-center gap-2">
+                <PieChartIcon className="h-4 w-4 text-primary" />
+                Portfolio Allocation
+              </CardTitle>
+              <Link href="/portfolio">
+                <Button variant="ghost" size="sm" className="h-8 text-[10px] uppercase font-bold tracking-widest text-primary">Details</Button>
+              </Link>
+            </div>
+            <CardDescription className="text-xs">Current exposure by asset class.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex-1 flex flex-col justify-center min-h-[300px]">
+            <ResponsiveContainer width="100%" height={220}>
+              <PieChart>
+                <Pie
+                  data={assetAllocation}
+                  innerRadius={60}
+                  outerRadius={80}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {assetAllocation.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <RechartsTooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsla(var(--foreground), 0.1)', borderRadius: '12px' }} />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="grid grid-cols-2 gap-y-2 gap-x-4 mt-4 px-2">
+              {assetAllocation.map((item, i) => (
+                <div key={i} className="flex items-center justify-between text-[11px]">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: item.color }} />
+                    <span>{item.name}</span>
                   </div>
-                  <p className="text-[11px] text-muted-foreground leading-relaxed">{spot.description}</p>
+                  <span className="font-bold">{item.value}%</span>
                 </div>
               ))}
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="space-y-8">
-          {/* AI Narrative Summary */}
-          <Card className="glass-panel bg-primary/5 border-primary/20">
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-2">
-                <BrainCircuit className="h-5 w-5 text-primary" />
-                <CardTitle className="text-sm font-bold uppercase tracking-widest text-primary">Synthesis Narrative</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="p-4 rounded-xl bg-background/50 border border-white/5 italic text-sm leading-relaxed text-foreground opacity-90">
-                "{dna?.narrativeSummary || "Your legacy DNA is being synthesized. Complete the profiling journey to unlock human-centric insights. Current baseline indicates a transition from founder-led growth to institutional governance."}"
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Active AI Insights */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-muted-foreground px-1">Active AI Insights</h3>
-            {aiInsights.map((insight, i) => (
-              <Card key={i} className="glass-panel border-white/5 hover:border-primary/20 transition-all group overflow-hidden">
-                <CardContent className="p-5 flex gap-4">
-                  <div className="h-10 w-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-                    <insight.icon className="h-5 w-5 text-primary" />
-                  </div>
-                  <div className="flex-1 space-y-1">
-                    <p className="text-sm font-bold group-hover:text-primary transition-colors">{insight.title}</p>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{insight.description}</p>
-                    <Button variant="link" size="sm" className="h-auto p-0 text-primary text-[10px] font-bold uppercase tracking-widest mt-2">
-                      {insight.action} <ArrowRight className="ml-1 h-3 w-3" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          {/* Situation Alert */}
-          <Card className="glass-panel bg-red-500/5 border-red-500/20 overflow-hidden relative">
-            <div className="absolute top-0 right-0 p-4 opacity-10">
-              <Activity className="h-12 w-12 text-red-500" />
             </div>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-red-500" />
-                <CardTitle className="text-xs font-bold uppercase text-red-500 tracking-widest">Urgent Advisory</CardTitle>
+          </CardContent>
+        </Card>
+
+        {/* Accounts Tile */}
+        <Card className="lg:col-span-2 glass-panel border-white/5 flex flex-col">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-headline font-bold flex items-center gap-2">
+                <Briefcase className="h-4 w-4 text-primary" />
+                Holdings & Accounts
+              </CardTitle>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" className="h-8 bg-white/5 border-white/10 text-[10px] font-bold uppercase tracking-widest">
+                  <LinkIcon className="mr-1.5 h-3 w-3" /> Link Account
+                </Button>
+                <Dialog open={isAddAssetOpen} onOpenChange={setIsAddAssetOpen}>
+                  <DialogTrigger asChild>
+                    <Button size="sm" className="h-8 text-[10px] font-bold uppercase tracking-widest shadow-lg">
+                      <Plus className="mr-1.5 h-3 w-3" /> Add Physical Asset
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="glass-panel border-white/10 sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>Register Manual Asset</DialogTitle>
+                      <DialogDescription>Add real estate, art, or private holdings to the vault.</DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <div className="grid gap-2">
+                        <Label>Asset Name</Label>
+                        <Input placeholder="e.g. London Office Tower" value={newAsset.name} onChange={(e) => setNewAsset({...newAsset, name: e.target.value})} />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="grid gap-2">
+                          <Label>Asset Type</Label>
+                          <Select value={newAsset.type} onValueChange={(val) => setNewAsset({...newAsset, type: val})}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Real Estate">Real Estate</SelectItem>
+                              <SelectItem value="Art">Fine Art</SelectItem>
+                              <SelectItem value="Private Equity">Private Equity</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="grid gap-2">
+                          <Label>Value ($)</Label>
+                          <Input type="number" value={newAsset.appraisalValue} onChange={(e) => setNewAsset({...newAsset, appraisalValue: e.target.value})} />
+                        </div>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button onClick={handleAddAsset} disabled={isSubmitting || !newAsset.name || !newAsset.appraisalValue}>
+                        {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Register Asset"}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                We've detected a significant gap between G1 and G2 in terms of **Risk Tolerance** on the Singapore-held real estate portfolio.
-              </p>
-              <Button size="sm" className="w-full mt-4 bg-red-500/20 text-red-500 hover:bg-red-500/30 border border-red-500/30 font-bold uppercase text-[9px]">
-                Initiate Alignment Protocol
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+            <CardDescription className="text-xs">Live feeds and manual generational assets.</CardDescription>
+          </CardHeader>
+          <CardContent className="p-0 flex-1 overflow-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-white/5 hover:bg-transparent">
+                  <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Account / Asset</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Status</TableHead>
+                  <TableHead className="text-right text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Value</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {mockLinkedAccounts.map((acc) => (
+                  <TableRow key={acc.id} className="border-white/5 hover:bg-white/5 transition-colors group">
+                    <TableCell className="py-4">
+                      <p className="text-sm font-medium">{acc.name}</p>
+                      <p className="text-[10px] text-muted-foreground uppercase">{acc.institution}</p>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="bg-emerald-500/5 text-emerald-500 border-emerald-500/20 text-[8px] font-bold">{acc.status}</Badge>
+                    </TableCell>
+                    <TableCell className="text-right font-headline font-bold text-primary">{acc.balance}</TableCell>
+                  </TableRow>
+                ))}
+                {manualAssets.slice(0, 2).map((asset) => (
+                  <TableRow key={asset.id} className="border-white/5 hover:bg-white/5 transition-colors">
+                    <TableCell className="py-4">
+                      <div className="flex items-center gap-2">
+                        <Home className="h-3 w-3 text-muted-foreground" />
+                        <p className="text-sm font-medium">{asset.name}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell><Badge variant="outline" className="text-[8px] font-bold uppercase">Manual</Badge></TableCell>
+                    <TableCell className="text-right font-headline font-bold text-primary">${asset.appraisalValue?.toLocaleString()}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <div className="p-4 flex justify-center border-t border-white/5">
+              <Link href="/accounts">
+                <Button variant="ghost" size="sm" className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground hover:text-primary transition-colors">
+                  View All Accounts <ChevronDown className="ml-1 h-3 w-3" />
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Persistent Quick Actions Bar */}
       <div className="fixed bottom-8 left-[310px] right-8 z-50">
         <div className="glass-panel border-white/10 bg-card/80 p-3 rounded-2xl flex items-center justify-between gap-4 shadow-[0_20px_50px_rgba(0,0,0,0.5)] border-t border-white/10">
           <div className="flex items-center gap-3 px-2">
-            <div className="h-2 w-2 rounded-full bg-emerald-500" />
+            <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Legacy Ready</span>
           </div>
           <div className="flex items-center gap-3">
-            <Button size="sm" variant="outline" className="bg-white/5 border-white/5 text-[10px] font-bold uppercase tracking-widest h-9" onClick={() => window.location.href = '/simulator'}>
-              <Cpu className="mr-2 h-3.5 w-3.5" /> Run Simulation
-            </Button>
-            <Button size="sm" variant="outline" className="bg-white/5 border-white/5 text-[10px] font-bold uppercase tracking-widest h-9" onClick={() => window.location.href = '/family'}>
-              <UserPlus className="mr-2 h-3.5 w-3.5" /> Invite Member
+            <Link href="/simulator">
+              <Button size="sm" variant="outline" className="bg-white/5 border-white/5 text-[10px] font-bold uppercase tracking-widest h-9">
+                Run Simulation
+              </Button>
+            </Link>
+            <Button size="sm" variant="outline" className="bg-white/5 border-white/5 text-[10px] font-bold uppercase tracking-widest h-9">
+              Invite Member
             </Button>
             <Button size="sm" variant="outline" className="bg-white/5 border-white/5 text-[10px] font-bold uppercase tracking-widest h-9">
-              <FileText className="mr-2 h-3.5 w-3.5" /> Charter Draft
+              Charter Draft
             </Button>
-            <Button size="sm" className="shadow-lg h-9 px-6 text-[10px] font-bold uppercase tracking-widest">
+            <Button size="sm" className="shadow-lg h-9 px-6 text-[10px] font-bold uppercase tracking-widest bg-primary text-primary-foreground">
               Review Alignment Report
             </Button>
           </div>
