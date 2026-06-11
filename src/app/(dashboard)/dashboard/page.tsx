@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -53,48 +54,66 @@ import { FamilyCalendar, type FamilyEvent } from "@/components/dashboard/FamilyC
 const MOCK_EVENTS: FamilyEvent[] = [
   {
     id: "1",
-    title: "Succession Charter Review",
-    date: "2024-11-15",
+    title: "Quarterly Strategy Video Call",
+    date: "2024-11-12",
     eventType: "GOVERNANCE",
     priority: "URGENT",
-    description: "Final walkthrough of the Gen-2 decision-making framework.",
-    memberAccess: ["julian", "marcus"]
+    description: "Reviewing year-end tax positions and G2 transition readiness with Robert Chen.",
+    memberAccess: ["Julian", "Marcus", "@Advisor"]
   },
   {
     id: "2",
+    title: "Trust Inheritance Tranche",
+    date: "2024-11-18",
+    eventType: "FINANCIAL",
+    priority: "URGENT",
+    description: "Scheduled payout from the 1992 Dynasty Trust. Coordination with UBS Zurich required for final biometric verification.",
+    memberAccess: ["Julian", "Elena"]
+  },
+  {
+    id: "3",
+    title: "Global Portfolio Audit",
+    date: "2024-11-25",
+    eventType: "FINANCIAL",
+    priority: "NORMAL",
+    description: "Consolidated audit of all offshore holdings and physical real estate for Q4 reporting cycle.",
+    memberAccess: ["@Advisor", "Julian"]
+  },
+  {
+    id: "4",
+    title: "Heritage Anniversary Dinner",
+    date: "2024-11-28",
+    eventType: "SOCIAL",
+    priority: "INFORMATIONAL",
+    description: "Celebrating the founding of the Aivaz logistics empire. Venue: London Townhouse.",
+    memberAccess: ["All Members"]
+  },
+  {
+    id: "5",
+    title: "Succession Charter Review",
+    date: "2024-12-05",
+    eventType: "GOVERNANCE",
+    priority: "URGENT",
+    description: "Final walkthrough of the Gen-2 decision-making framework and risk-tolerance alignment.",
+    memberAccess: ["Julian", "Marcus"]
+  },
+  {
+    id: "6",
     title: "PE Distribution (Alpine Fund)",
     date: "2024-12-01",
     eventType: "FINANCIAL",
     priority: "NORMAL",
-    description: "Quarterly yield distribution scheduled for Aivaz Holding Co.",
-    memberAccess: ["julian", "elena"]
+    description: "Quarterly yield distribution scheduled for Aivaz Strategic Reserve.",
+    memberAccess: ["Julian", "Elena"]
   },
   {
-    id: "3",
-    title: "Family Reunion (Aspen)",
-    date: "2024-12-24",
-    eventType: "SOCIAL",
-    priority: "INFORMATIONAL",
-    description: "Annual heritage gathering and philanthropic mission update.",
-    memberAccess: ["all"]
-  },
-  {
-    id: "4",
-    title: "G2 Transition Workshop",
-    date: "2024-11-20",
+    id: "7",
+    title: "G2 Governance Workshop",
+    date: "2024-12-10",
     eventType: "MILESTONE",
-    priority: "URGENT",
-    description: "Intensive session for Next Gen leadership preparation.",
-    memberAccess: ["marcus", "sarah"]
-  },
-  {
-    id: "5",
-    title: "Quarterly Tax Filing",
-    date: "2024-11-10",
-    eventType: "FINANCIAL",
-    priority: "URGENT",
-    description: "Consolidated filing for all offshore entities.",
-    memberAccess: ["julian", "robert"]
+    priority: "NORMAL",
+    description: "Intensive training session for Next Gen principals on institutional investment vetting.",
+    memberAccess: ["Marcus", "Sarah"]
   }
 ];
 
