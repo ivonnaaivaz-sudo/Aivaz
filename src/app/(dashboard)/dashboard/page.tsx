@@ -52,6 +52,7 @@ import Image from "next/image";
 import { FamilyCalendar, type FamilyEvent } from "@/components/dashboard/FamilyCalendar";
 
 const MOCK_EVENTS: FamilyEvent[] = [
+  // November 2024 (Existing)
   {
     id: "1",
     title: "Quarterly Strategy Video Call",
@@ -71,15 +72,6 @@ const MOCK_EVENTS: FamilyEvent[] = [
     memberAccess: ["Julian", "Elena"]
   },
   {
-    id: "3",
-    title: "Global Portfolio Performance Review",
-    date: "2024-11-25",
-    eventType: "FINANCIAL",
-    priority: "NORMAL",
-    description: "Consolidated performance audit of all offshore holdings and physical real estate for Q4 reporting cycle.",
-    memberAccess: ["@Advisor", "Julian"]
-  },
-  {
     id: "4",
     title: "Heritage Anniversary Dinner",
     date: "2024-11-28",
@@ -88,50 +80,74 @@ const MOCK_EVENTS: FamilyEvent[] = [
     description: "Celebrating the founding of the Aivaz logistics empire. Venue: London Townhouse.",
     memberAccess: ["All Members"]
   },
+  
+  // June 2026
   {
-    id: "5",
-    title: "Succession Charter Review",
-    date: "2024-11-05",
+    id: "june-1",
+    title: "G2 Governance Summit",
+    date: "2026-06-10",
     eventType: "GOVERNANCE",
     priority: "URGENT",
-    description: "Final walkthrough of the Gen-2 decision-making framework and risk-tolerance alignment.",
-    memberAccess: ["Julian", "Marcus"]
+    description: "Annual summit to finalize the G2 decision-making thresholds and operational autonomy limits.",
+    memberAccess: ["Julian", "Marcus", "Sarah"]
   },
   {
-    id: "6",
-    title: "PE Distribution (Alpine Fund)",
-    date: "2024-11-01",
+    id: "june-2",
+    title: "Quarterly Dividend: Alpha Holdings",
+    date: "2026-06-22",
     eventType: "FINANCIAL",
     priority: "NORMAL",
-    description: "Quarterly yield distribution scheduled for Aivaz Strategic Reserve.",
-    memberAccess: ["Julian", "Elena"]
+    description: "Scheduled distribution from the Semiconductor Infrastructure fund to all designated principal accounts.",
+    memberAccess: ["Julian", "Elena", "Marcus"]
+  },
+
+  // July 2026
+  {
+    id: "july-1",
+    title: "Heritage Day BBQ - Aspen",
+    date: "2026-07-04",
+    eventType: "SOCIAL",
+    priority: "INFORMATIONAL",
+    description: "Independence Day gathering at the Winter Estate. Reviewing 2027 philanthropic targets during lunch.",
+    memberAccess: ["All Members"]
   },
   {
-    id: "7",
-    title: "G2 Governance Workshop",
-    date: "2024-11-10",
-    eventType: "MILESTONE",
-    priority: "NORMAL",
-    description: "Intensive training session for Next Gen principals on institutional investment vetting.",
-    memberAccess: ["Marcus", "Sarah"]
-  },
-  {
-    id: "8",
-    title: "Advisor Compliance Call",
-    date: "2024-11-08",
+    id: "july-2",
+    title: "Tax Residency Certification Due",
+    date: "2026-07-15",
     eventType: "GOVERNANCE",
     priority: "URGENT",
-    description: "Bi-weekly sync with legal team regarding EU Golden Visa residency and tax residency certificate updates.",
+    description: "Final deadline for Swiss and Singapore tax residency certificate filings. Coordination with @Legal required.",
     memberAccess: ["Julian", "@Legal"]
   },
+
+  // August 2026
   {
-    id: "9",
-    title: "Family Council: Foundation Vote",
-    date: "2024-11-15",
-    eventType: "GOVERNANCE",
+    id: "aug-1",
+    title: "Dynasty Trust Maturity Event",
+    date: "2026-08-12",
+    eventType: "MILESTONE",
     priority: "URGENT",
-    description: "Official vote on the 2025 Philanthropic Budget and selection of target non-profits.",
-    memberAccess: ["All Stakeholders"]
+    description: "Major milestone: The 2011 Dynasty Trust reaches its secondary maturity phase. Triggers G3 educational sub-trusts.",
+    memberAccess: ["Julian", "Elena", "Trustees"]
+  },
+  {
+    id: "aug-2",
+    title: "Advisor Performance Review",
+    date: "2026-08-25",
+    eventType: "GOVERNANCE",
+    priority: "NORMAL",
+    description: "Biannual performance audit of institutional partners (Morgan Stanley, UBS, GS).",
+    memberAccess: ["Julian", "Robert Chen"]
+  },
+  {
+    id: "aug-3",
+    title: "Foundation Gala Planning",
+    date: "2026-08-30",
+    eventType: "SOCIAL",
+    priority: "INFORMATIONAL",
+    description: "Kick-off call for the winter 2026 Heritage Foundation Gala committee.",
+    memberAccess: ["Elena", "Sarah"]
   }
 ];
 
