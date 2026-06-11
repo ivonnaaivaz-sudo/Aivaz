@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Cpu, 
   Loader2, 
@@ -25,7 +26,8 @@ import {
   Flag,
   ShieldAlert,
   Zap,
-  ArrowUpRight
+  ArrowUpRight,
+  MessageSquare
 } from "lucide-react";
 import { 
   AreaChart, 
@@ -132,7 +134,7 @@ export default function ChartRoomPage() {
     
     let text = "";
     if (source === 'blindspots') {
-      const topRisk = blindspots.sort((a, b) => parseInt(b.impact) - parseInt(a.impact))[0];
+      const topRisk = [...blindspots].sort((a, b) => parseInt(b.impact) - parseInt(a.impact))[0];
       text = `STRATEGY ALERT: Blindspot Analysis in ${activeScenario.toUpperCase()} scenario.\n\nThe current portfolio shows a ${topRisk.name} blindspot. The ${activeScenario} scenario suggests this risk increases impact to ${topRisk.impact}. How should we reallocate?`;
     } else if (simResult) {
       text = `PROGNOSIS OUTPUT: ${simResult.scenarioSummary}\n\nProjected Wealth: ${simResult.projectedWealth}\nRisk Level: ${simResult.riskLevel}`;
@@ -433,7 +435,7 @@ export default function ChartRoomPage() {
                       </div>
                       <div className="space-y-1 pb-4">
                         <div className="flex items-center gap-2">
-                          <p className="text-[10px] font-mono font-bold text-primary">{event.year}</p>
+                          <p className="text-px] font-mono font-bold text-primary">{event.year}</p>
                           <Badge variant="outline" className="text-[7px] font-mono py-0">{event.type}</Badge>
                         </div>
                         <p className="text-xs font-bold leading-tight">{event.title}</p>
