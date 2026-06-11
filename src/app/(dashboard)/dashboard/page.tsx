@@ -81,11 +81,20 @@ const MOCK_EVENTS: FamilyEvent[] = [
   {
     id: "4",
     title: "G2 Transition Workshop",
-    date: "2025-01-12",
+    date: "2024-11-20",
     eventType: "MILESTONE",
     priority: "URGENT",
     description: "Intensive session for Next Gen leadership preparation.",
     memberAccess: ["marcus", "sarah"]
+  },
+  {
+    id: "5",
+    title: "Quarterly Tax Filing",
+    date: "2024-11-10",
+    eventType: "FINANCIAL",
+    priority: "URGENT",
+    description: "Consolidated filing for all offshore entities.",
+    memberAccess: ["julian", "robert"]
   }
 ];
 
@@ -219,7 +228,7 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {/* Succession Engagement Module - Integrated above Calendar */}
+      {/* Succession Engagement Module */}
       <Dialog open={showEngagement} onOpenChange={setShowEngagement}>
         <DialogTrigger asChild>
           <Card className="glass-panel border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer group overflow-hidden relative">
@@ -270,7 +279,7 @@ export default function DashboardPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Primary Calendar View - Centered and Full Width */}
+      {/* Primary Calendar View */}
       <FamilyCalendar events={MOCK_EVENTS} />
 
       {/* Persistent Quick Actions Bar */}

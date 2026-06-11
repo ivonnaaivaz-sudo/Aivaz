@@ -88,8 +88,7 @@ export function FamilyCalendar({ events }: { events: FamilyEvent[] }) {
             <CalendarIcon className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <CardTitle className="text-xl font-headline font-bold">Family Governance Calendar</CardTitle>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Institutional Planning View</p>
+            <CardTitle className="text-xl font-headline font-bold">Family Calendar</CardTitle>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -105,7 +104,6 @@ export function FamilyCalendar({ events }: { events: FamilyEvent[] }) {
         </div>
       </CardHeader>
       <CardContent className="p-0">
-        {/* Calendar Grid Header */}
         <div className="grid grid-cols-7 border-b border-white/5">
           {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
             <div key={day} className="py-3 text-center text-[10px] font-bold uppercase tracking-widest text-muted-foreground bg-white/[0.02]">
@@ -114,7 +112,6 @@ export function FamilyCalendar({ events }: { events: FamilyEvent[] }) {
           ))}
         </div>
 
-        {/* Calendar Grid Days */}
         <div className="grid grid-cols-7 auto-rows-fr">
           {days.map((day, idx) => {
             const dayEvents = getEventsForDay(day);
