@@ -308,7 +308,6 @@ export default function BridgeHub() {
                       dataKey="value"
                       stroke="none"
                     >
-                      {assetAllocation}
                       {assetAllocation.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
