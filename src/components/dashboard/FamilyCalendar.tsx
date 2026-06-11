@@ -1,14 +1,44 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Landmark, Users, Trophy, AlertCircle, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { 
+  Calendar as CalendarIcon, 
+  Landmark, 
+  Users, 
+  Trophy, 
+  ChevronLeft, 
+  ChevronRight,
+  Info
+} from "lucide-react";
+import { 
+  format, 
+  addMonths, 
+  subMonths, 
+  startOfMonth, 
+  endOfMonth, 
+  startOfWeek, 
+  endOfWeek, 
+  isSameMonth, 
+  isSameDay, 
+  addDays, 
+  eachDayOfInterval,
+  parseISO
+} from "date-fns";
+import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export type FamilyEvent = {
   id: string;
   title: string;
-  date: string;
+  date: string; // ISO string format YYYY-MM-DD
   eventType: 'GOVERNANCE' | 'FINANCIAL' | 'SOCIAL' | 'MILESTONE';
   priority: 'URGENT' | 'NORMAL' | 'INFORMATIONAL';
   description: string;
@@ -16,68 +46,155 @@ export type FamilyEvent = {
 };
 
 const typeConfig = {
-  GOVERNANCE: { icon: Users, color: "text-blue-500", label: "Governance" },
-  FINANCIAL: { icon: Landmark, color: "text-emerald-500", label: "Financial" },
-  SOCIAL: { icon: Trophy, color: "text-amber-500", label: "Social" },
-  MILESTONE: { icon: Calendar, color: "text-primary", label: "Milestone" },
+  GOVERNANCE: { icon: Users, color: "text-blue-500", bg: "bg-blue-500/10", border: "border-blue-500/20", label: "Governance" },
+  FINANCIAL: { icon: Landmark, color: "text-emerald-500", bg: "bg-emerald-500/10", border: "border-emerald-500/20", label: "Financial" },
+  SOCIAL: { icon: Trophy, color: "text-amber-500", bg: "bg-amber-500/10", border: "border-amber-500/20", label: "Social" },
+  MILESTONE: { icon: CalendarIcon, color: "text-primary", bg: "bg-primary/10", border: "border-primary/20", label: "Milestone" },
 };
 
 const priorityConfig = {
-  URGENT: "border-red-500/50 bg-red-500/10 text-red-500",
-  NORMAL: "border-primary/20 bg-primary/5 text-primary",
-  INFORMATIONAL: "border-white/10 bg-white/5 text-muted-foreground",
+  URGENT: "text-red-500",
+  NORMAL: "text-primary",
+  INFORMATIONAL: "text-muted-foreground",
 };
 
 export function FamilyCalendar({ events }: { events: FamilyEvent[] }) {
-  const sortedEvents = useMemo(() => {
-    return [...events].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [events]);
+  const [currentDate, setCurrentDate] = useState(new Date());
+
+  const days = useMemo(() => {
+    const monthStart = startOfMonth(currentDate);
+    const monthEnd = endOfMonth(monthStart);
+    const startDate = startOfWeek(monthStart);
+    const endDate = endOfWeek(monthEnd);
+
+    return eachDayOfInterval({
+      start: startDate,
+      end: endDate,
+    });
+  }, [currentDate]);
+
+  const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
+  const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
+
+  const getEventsForDay = (day: Date) => {
+    return events.filter(event => isSameDay(parseISO(event.date), day));
+  };
 
   return (
-    <Card className="glass-panel border-white/5">
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
-            <Calendar className="h-3 w-3" />
-            Family Calendar
-          </CardTitle>
-          <Badge variant="outline" className="text-[8px] opacity-50">Sync Active</Badge>
+    <Card className="glass-panel border-white/5 overflow-hidden">
+      <CardHeader className="flex flex-row items-center justify-between pb-6 border-b border-white/5">
+        <div className="flex items-center gap-4">
+          <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
+            <CalendarIcon className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <CardTitle className="text-xl font-headline font-bold">Family Governance Calendar</CardTitle>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Institutional Planning View</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" onClick={prevMonth} className="h-8 w-8 hover:bg-white/5">
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <span className="text-sm font-bold min-w-[120px] text-center">
+            {format(currentDate, "MMMM yyyy")}
+          </span>
+          <Button variant="ghost" size="icon" onClick={nextMonth} className="h-8 w-8 hover:bg-white/5">
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {sortedEvents.length === 0 ? (
-          <p className="text-xs text-muted-foreground italic text-center py-4">No upcoming events scheduled.</p>
-        ) : (
-          sortedEvents.map((event) => {
-            const config = typeConfig[event.eventType];
+      <CardContent className="p-0">
+        {/* Calendar Grid Header */}
+        <div className="grid grid-cols-7 border-b border-white/5">
+          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+            <div key={day} className="py-3 text-center text-[10px] font-bold uppercase tracking-widest text-muted-foreground bg-white/[0.02]">
+              {day}
+            </div>
+          ))}
+        </div>
+
+        {/* Calendar Grid Days */}
+        <div className="grid grid-cols-7 auto-rows-fr">
+          {days.map((day, idx) => {
+            const dayEvents = getEventsForDay(day);
+            const isToday = isSameDay(day, new Date());
+            const isCurrentMonth = isSameMonth(day, currentDate);
+
             return (
-              <div key={event.id} className="flex gap-3 group relative">
-                <div className="flex flex-col items-center shrink-0">
-                  <div className={`w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center group-hover:border-primary/30 transition-colors`}>
-                    <config.icon className={`h-4 w-4 ${config.color}`} />
-                  </div>
-                  <div className="w-px flex-1 bg-white/5 my-1 group-last:hidden" />
+              <div 
+                key={idx} 
+                className={cn(
+                  "min-h-[120px] p-2 border-r border-b border-white/5 transition-colors relative group",
+                  !isCurrentMonth ? "bg-black/20 opacity-30" : "hover:bg-white/[0.02]",
+                  isToday && "bg-primary/[0.03]"
+                )}
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <span className={cn(
+                    "text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full",
+                    isToday && "bg-primary text-primary-foreground shadow-[0_0_10px_rgba(75,163,199,0.5)]"
+                  )}>
+                    {format(day, "d")}
+                  </span>
                 </div>
-                <div className="flex-1 pb-4">
-                  <div className="flex justify-between items-start">
-                    <p className="text-xs font-bold leading-none">{event.title}</p>
-                    <span className="text-[9px] font-bold text-muted-foreground uppercase">{event.date}</span>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground mt-1 line-clamp-1">{event.description}</p>
-                  <div className="flex gap-1.5 mt-2">
-                    <Badge variant="outline" className={`text-[7px] font-bold uppercase tracking-tighter ${priorityConfig[event.priority]}`}>
-                      {event.priority}
-                    </Badge>
-                    <Badge variant="outline" className="text-[7px] font-bold uppercase tracking-tighter border-white/5 bg-white/[0.02]">
-                      {config.label}
-                    </Badge>
-                  </div>
+                
+                <div className="space-y-1">
+                  {dayEvents.map((event) => {
+                    const config = typeConfig[event.eventType];
+                    return (
+                      <TooltipProvider key={event.id}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className={cn(
+                              "text-[10px] p-1.5 rounded border truncate cursor-pointer transition-all hover:scale-[1.02]",
+                              config.bg, config.border, config.color,
+                              event.priority === 'URGENT' && "font-bold ring-1 ring-red-500/20"
+                            )}>
+                              <div className="flex items-center gap-1">
+                                <config.icon className="h-2.5 w-2.5 shrink-0" />
+                                <span className="truncate">{event.title}</span>
+                              </div>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent className="glass-panel border-white/10 p-3 max-w-xs">
+                            <div className="space-y-2">
+                              <div className="flex justify-between items-center">
+                                <Badge variant="outline" className={cn("text-[8px] uppercase", config.bg, config.color, config.border)}>
+                                  {config.label}
+                                </Badge>
+                                <span className={cn("text-[8px] font-bold", priorityConfig[event.priority])}>
+                                  {event.priority}
+                                </span>
+                              </div>
+                              <p className="text-xs font-bold">{event.title}</p>
+                              <p className="text-[10px] text-muted-foreground leading-relaxed">{event.description}</p>
+                              <div className="pt-2 border-t border-white/5 flex items-center gap-2">
+                                <Users className="h-3 w-3 text-muted-foreground" />
+                                <span className="text-[8px] uppercase tracking-tighter text-muted-foreground">
+                                  Access: {event.memberAccess.join(", ")}
+                                </span>
+                              </div>
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    );
+                  })}
                 </div>
               </div>
             );
-          })
-        )}
+          })}
+        </div>
       </CardContent>
+      <div className="p-4 bg-white/[0.01] border-t border-white/5 flex items-center justify-center gap-6">
+        {Object.entries(typeConfig).map(([type, config]) => (
+          <div key={type} className="flex items-center gap-2">
+            <div className={cn("w-2 h-2 rounded-full", config.bg.replace('/10', ''), "opacity-60")} />
+            <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">{config.label}</span>
+          </div>
+        ))}
+      </div>
     </Card>
   );
 }

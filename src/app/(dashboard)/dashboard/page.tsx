@@ -1,9 +1,8 @@
-
 "use client";
 
 import { useState } from "react";
 import { useUser, useDoc } from "@/firebase";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -34,7 +33,6 @@ import {
 import { 
   TrendingUp, 
   ShieldCheck, 
-  Activity,
   Globe,
   Calendar as CalendarIcon,
   HeartPulse,
@@ -42,13 +40,11 @@ import {
   RefreshCw,
   Lock,
   Sparkles,
-  Radio,
-  PlayCircle,
-  Clock,
   Zap,
   Users,
   BookOpen,
-  ArrowRight
+  ArrowRight,
+  Activity
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -58,7 +54,7 @@ const MOCK_EVENTS: FamilyEvent[] = [
   {
     id: "1",
     title: "Succession Charter Review",
-    date: "Nov 15",
+    date: "2024-11-15",
     eventType: "GOVERNANCE",
     priority: "URGENT",
     description: "Final walkthrough of the Gen-2 decision-making framework.",
@@ -67,7 +63,7 @@ const MOCK_EVENTS: FamilyEvent[] = [
   {
     id: "2",
     title: "PE Distribution (Alpine Fund)",
-    date: "Dec 01",
+    date: "2024-12-01",
     eventType: "FINANCIAL",
     priority: "NORMAL",
     description: "Quarterly yield distribution scheduled for Aivaz Holding Co.",
@@ -76,7 +72,7 @@ const MOCK_EVENTS: FamilyEvent[] = [
   {
     id: "3",
     title: "Family Reunion (Aspen)",
-    date: "Dec 24",
+    date: "2024-12-24",
     eventType: "SOCIAL",
     priority: "INFORMATIONAL",
     description: "Annual heritage gathering and philanthropic mission update.",
@@ -85,7 +81,7 @@ const MOCK_EVENTS: FamilyEvent[] = [
   {
     id: "4",
     title: "G2 Transition Workshop",
-    date: "Jan 12",
+    date: "2025-01-12",
     eventType: "MILESTONE",
     priority: "URGENT",
     description: "Intensive session for Next Gen leadership preparation.",
@@ -223,108 +219,59 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Main Column: Succession Engagement & Family Calendar */}
-        <div className="lg:col-span-8 space-y-8">
-          {/* Succession Engagement Module */}
-          <Dialog open={showEngagement} onOpenChange={setShowEngagement}>
-            <DialogTrigger asChild>
-              <Card className="glass-panel border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer group overflow-hidden relative">
-                <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-                  <BookOpen className="h-24 w-24" />
+      {/* Succession Engagement Module - Integrated above Calendar */}
+      <Dialog open={showEngagement} onOpenChange={setShowEngagement}>
+        <DialogTrigger asChild>
+          <Card className="glass-panel border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer group overflow-hidden relative">
+            <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+              <BookOpen className="h-24 w-24" />
+            </div>
+            <CardContent className="p-8 flex items-center justify-between gap-6 relative z-10">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 mb-2">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Strategic Insight</span>
                 </div>
-                <CardContent className="p-8 flex items-center justify-between gap-6 relative z-10">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Sparkles className="h-4 w-4 text-primary" />
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Strategic Insight</span>
-                    </div>
-                    <h3 className="text-xl font-headline font-bold">Hey, do you want to know some info about organizing better succession legacies?</h3>
-                    <p className="text-sm text-muted-foreground">Discover the psychological frameworks used by the world's most enduring family offices.</p>
-                  </div>
-                  <Button size="icon" className="rounded-full h-12 w-12 shrink-0 shadow-lg">
-                    <ArrowRight className="h-6 w-6" />
-                  </Button>
-                </CardContent>
-              </Card>
-            </DialogTrigger>
-            <DialogContent className="glass-panel border-white/10 max-w-2xl">
-              <DialogHeader>
-                <DialogTitle className="text-2xl font-headline">Succession Legacy Framework</DialogTitle>
-                <DialogDescription>
-                  Deep-dive into multi-generational stability and intellectual capital growth.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-6 py-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {[
-                    { title: "Intellectual Capital", desc: "Prioritize the transfer of wisdom and decision-making frameworks over pure financial assets." },
-                    { title: "Governance Charters", desc: "Establish formal Family Councils to manage risk tolerance and internal alignment." },
-                    { title: "G2 Integration", desc: "How to effectively bridge the gap between founder vision and successor operational styles." },
-                    { title: "Emotional Ownership", desc: "Developing a sense of shared responsibility and brand stewardship within the family." }
-                  ].map((item, i) => (
-                    <div key={i} className="p-4 rounded-xl bg-white/[0.02] border border-white/5">
-                      <p className="font-bold text-sm mb-1 text-primary">{item.title}</p>
-                      <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
-                    </div>
-                  ))}
-                </div>
-                <div className="p-4 rounded-xl bg-primary/10 border border-primary/20 flex gap-4">
-                  <Zap className="h-6 w-6 text-primary shrink-0" />
-                  <p className="text-sm italic text-foreground/80">"The greatest risk to a family legacy is not market volatility, but a lack of human-centric governance." — Aivaz Core</p>
-                </div>
+                <h3 className="text-xl font-headline font-bold">Hey, do you want to know some info about organizing better succession legacies?</h3>
+                <p className="text-sm text-muted-foreground">Discover the psychological frameworks used by the world's most enduring family offices.</p>
               </div>
-            </DialogContent>
-          </Dialog>
-
-          {/* Primary Calendar View */}
-          <FamilyCalendar events={MOCK_EVENTS} />
-        </div>
-
-        {/* Support Column: Audio Briefing & Snippets */}
-        <div className="lg:col-span-4 space-y-6">
-          <Card className="glass-panel bg-primary/5 border-primary/20">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Audio Briefing</CardTitle>
-                <Radio className="h-4 w-4 text-primary animate-pulse" />
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center gap-4 p-4 rounded-xl bg-primary/10 border border-primary/20 group cursor-pointer hover:bg-primary/20 transition-all">
-                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                  <PlayCircle className="h-6 w-6 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-bold">Q4 Strategic Summary</p>
-                  <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Aivaz Synthetic Voice • 4:20</p>
-                </div>
-              </div>
+              <Button size="icon" className="rounded-full h-12 w-12 shrink-0 shadow-lg">
+                <ArrowRight className="h-6 w-6" />
+              </Button>
             </CardContent>
           </Card>
-
-          <Card className="glass-panel border-white/5">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Daily Snippets</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
+        </DialogTrigger>
+        <DialogContent className="glass-panel border-white/10 max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-headline">Succession Legacy Framework</DialogTitle>
+            <DialogDescription>
+              Deep-dive into multi-generational stability and intellectual capital growth.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-6 py-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {[
-                { icon: Zap, label: "Market Intelligence", text: "Tech supply chain volatility up 12%. Reviewing liquidity bridge." },
-                { icon: Clock, label: "Heritage Milestone", text: "Marcus (G2) scheduled for trust governance training in 4 days." },
-                { icon: ShieldCheck, label: "Security Status", text: "All G1 digital vaults synchronized with biometric overrides." }
-              ].map((snippet, i) => (
-                <div key={i} className="flex gap-3 p-3 rounded-lg bg-white/[0.02] border border-white/5 hover:border-primary/20 transition-all group">
-                  <snippet.icon className="h-3.5 w-3.5 text-primary mt-0.5" />
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-primary/70">{snippet.label}</p>
-                    <p className="text-xs text-muted-foreground leading-tight mt-1">{snippet.text}</p>
-                  </div>
+                { title: "Intellectual Capital", desc: "Prioritize the transfer of wisdom and decision-making frameworks over pure financial assets." },
+                { title: "Governance Charters", desc: "Establish formal Family Councils to manage risk tolerance and internal alignment." },
+                { title: "G2 Integration", desc: "How to effectively bridge the gap between founder vision and successor operational styles." },
+                { title: "Emotional Ownership", desc: "Developing a sense of shared responsibility and brand stewardship within the family." }
+              ].map((item, i) => (
+                <div key={i} className="p-4 rounded-xl bg-white/[0.02] border border-white/5">
+                  <p className="font-bold text-sm mb-1 text-primary">{item.title}</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
                 </div>
               ))}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+            </div>
+            <div className="p-4 rounded-xl bg-primary/10 border border-primary/20 flex gap-4">
+              <Zap className="h-6 w-6 text-primary shrink-0" />
+              <p className="text-sm italic text-foreground/80">"The greatest risk to a family legacy is not market volatility, but a lack of human-centric governance." — Aivaz Core</p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Primary Calendar View - Centered and Full Width */}
+      <FamilyCalendar events={MOCK_EVENTS} />
 
       {/* Persistent Quick Actions Bar */}
       <div className="fixed bottom-0 left-[280px] right-0 p-6 bg-background/80 backdrop-blur-xl border-t border-white/5 z-30">
