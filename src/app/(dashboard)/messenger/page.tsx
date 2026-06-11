@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
@@ -11,6 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Shield, User, MoreVertical, Search, Paperclip, Send, Sparkles, ExternalLink, MessageSquare } from "lucide-react";
 
+// Stable mock dates to prevent hydration mismatch
 const MOCK_MESSAGES = [
   {
     id: "m1",
@@ -18,7 +18,7 @@ const MOCK_MESSAGES = [
     senderName: "Robert Chen (Advisor)",
     text: "Julian, I've updated the roadmap with the EU Golden Visa eligibility targets for 2025. We should coordinate the side-letter renewal for the PE fund soon.",
     type: "text",
-    timestamp: new Date(Date.now() - 3600000 * 5).toISOString(), // 5 hours ago
+    timestamp: "2024-11-06T08:00:00.000Z",
   },
   {
     id: "m2",
@@ -26,7 +26,7 @@ const MOCK_MESSAGES = [
     senderName: "Julian Aivaz",
     text: "Thanks Robert. Marcus, have you had a chance to look at the Aivaz Foundation bylaws? We want to ensure G3 is properly integrated into the philanthropic mission.",
     type: "text",
-    timestamp: new Date(Date.now() - 3600000 * 4).toISOString(), // 4 hours ago
+    timestamp: "2024-11-06T09:00:00.000Z",
   },
   {
     id: "m3",
@@ -34,7 +34,7 @@ const MOCK_MESSAGES = [
     senderName: "Marcus Aivaz",
     text: "I'm reviewing them now. I agree with the focus on intellectual capital growth. I'm also curious about the Liquidity Bridge recommendation Aivaz flagged today.",
     type: "text",
-    timestamp: new Date(Date.now() - 3600000 * 3).toISOString(), // 3 hours ago
+    timestamp: "2024-11-06T10:00:00.000Z",
   },
   {
     id: "m4",
@@ -43,7 +43,7 @@ const MOCK_MESSAGES = [
     text: "Shared a recommendation: Generational Liquidity Bridge. Target: @Marcus & Next Gen. Impact: Strategic Stability",
     type: "recommendation",
     recommendationId: "rec-1",
-    timestamp: new Date(Date.now() - 3600000 * 2).toISOString(), // 2 hours ago
+    timestamp: "2024-11-06T11:00:00.000Z",
   },
   {
     id: "m5",
@@ -51,7 +51,7 @@ const MOCK_MESSAGES = [
     senderName: "Julian Aivaz",
     text: "The bridge makes sense. Let's move 5% of the tech holdings as suggested. It buffers the education trust against the volatility we're seeing in the supply chain sector.",
     type: "text",
-    timestamp: new Date(Date.now() - 3600000 * 1).toISOString(), // 1 hour ago
+    timestamp: "2024-11-06T12:00:00.000Z",
   }
 ];
 
@@ -59,7 +59,12 @@ export default function MessengerPage() {
   const { user } = useUser();
   const db = useFirestore();
   const [inputText, setInputText] = useState("");
+  const [mounted, setMounted] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const messagesQuery = useMemo(() => {
     if (!user || !db) return null;
@@ -70,20 +75,17 @@ export default function MessengerPage() {
 
   const messages = useMemo(() => {
     if (!realMessages || realMessages.length === 0) return MOCK_MESSAGES;
-    // If we have real messages, we could potentially merge them, but for the demo, 
-    // we'll just prepend mock messages to show a history
     return [...MOCK_MESSAGES, ...realMessages];
   }, [realMessages]);
 
   useEffect(() => {
-    if (scrollRef.current) {
-      // Find the viewport inside ScrollArea to scroll
+    if (scrollRef.current && mounted) {
       const viewport = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
       if (viewport) {
         viewport.scrollTop = viewport.scrollHeight;
       }
     }
-  }, [messages]);
+  }, [messages, mounted]);
 
   const handleSendMessage = async () => {
     if (!inputText.trim() || !user || !db) return;
@@ -100,6 +102,15 @@ export default function MessengerPage() {
       setInputText("");
     } catch (e) {
       console.error(e);
+    }
+  };
+
+  const formatTime = (timestamp: string) => {
+    if (!mounted) return "";
+    try {
+      return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch (e) {
+      return "";
     }
   };
 
@@ -198,7 +209,7 @@ export default function MessengerPage() {
                   
                   <div className={`space-y-1 flex flex-col ${isCurrentUser ? 'items-end' : 'items-start'}`}>
                     <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground px-1">
-                      {msg.senderName} • {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'now'}
+                      {msg.senderName} • {formatTime(msg.timestamp)}
                     </span>
                     
                     {msg.type === "recommendation" ? (

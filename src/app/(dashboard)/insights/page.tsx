@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useUser, useFirestore, useDoc, useCollection } from "@/firebase";
 import { collection, doc, setDoc, query, orderBy, writeBatch } from "firebase/firestore";
 import { generateFamilyRecommendations } from "@/ai/flows/family-recommendations";
@@ -20,7 +20,7 @@ const MOCK_RECOMMENDATIONS = [
     category: "Succession",
     priority: "High",
     link: "/strategy",
-    createdAt: new Date().toISOString(),
+    createdAt: "2024-11-06T10:00:00.000Z",
     isDemo: true
   },
   {
@@ -32,7 +32,7 @@ const MOCK_RECOMMENDATIONS = [
     category: "Governance",
     priority: "Medium",
     link: "/dna",
-    createdAt: new Date().toISOString(),
+    createdAt: "2024-11-05T14:30:00.000Z",
     isDemo: true
   },
   {
@@ -44,7 +44,7 @@ const MOCK_RECOMMENDATIONS = [
     category: "Philanthropy",
     priority: "Low",
     link: "/vault",
-    createdAt: new Date().toISOString(),
+    createdAt: "2024-11-04T09:15:00.000Z",
     isDemo: true
   }
 ];
@@ -54,6 +54,11 @@ export default function InsightsPage() {
   const db = useFirestore();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const { data: dna } = useDoc(user ? `users/${user.uid}/dna/current` : null);
   
@@ -135,6 +140,15 @@ export default function InsightsPage() {
     }
   };
 
+  const formatDate = (dateStr: string) => {
+    if (!mounted) return "";
+    try {
+      return new Date(dateStr).toLocaleDateString();
+    } catch (e) {
+      return "";
+    }
+  };
+
   return (
     <div className="space-y-8 max-w-6xl mx-auto pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -185,7 +199,7 @@ export default function InsightsPage() {
                   </Badge>
                   {rec.isDemo && <Badge variant="secondary" className="text-[8px] uppercase tracking-tighter bg-white/5 border-white/10">Demo</Badge>}
                 </div>
-                <span className="text-[10px] text-muted-foreground font-mono">{new Date(rec.createdAt).toLocaleDateString()}</span>
+                <span className="text-[10px] text-muted-foreground font-mono">{formatDate(rec.createdAt)}</span>
               </div>
               <CardTitle className="text-xl group-hover:text-primary transition-colors">{rec.title}</CardTitle>
             </CardHeader>
