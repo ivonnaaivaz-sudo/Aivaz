@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -45,320 +44,78 @@ import {
   Users,
   BookOpen,
   ArrowRight,
-  Activity
+  Activity,
+  AlertTriangle
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { FamilyCalendar, type FamilyEvent } from "@/components/dashboard/FamilyCalendar";
 
 const MOCK_EVENTS: FamilyEvent[] = [
-  // November 2024 (Existing)
-  {
-    id: "1",
-    title: "Quarterly Strategy Video Call",
-    date: "2024-11-12",
-    eventType: "GOVERNANCE",
-    priority: "URGENT",
-    description: "Reviewing year-end tax positions and G2 transition readiness with Robert Chen (Strategic Advisor).",
-    memberAccess: ["Julian", "Marcus", "@Advisor"]
-  },
-  {
-    id: "2",
-    title: "Trust Inheritance Tranche",
-    date: "2024-11-18",
-    eventType: "FINANCIAL",
-    priority: "URGENT",
-    description: "Scheduled payout from the 1992 Dynasty Trust. Coordination with UBS Zurich required for final biometric verification.",
-    memberAccess: ["Julian", "Elena"]
-  },
-  {
-    id: "4",
-    title: "Heritage Anniversary Dinner",
-    date: "2024-11-28",
-    eventType: "SOCIAL",
-    priority: "INFORMATIONAL",
-    description: "Celebrating the founding of the Aivaz logistics empire. Venue: London Townhouse.",
-    memberAccess: ["All Members"]
-  },
-  
-  // June 2026
-  {
-    id: "june-1",
-    title: "G2 Governance Summit",
-    date: "2026-06-10",
-    eventType: "GOVERNANCE",
-    priority: "URGENT",
-    description: "Annual summit to finalize the G2 decision-making thresholds and operational autonomy limits.",
-    memberAccess: ["Julian", "Marcus", "Sarah"]
-  },
-  {
-    id: "june-2",
-    title: "Quarterly Dividend: Alpha Holdings",
-    date: "2026-06-22",
-    eventType: "FINANCIAL",
-    priority: "NORMAL",
-    description: "Scheduled distribution from the Semiconductor Infrastructure fund to all designated principal accounts.",
-    memberAccess: ["Julian", "Elena", "Marcus"]
-  },
-
-  // July 2026
-  {
-    id: "july-1",
-    title: "Heritage Day BBQ - Aspen",
-    date: "2026-07-04",
-    eventType: "SOCIAL",
-    priority: "INFORMATIONAL",
-    description: "Independence Day gathering at the Winter Estate. Reviewing 2027 philanthropic targets during lunch.",
-    memberAccess: ["All Members"]
-  },
-  {
-    id: "july-2",
-    title: "Tax Residency Certification Due",
-    date: "2026-07-15",
-    eventType: "GOVERNANCE",
-    priority: "URGENT",
-    description: "Final deadline for Swiss and Singapore tax residency certificate filings. Coordination with @Legal required.",
-    memberAccess: ["Julian", "@Legal"]
-  },
-
-  // August 2026
-  {
-    id: "aug-1",
-    title: "Dynasty Trust Maturity Event",
-    date: "2026-08-12",
-    eventType: "MILESTONE",
-    priority: "URGENT",
-    description: "Major milestone: The 2011 Dynasty Trust reaches its secondary maturity phase. Triggers G3 educational sub-trusts.",
-    memberAccess: ["Julian", "Elena", "Trustees"]
-  },
-  {
-    id: "aug-2",
-    title: "Advisor Performance Review",
-    date: "2026-08-25",
-    eventType: "GOVERNANCE",
-    priority: "NORMAL",
-    description: "Biannual performance audit of institutional partners (Morgan Stanley, UBS, GS).",
-    memberAccess: ["Julian", "Robert Chen"]
-  },
-  {
-    id: "aug-3",
-    title: "Foundation Gala Planning",
-    date: "2026-08-30",
-    eventType: "SOCIAL",
-    priority: "INFORMATIONAL",
-    description: "Kick-off call for the winter 2026 Heritage Foundation Gala committee.",
-    memberAccess: ["Elena", "Sarah"]
-  }
+  { id: "1", title: "Quarterly Strategy Call", date: "2024-11-12", eventType: "GOVERNANCE", priority: "URGENT", description: "Reviewing year-end tax positions with Robert Chen.", memberAccess: ["Julian", "Marcus", "Robert"] },
+  { id: "2", title: "Aivaz Logistics Payout", date: "2024-11-18", eventType: "FINANCIAL", priority: "URGENT", description: "$5.2M Q4 liquidity event distribution.", memberAccess: ["Julian", "Elena"] },
+  { id: "june-1", title: "G2 Governance Summit", date: "2026-06-10", eventType: "GOVERNANCE", priority: "URGENT", description: "Finalizing G2 decision thresholds.", memberAccess: ["All Principals"] },
 ];
 
 const familyPhotos = [
-  { id: 1, url: "https://picsum.photos/seed/aspen1/1200/400", title: "Winter Estate 2024", hint: "luxury cabin" },
-  { id: 2, url: "https://picsum.photos/seed/yacht/1200/400", title: "Adriatic Expedition", hint: "luxury yacht" },
-  { id: 3, url: "https://picsum.photos/seed/london1/1200/400", title: "London Townhouse Gala", hint: "classic architecture" }
+  { id: 1, url: "https://picsum.photos/seed/aspen1/1200/400", title: "Heritage Archive", hint: "luxury cabin" }
 ];
 
 export default function DashboardPage() {
   const { user } = useUser();
   const { data: dna, loading: dnaLoading } = useDoc(user ? `users/${user.uid}/dna/current` : null);
-  const [showEngagement, setShowEngagement] = useState(false);
 
   if (dnaLoading) {
-    return (
-      <div className="space-y-8 max-w-7xl mx-auto p-8">
-        <Skeleton className="h-[400px] w-full rounded-2xl" />
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-          {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-32" />)}
-        </div>
-      </div>
-    );
+    return <div className="p-8"><Skeleton className="h-[400px] w-full rounded-2xl" /></div>;
   }
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-32">
-      {/* Hero Media Header */}
-      <div className="relative group">
-        <Carousel className="w-full rounded-3xl overflow-hidden border border-white/5 shadow-2xl">
-          <CarouselContent>
-            {familyPhotos.map((photo) => (
-              <CarouselItem key={photo.id}>
-                <div className="relative h-[400px] w-full">
-                  <Image 
-                    src={photo.url} 
-                    alt={photo.title} 
-                    fill 
-                    className="object-cover"
-                    data-ai-hint={photo.hint}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
-                  <div className="absolute bottom-8 left-8">
-                    <Badge className="mb-2 bg-primary/20 text-primary border-primary/30 backdrop-blur-md">Family Archive</Badge>
-                    <h2 className="text-3xl font-headline font-bold text-white drop-shadow-lg">{photo.title}</h2>
-                  </div>
-                </div>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselPrevious className="left-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-          <CarouselNext className="right-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-        </Carousel>
-      </div>
-
-      {/* Global Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-6">
-        <div className="flex items-center gap-4">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-auto p-0 hover:bg-transparent flex items-center gap-3">
-                <Avatar className="h-10 w-10 border border-primary/20">
-                  <AvatarImage src="https://picsum.photos/seed/family/100/100" />
-                  <AvatarFallback>AF</AvatarFallback>
-                </Avatar>
-                <div className="text-left">
-                  <p className="text-sm font-bold flex items-center gap-2">
-                    {dna?.familyProfile?.familyName || "Aivaz Family"} <ChevronDown className="h-3 w-3" />
-                  </p>
-                  <p className="text-[10px] text-muted-foreground font-bold tracking-widest uppercase">
-                    Institutional Tier
-                  </p>
-                </div>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="glass-panel w-56">
-              <DropdownMenuLabel>Switch Entity</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Aivaz Family Trust</DropdownMenuItem>
-              <DropdownMenuItem>Heritage Logistics Co.</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <div className="h-8 w-px bg-white/10 hidden md:block" />
-          <div className="hidden md:flex flex-col">
-            <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest flex items-center gap-1.5">
-              <div className="h-1 w-1 rounded-full bg-emerald-500 animate-pulse" />
-              All 12 Entities Synced
-            </span>
-            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter flex items-center gap-1.5">
-              <Users className="h-3 w-3" />
-              3 Members Online
-            </span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-6">
-          <div className="text-right hidden sm:block">
-            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Last Updated</p>
-            <p className="text-xs font-medium flex items-center gap-2 justify-end cursor-pointer group">
-              Today, 09:42 AM <RefreshCw className="h-3 w-3 text-primary group-hover:rotate-180 transition-transform duration-500" />
-            </p>
-          </div>
-          <Badge className="bg-primary/10 text-primary border-primary/20 flex items-center gap-2 py-1.5 px-3 rounded-full">
-            <Lock className="h-3 w-3" />
-            Privacy Mode Active
-          </Badge>
+      <div className="relative h-[240px] w-full rounded-3xl overflow-hidden border border-white/5">
+        <Image src={familyPhotos[0].url} alt="Aivaz Heritage" fill className="object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
+        <div className="absolute bottom-8 left-8">
+          <Badge className="mb-2 bg-primary/20 text-primary border-primary/30">Aivaz Heritage Repository</Badge>
+          <h2 className="text-3xl font-headline font-bold text-white">G2 Transition Command</h2>
         </div>
       </div>
 
-      {/* Executive Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         {[
-          { label: "Net Worth", value: "$142.4M", change: "+2.4%", icon: TrendingUp, color: "text-primary" },
-          { label: "Legacy Alignment", value: "78%", change: "Needs Engagement", icon: ShieldCheck, color: "text-amber-500" },
-          { label: "Geopolitical Risk", value: "Moderate", change: "Stable", icon: Globe, color: "text-emerald-500" },
-          { label: "Next Milestone", value: "Gen-2", change: "Target: 2028", icon: CalendarIcon, color: "text-primary" },
-          { label: "Overall Health", value: "84/100", change: "v4.2 Stable", icon: HeartPulse, color: "text-emerald-500" }
+          { label: "Total AUM", value: "$50.0M", change: "Threshold Met", icon: TrendingUp, color: "text-primary" },
+          { label: "Tech Exposure", value: "55%", change: "CONCENTRATED", icon: AlertTriangle, color: "text-amber-500" },
+          { label: "Alignment", value: "84.2%", change: "Stable", icon: ShieldCheck, color: "text-emerald-500" },
+          { label: "G2 Readiness", value: "Medium", change: "Training Active", icon: HeartPulse, color: "text-primary" },
+          { label: "Liquidity", value: "5%", change: "Tight", icon: Activity, color: "text-amber-500" }
         ].map((stat, i) => (
-          <Card key={i} className="glass-panel border-white/5 overflow-hidden">
+          <Card key={i} className="glass-panel border-white/5">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground">{stat.label}</CardTitle>
               <stat.icon className={`h-3.5 w-3.5 ${stat.color}`} />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold font-headline">{stat.value}</div>
-              <div className={`text-[9px] font-bold mt-1 uppercase tracking-tighter ${stat.color}/80`}>
-                {stat.change}
-              </div>
+              <div className={`text-[9px] font-bold mt-1 uppercase tracking-tighter ${stat.color}/80`}>{stat.change}</div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Primary Calendar View */}
       <FamilyCalendar events={MOCK_EVENTS} />
 
-      {/* Succession Engagement Module (Strategic Insight) */}
-      <Dialog open={showEngagement} onOpenChange={setShowEngagement}>
-        <DialogTrigger asChild>
-          <Card className="glass-panel border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer group overflow-hidden relative">
-            <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-              <BookOpen className="h-24 w-24" />
+      <Card className="glass-panel border-primary/20 bg-primary/5 p-8 flex items-center justify-between group cursor-pointer" asChild>
+        <Link href="/academy">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 mb-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Succession Intelligence</span>
             </div>
-            <CardContent className="p-8 flex items-center justify-between gap-6 relative z-10">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 mb-2">
-                  <Sparkles className="h-4 w-4 text-primary" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Strategic Insight</span>
-                </div>
-                <h3 className="text-xl font-headline font-bold">Hey, do you want to know some info about organizing better succession legacies?</h3>
-                <p className="text-sm text-muted-foreground">Discover the psychological frameworks used by the world's most enduring family offices.</p>
-              </div>
-              <Button size="icon" className="rounded-full h-12 w-12 shrink-0 shadow-lg">
-                <ArrowRight className="h-6 w-6" />
-              </Button>
-            </CardContent>
-          </Card>
-        </DialogTrigger>
-        <DialogContent className="glass-panel border-white/10 max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-headline">Succession Legacy Framework</DialogTitle>
-            <DialogDescription>
-              Deep-dive into multi-generational stability and intellectual capital growth.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-6 py-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {[
-                { title: "Intellectual Capital", desc: "Prioritize the transfer of wisdom and decision-making frameworks over pure financial assets." },
-                { title: "Governance Charters", desc: "Establish formal Family Councils to manage risk tolerance and internal alignment." },
-                { title: "G2 Integration", desc: "How to effectively bridge the gap between founder vision and successor operational styles." },
-                { title: "Emotional Ownership", desc: "Developing a sense of shared responsibility and brand stewardship within the family." }
-              ].map((item, i) => (
-                <div key={i} className="p-4 rounded-xl bg-white/[0.02] border border-white/5">
-                  <p className="font-bold text-sm mb-1 text-primary">{item.title}</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
-                </div>
-              ))}
-            </div>
-            <div className="p-4 rounded-xl bg-primary/10 border border-primary/20 flex gap-4">
-              <Zap className="h-6 w-6 text-primary shrink-0" />
-              <p className="text-sm italic text-foreground/80">"The greatest risk to a family legacy is not market volatility, but a lack of human-centric governance." — Aivaz Core</p>
-            </div>
+            <h3 className="text-xl font-headline font-bold">Review G2 Governance Framework</h3>
+            <p className="text-sm text-muted-foreground">Transitioning from Founder-led to Values-based institutional governance.</p>
           </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Persistent Quick Actions Bar */}
-      <div className="fixed bottom-0 left-[280px] right-0 p-6 bg-background/80 backdrop-blur-xl border-t border-white/5 z-30">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Legacy Ready Actions</span>
-          </div>
-          <div className="flex gap-3">
-            <Button variant="outline" size="sm" className="bg-white/5 border-white/10 text-[10px] font-bold uppercase tracking-widest" asChild>
-              <Link href="/simulator">
-                <Activity className="mr-2 h-3.5 w-3.5" /> Run New Simulation
-              </Link>
-            </Button>
-            <Button variant="outline" size="sm" className="bg-white/5 border-white/10 text-[10px] font-bold uppercase tracking-widest">
-              <BookOpen className="mr-2 h-3.5 w-3.5" /> Generate Charter
-            </Button>
-            <Button size="sm" className="shadow-lg text-[10px] font-bold uppercase tracking-widest" asChild>
-              <Link href="/insights">
-                <ShieldCheck className="mr-2 h-3.5 w-3.5" /> Review Alignment Report
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </div>
+          <Button size="icon" className="rounded-full h-12 w-12"><ArrowRight className="h-6 w-6" /></Button>
+        </Link>
+      </Card>
     </div>
   );
 }

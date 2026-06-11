@@ -28,7 +28,8 @@ import {
   EyeOff,
   TrendingUp,
   MapPin,
-  ArrowUpRight
+  ArrowUpRight,
+  AlertTriangle
 } from "lucide-react";
 import { 
   PieChart, 
@@ -41,22 +42,22 @@ import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 
 const assetAllocation = [
-  { name: 'Equities', value: 60, color: 'hsl(var(--primary))' },
-  { name: 'Real Estate', value: 20, color: 'hsl(var(--secondary))' },
-  { name: 'Fixed Income', value: 15, color: 'hsl(var(--accent))' },
-  { name: 'Alternatives', value: 5, color: 'hsl(var(--muted-foreground))' },
+  { name: 'Private Tech Equity', value: 55, color: 'hsl(var(--primary))' },
+  { name: 'Real Estate (Asia)', value: 30, color: 'hsl(var(--secondary))' },
+  { name: 'Fixed Income', value: 10, color: 'hsl(var(--accent))' },
+  { name: 'Cash/Liquid', value: 5, color: 'hsl(var(--muted-foreground))' },
 ];
 
 const memberExposure = [
-  { name: "Julian (G1)", percent: 45, color: "bg-primary" },
-  { name: "Elena (G1)", percent: 35, color: "bg-primary/60" },
-  { name: "Marcus (G2)", percent: 20, color: "bg-primary/30" }
+  { name: "Julian (G1)", percent: 65, color: "bg-primary" },
+  { name: "Marcus (G2)", percent: 20, color: "bg-primary/60" },
+  { name: "Elena (G2)", percent: 15, color: "bg-primary/30" }
 ];
 
 const mockLinkedAccounts = [
-  { id: 1, name: "Aivaz Family Trust", institution: "Morgan Stanley", balance: "$45,200,000", status: "Active", type: "Irrevocable Trust" },
-  { id: 2, name: "Offshore Reserve", institution: "UBS Zurich", balance: "$28,150,000", status: "Synced", type: "Private Banking" },
-  { id: 3, name: "PE HoldCo", institution: "Goldman Sachs", balance: "$12,400,000", status: "Active", type: "Business" },
+  { id: 1, name: "Aivaz Family Trust", institution: "Morgan Stanley", balance: "$27,500,000", status: "Concentrated", type: "Tech Equity" },
+  { id: 2, name: "Asian Strategic RE", institution: "UBS Singapore", balance: "$15,000,000", status: "Synced", type: "Real Estate" },
+  { id: 3, name: "Strategic Reserve", institution: "Goldman Sachs", balance: "$5,000,000", status: "Stable", type: "Fixed Income" },
 ];
 
 export default function BridgeHub() {
@@ -143,36 +144,49 @@ export default function BridgeHub() {
         </div>
       </div>
 
+      {/* Demo Alert */}
+      <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-1000">
+        <div className="p-2 bg-amber-500/20 rounded-full">
+          <AlertTriangle className="h-5 w-5 text-amber-500" />
+        </div>
+        <div>
+          <p className="text-sm font-bold text-amber-500 uppercase tracking-widest">Concentration Threshold Alert</p>
+          <p className="text-xs text-muted-foreground">Tech equity holdings have reached 55% of AUM. Downside risk projected at $12M.</p>
+        </div>
+        <Button variant="outline" size="sm" className="ml-auto bg-amber-500/10 border-amber-500/30 text-amber-500 text-[10px] font-bold uppercase" asChild>
+          <Link href="/chart-room">Analyze Blindspots</Link>
+        </Button>
+      </div>
+
       {viewMode === "individual" ? (
-        /* INDIVIDUAL MODE: Detail Oriented, Raw Values */
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+        <div className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card className="glass-panel border-white/5 bg-primary/5">
               <CardContent className="p-6">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Total Individual Value</p>
-                <h3 className="text-3xl font-headline font-bold text-primary">$142,400,000</h3>
+                <h3 className="text-3xl font-headline font-bold text-primary">$50,000,000</h3>
                 <div className="mt-4 flex items-center gap-2 text-xs font-bold text-emerald-500">
                   <TrendingUp className="h-3.5 w-3.5" />
-                  <span>+4.2% Growth YTD</span>
+                  <span>+12.4% Growth YTD</span>
                 </div>
               </CardContent>
             </Card>
             <Card className="glass-panel border-white/5">
               <CardContent className="p-6">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Liquid Capital</p>
-                <h3 className="text-3xl font-headline font-bold">$28,150,000</h3>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Liquid Capital (5%)</p>
+                <h3 className="text-3xl font-headline font-bold">$2,500,000</h3>
                 <div className="mt-4 h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                  <div className="h-full bg-primary w-[20%]" />
+                  <div className="h-full bg-primary w-[5%]" />
                 </div>
               </CardContent>
             </Card>
             <Card className="glass-panel border-white/5">
               <CardContent className="p-6">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Physical Holdings</p>
-                <h3 className="text-3xl font-headline font-bold">{manualAssets?.length || 0} Assets</h3>
-                <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground font-bold uppercase tracking-widest">
-                  <MapPin className="h-3.5 w-3.5" />
-                  <span>4 Jurisdictions</span>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Concentrated Assets</p>
+                <h3 className="text-3xl font-headline font-bold">55% Exposure</h3>
+                <div className="mt-4 flex items-center gap-2 text-xs text-amber-500 font-bold uppercase tracking-widest">
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  <span>High Tech Concentration</span>
                 </div>
               </CardContent>
             </Card>
@@ -198,7 +212,7 @@ export default function BridgeHub() {
                   <div className="grid gap-4 py-4">
                     <div className="grid gap-2">
                       <Label>Asset Name</Label>
-                      <Input placeholder="e.g. London Office Tower" value={newAsset.name} onChange={(e) => setNewAsset({...newAsset, name: e.target.value})} />
+                      <Input placeholder="e.g. Hong Kong Commercial" value={newAsset.name} onChange={(e) => setNewAsset({...newAsset, name: e.target.value})} />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="grid gap-2">
@@ -254,29 +268,14 @@ export default function BridgeHub() {
                     </TableCell>
                     <TableCell className="text-[10px] font-bold uppercase tracking-widest opacity-60">{acc.type}</TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="bg-emerald-500/5 text-emerald-500 border-emerald-500/20 text-[8px] font-bold px-2 py-0">
+                      <Badge variant="outline" className={cn(
+                        "text-[8px] font-bold px-2 py-0",
+                        acc.status === 'Concentrated' ? 'bg-amber-500/5 text-amber-500 border-amber-500/20' : 'bg-emerald-500/5 text-emerald-500 border-emerald-500/20'
+                      )}>
                         {acc.status}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right font-headline font-bold text-primary px-6">{acc.balance}</TableCell>
-                  </TableRow>
-                ))}
-                {manualAssets?.map((asset) => (
-                  <TableRow key={asset.id} className="border-white/5 hover:bg-white/5 transition-colors group">
-                    <TableCell className="px-6 py-5">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">
-                          <Home className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-bold">{asset.name}</p>
-                          <p className="text-[10px] text-muted-foreground uppercase font-medium">{asset.location}</p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-[10px] font-bold uppercase tracking-widest opacity-60">{asset.type}</TableCell>
-                    <TableCell><Badge variant="outline" className="text-[8px] font-bold uppercase px-2 py-0 border-white/10">Manual</Badge></TableCell>
-                    <TableCell className="text-right font-headline font-bold text-primary px-6">${asset.appraisalValue?.toLocaleString()}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -284,8 +283,7 @@ export default function BridgeHub() {
           </Card>
         </div>
       ) : (
-        /* AGGREGATED MODE: Strategic Oversight, Percentages Only */
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <Card className="lg:col-span-7 glass-panel border-white/5 flex flex-col">
             <CardHeader className="pb-2 border-b border-white/5 mb-6">
               <div className="flex items-center justify-between">
