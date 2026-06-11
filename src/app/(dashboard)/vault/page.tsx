@@ -1,10 +1,14 @@
+
 "use client";
 
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   Shield, 
   Search, 
@@ -18,10 +22,15 @@ import {
   FolderPlus,
   Eye,
   Gavel,
+  Book,
+  Anchor,
   Scale,
   Scroll,
-  Book,
-  Anchor
+  UserPlus,
+  Users2,
+  Mail,
+  ShieldAlert,
+  MoreVertical
 } from "lucide-react";
 
 const documents = [
@@ -53,7 +62,41 @@ const bedrockDocs = [
   }
 ];
 
+const familyMembers = [
+  { 
+    name: "Julian Aivaz", 
+    role: "Principal Founder", 
+    status: "Active", 
+    email: "julian@aivaz-heritage.com",
+    avatar: "https://picsum.photos/seed/julian/100/100"
+  },
+  { 
+    name: "Marcus Aivaz", 
+    role: "Next Generation", 
+    status: "Engaged", 
+    email: "marcus@aivaz-heritage.com",
+    avatar: "https://picsum.photos/seed/marcus/100/100"
+  },
+  { 
+    name: "Robert Chen", 
+    role: "Trustee / Advisor", 
+    status: "Active", 
+    email: "robert@global-advisors.com",
+    avatar: "https://picsum.photos/seed/robert/100/100"
+  },
+];
+
 export default function VaultPage() {
+  const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState("bedrock");
+
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab === "admin") {
+      setActiveTab("admin");
+    }
+  }, [searchParams]);
+
   return (
     <div className="space-y-8 max-w-6xl mx-auto pb-20">
       <div className="flex items-center justify-between">
@@ -63,22 +106,33 @@ export default function VaultPage() {
             <span className="text-xs font-bold tracking-widest uppercase text-primary">Strongroom Level 4</span>
           </div>
           <h1 className="font-headline text-4xl font-bold tracking-tight">Strongroom</h1>
-          <p className="text-muted-foreground">The encrypted bedrock of family governance and asset documentation.</p>
+          <p className="text-muted-foreground">The encrypted bedrock of family governance, administration, and asset documentation.</p>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline" size="sm" className="glass-card">
-            <FolderPlus className="mr-2 h-4 w-4" /> New Folder
-          </Button>
-          <Button size="sm" className="shadow-[0_0_15px_rgba(75,163,199,0.3)]">
-            <Upload className="mr-2 h-4 w-4" /> Secure Upload
-          </Button>
+          {activeTab === 'admin' ? (
+             <Button size="sm" className="shadow-[0_0_15px_rgba(75,163,199,0.3)]">
+               <UserPlus className="mr-2 h-4 w-4" /> Invite Stakeholder
+             </Button>
+          ) : (
+            <>
+              <Button variant="outline" size="sm" className="glass-card">
+                <FolderPlus className="mr-2 h-4 w-4" /> New Folder
+              </Button>
+              <Button size="sm" className="shadow-[0_0_15px_rgba(75,163,199,0.3)]">
+                <Upload className="mr-2 h-4 w-4" /> Secure Upload
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
-      <Tabs defaultValue="bedrock" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="bg-white/5 border border-white/10 p-1 rounded-xl">
           <TabsTrigger value="bedrock" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-widest">
             <Gavel className="mr-2 h-3.5 w-3.5" /> Governance Bedrock
+          </TabsTrigger>
+          <TabsTrigger value="admin" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-widest">
+            <Users2 className="mr-2 h-3.5 w-3.5" /> Administration
           </TabsTrigger>
           <TabsTrigger value="documents" className="data-[state=active]:bg-white/10 px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-widest">
             <Book className="mr-2 h-3.5 w-3.5" /> Digital Vault
@@ -114,12 +168,83 @@ export default function VaultPage() {
             </div>
             <div className="flex-1">
               <p className="text-sm font-bold">Immutable Charter Protocol Active</p>
-              <p className="text-xs text-muted-foreground mt-1">These documents serve as the primary source of truth for Captain's recommendation engine in the Wardroom.</p>
+              <p className="text-xs text-muted-foreground mt-1">These documents serve as the primary source of truth for AI recommendation engine and governance audits.</p>
             </div>
             <Button variant="outline" size="sm" className="bg-white/5 text-[10px] font-bold uppercase tracking-widest">
               Audit Governance History
             </Button>
           </div>
+        </TabsContent>
+
+        <TabsContent value="admin" className="animate-in fade-in slide-in-from-bottom-2 duration-500 space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {familyMembers.map((member) => (
+              <Card key={member.name} className="glass-panel border-white/5 hover:border-primary/20 transition-all group">
+                <CardHeader className="flex flex-row items-center gap-4 pb-4">
+                  <Avatar className="h-14 w-14 border border-white/10 group-hover:border-primary/30 transition-all">
+                    <AvatarImage src={member.avatar} />
+                    <AvatarFallback>{member.name[0]}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-lg truncate">{member.name}</CardTitle>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-primary">{member.role}</p>
+                  </div>
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2">
+                      <div className={`h-1.5 w-1.5 rounded-full ${member.status === 'Active' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                      <span className="text-muted-foreground">{member.status}</span>
+                    </div>
+                    <Badge variant="outline" className="text-[9px] bg-primary/5 border-primary/20">Authorized Access</Badge>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2 pt-2">
+                    <Button variant="outline" size="sm" className="text-[10px] h-8 bg-white/5 border-white/10">
+                      <Mail className="mr-2 h-3 w-3" /> Message
+                    </Button>
+                    <Button variant="outline" size="sm" className="text-[10px] h-8 bg-white/5 border-white/10">
+                      <Shield className="mr-2 h-3 w-3" /> Permissions
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+
+            <Card className="glass-panel border-dashed border-white/10 hover:border-primary/50 transition-all cursor-pointer flex flex-col items-center justify-center p-8 text-center space-y-4 group">
+              <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                <UserPlus className="h-6 w-6 text-muted-foreground group-hover:text-primary" />
+              </div>
+              <div>
+                <p className="font-bold text-sm">Add New Member</p>
+                <p className="text-[10px] text-muted-foreground mt-1 px-4">Expand the family lineage or invite a trusted professional advisor.</p>
+              </div>
+            </Card>
+          </div>
+
+          <Card className="glass-panel">
+            <CardHeader>
+              <CardTitle className="text-lg">Access Control & Governance</CardTitle>
+              <CardDescription>Configure hierarchical access for family members and external partners.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-lg bg-primary/10">
+                    <ShieldAlert className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-sm">Military Grade Encryption Active</p>
+                    <p className="text-xs text-muted-foreground">All communications and document access within this administrative track are secured end-to-end.</p>
+                  </div>
+                </div>
+                <Button variant="link" className="text-primary text-xs font-bold uppercase tracking-widest">Audit Logs</Button>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="documents" className="animate-in fade-in slide-in-from-bottom-2 duration-500">

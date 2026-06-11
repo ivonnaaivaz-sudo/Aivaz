@@ -1,8 +1,8 @@
 
 "use client";
 
-import { useUser, useDoc, useFirestore } from "@/firebase";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { useUser, useDoc } from "@/firebase";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -10,16 +10,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   Fingerprint, 
   Users, 
-  UserPlus, 
   ShieldCheck, 
   History, 
   Zap, 
-  Heart, 
-  BookOpen, 
-  Compass, 
-  Plus, 
-  Info
+  Plus,
+  Settings2
 } from "lucide-react";
+import Link from "next/link";
 
 const MOCK_DNA = {
   personalProfile: {
@@ -75,7 +72,6 @@ export default function HousePage() {
   const { data: realDna, loading } = useDoc(user ? `users/${user.uid}/dna/current` : null);
 
   const dna = realDna || MOCK_DNA;
-  const isDemo = !realDna;
 
   if (loading) {
     return (
@@ -91,6 +87,7 @@ export default function HousePage() {
 
   return (
     <div className="space-y-12 max-w-7xl mx-auto pb-32">
+      {/* Header: Purely Historical/Archive Focus */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/10 pb-8">
         <div className="space-y-4">
           <div className="flex items-center gap-3">
@@ -105,11 +102,13 @@ export default function HousePage() {
           </p>
         </div>
         <div className="flex gap-3">
+          <Button variant="ghost" className="text-xs font-bold uppercase tracking-widest opacity-60 hover:opacity-100" asChild>
+            <Link href="/vault?tab=admin">
+              <Settings2 className="mr-2 h-4 w-4" /> Manage Lineage
+            </Link>
+          </Button>
           <Button variant="outline" className="bg-white/5 border-white/10 text-xs font-bold uppercase tracking-widest">
             <History className="mr-2 h-4 w-4" /> View Archive
-          </Button>
-          <Button className="shadow-[0_0_20px_rgba(75,163,199,0.3)] text-xs font-bold uppercase tracking-widest">
-            <UserPlus className="mr-2 h-4 w-4" /> Add Member
           </Button>
         </div>
       </div>
@@ -158,8 +157,9 @@ export default function HousePage() {
                       </div>
                     </div>
                   ))}
-                  <div className="h-20 w-20 rounded-full border border-dashed border-white/20 flex items-center justify-center hover:border-primary/50 cursor-pointer transition-all">
-                    <Plus className="h-8 w-8 text-muted-foreground/50" />
+                  {/* Visual placeholder for lineage without interactive 'Add' button */}
+                  <div className="h-20 w-20 rounded-full border border-dashed border-white/10 flex items-center justify-center opacity-30">
+                    <History className="h-6 w-6 text-muted-foreground" />
                   </div>
                 </div>
               </div>
@@ -212,8 +212,8 @@ export default function HousePage() {
         <div className="lg:col-span-4 space-y-6">
           <Card className="glass-panel border-white/10">
             <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <ShieldCheck className="h-5 w-5 text-primary" />
+              <CardTitle className="text-lg flex items-center gap-2 text-primary">
+                <ShieldCheck className="h-5 w-5" />
                 Heritage Scorecard
               </CardTitle>
             </CardHeader>
