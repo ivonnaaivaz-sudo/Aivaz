@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
@@ -35,7 +34,8 @@ import {
   ShieldCheck,
   History,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Anchor
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -56,7 +56,9 @@ const MOCK_STRATEGY_DECISIONS = [
     proposal: "Invest $3M into Fixed Income to hedge current Tech Equity over-concentration and improve alignment to 82%.",
     delegation: "Execute via @Marcus (Successor Portfolio)",
     status: "VOTING",
-    votes: { yes: 2, no: 0 }
+    votes: { yes: 2, no: 0 },
+    isAligned: true,
+    alignmentNote: "Perpetual Wealth Preservation Mandate"
   }
 ];
 
@@ -248,6 +250,11 @@ export default function WardroomPage() {
             <div className="flex items-center justify-between px-8 py-3">
               <div className="flex items-center gap-3">
                 <Badge variant="outline" className="bg-primary/20 text-primary border-primary/30 text-[8px] font-bold uppercase">Proposal v1.0</Badge>
+                {dec.isAligned && (
+                  <Badge className="bg-emerald-500/20 text-emerald-500 border-emerald-500/30 text-[8px] font-bold uppercase animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+                    <ShieldCheck className="mr-1 h-3 w-3" /> Charter Aligned
+                  </Badge>
+                )}
                 <p className="text-xs font-bold text-muted-foreground">{dec.context}</p>
               </div>
               <CollapsibleTrigger asChild>
@@ -258,10 +265,16 @@ export default function WardroomPage() {
             </div>
             <CollapsibleContent>
               <div className="px-8 pb-6 pt-2">
-                <div className="bg-primary/[0.03] border border-primary/10 rounded-2xl p-6 shadow-lg backdrop-blur-md">
+                <div className="bg-primary/[0.03] border border-primary/10 rounded-2xl p-6 shadow-lg backdrop-blur-md relative overflow-hidden">
+                   {dec.isAligned && <div className="absolute top-0 right-0 p-4 opacity-5"><Anchor className="h-16 w-16" /></div>}
                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-center">
                     <div className="md:col-span-3 space-y-3">
-                       <h4 className="text-[10px] font-bold uppercase tracking-widest text-primary/70">Strategic Executive Brief</h4>
+                       <div className="flex items-center gap-2">
+                         <h4 className="text-[10px] font-bold uppercase tracking-widest text-primary/70">Strategic Executive Brief</h4>
+                         {dec.isAligned && (
+                           <span className="text-[9px] font-serif italic text-emerald-500/80">Aligned with Mission: {dec.alignmentNote}</span>
+                         )}
+                       </div>
                        <p className="text-sm font-headline font-medium leading-relaxed italic text-foreground/90">
                          "{dec.proposal}"
                        </p>

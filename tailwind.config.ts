@@ -12,6 +12,7 @@ export default {
       fontFamily: {
         body: ['Inter', 'sans-serif'],
         headline: ['Poppins', 'sans-serif'],
+        serif: ['Crimson Pro', 'serif'],
         code: ['monospace'],
       },
       colors: {
