@@ -7,11 +7,10 @@ import { useUser, useDoc } from "@/firebase";
 import { 
   Compass,
   Map,
-  Fingerprint,
+  Anchor,
   Radio,
   Lock,
-  Settings,
-  ChevronRight
+  Settings
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -20,12 +19,10 @@ export function Sidebar() {
   const { user } = useUser();
   const { data: dna } = useDoc(user ? `users/${user.uid}/dna/current` : null);
 
-  const familyName = dna?.familyProfile?.familyName || "Aivaz Heritage";
-
   const mainNav = [
     { name: "Bridge", href: "/dashboard", icon: Compass },
     { name: "Chart Room", href: "/chart-room", icon: Map },
-    { name: "Wardroom", href: "/wardroom", icon: Fingerprint },
+    { name: "Wardroom", href: "/wardroom", icon: Anchor },
     { name: "Signal Deck", href: "/messenger", icon: Radio },
     { name: "Strongroom", href: "/vault", icon: Lock },
     { name: "Settings", href: "/settings", icon: Settings },
