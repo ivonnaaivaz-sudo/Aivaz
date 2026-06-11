@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useUser, useDoc } from "@/firebase";
@@ -38,7 +37,8 @@ import {
   UserPlus,
   FileText,
   Cpu,
-  Lock
+  Lock,
+  BrainCircuit
 } from "lucide-react";
 import { 
   AreaChart,
@@ -147,7 +147,7 @@ export default function DashboardPage() {
           <div className="text-right hidden sm:block">
             <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Last Intelligence Audit</p>
             <p className="text-xs font-medium flex items-center gap-2 justify-end">
-              Today, 09:42 AM <RefreshCw className="h-3 w-3 text-primary animate-spin-slow" />
+              Today, 09:42 AM <RefreshCw className="h-3 w-3 text-primary" />
             </p>
           </div>
           <Badge className="bg-primary/10 text-primary border-primary/20 flex items-center gap-2 py-1 px-3">
