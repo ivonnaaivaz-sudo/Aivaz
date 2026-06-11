@@ -1,18 +1,17 @@
-
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { useUser, useDoc } from "@/firebase";
+import { useUser } from "@/firebase";
 import { 
   Compass,
   Map,
   MessageSquare,
-  Fingerprint,
+  Radio,
   Lock,
   Settings,
-  Anchor
+  ShieldCheck
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -43,7 +42,7 @@ export function Sidebar() {
     { name: "Bridge", href: "/dashboard", icon: Compass },
     { name: "Chart Room", href: "/chart-room", icon: Map },
     { name: "Wardroom", href: "/wardroom", icon: MessageSquare },
-    { name: "House", href: "/house", icon: Fingerprint },
+    { name: "Signal Deck", href: "/messenger", icon: Radio },
     { name: "Strongroom", href: "/vault", icon: Lock },
     { name: "Settings", href: "/settings", icon: Settings },
   ];
@@ -93,16 +92,33 @@ export function Sidebar() {
       </nav>
 
       <div className="p-6 border-t border-sidebar-border">
-        <div className="flex items-center gap-3 glass-card p-3 rounded-2xl border-white/5 bg-white/[0.02] group cursor-pointer hover:bg-white/5 transition-all">
-          <Avatar className="h-9 w-9 border border-white/10 group-hover:border-primary/30 transition-all">
-            <AvatarImage src="https://picsum.photos/seed/julian/100/100" />
-            <AvatarFallback>JA</AvatarFallback>
-          </Avatar>
-          <div className="flex-1 overflow-hidden">
-            <p className="text-xs font-semibold truncate text-foreground group-hover:text-primary transition-colors">{user?.displayName || "Julian Aivaz"}</p>
-            <p className="text-[9px] text-muted-foreground truncate uppercase font-bold tracking-widest opacity-60">Principal</p>
+        <Link 
+          href="/house"
+          className={cn(
+            "flex items-center gap-3 glass-card p-3 rounded-2xl border-white/5 bg-white/[0.02] group cursor-pointer hover:bg-white/5 transition-all",
+            pathname === "/house" && "border-primary/30 bg-primary/5"
+          )}
+        >
+          <div className="relative">
+            <Avatar className="h-9 w-9 border border-white/10 group-hover:border-primary/30 transition-all">
+              <AvatarImage src="https://picsum.photos/seed/julian/100/100" />
+              <AvatarFallback>JA</AvatarFallback>
+            </Avatar>
+            {pathname === "/house" && (
+              <div className="absolute -top-1 -right-1">
+                <ShieldCheck className="h-3 w-3 text-primary fill-background" />
+              </div>
+            )}
           </div>
-        </div>
+          <div className="flex-1 overflow-hidden">
+            <p className="text-xs font-semibold truncate text-foreground group-hover:text-primary transition-colors">
+              {user?.displayName || "Julian Aivaz"}
+            </p>
+            <p className="text-[9px] text-muted-foreground truncate uppercase font-bold tracking-widest opacity-60">
+              {pathname === "/house" ? "Inside The House" : "Principal"}
+            </p>
+          </div>
+        </Link>
       </div>
     </aside>
   );
