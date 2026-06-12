@@ -248,9 +248,9 @@ export default function DecisionSandboxPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/50 flex flex-col font-body antialiased">
+    <div className="flex flex-col font-body antialiased relative">
       {/* Header */}
-      <div className="h-20 bg-white border-b border-slate-200 px-12 flex items-center justify-between z-30 sticky top-0 shadow-sm">
+      <div className="h-20 bg-white border-b border-slate-200 px-12 flex items-center justify-between z-40 sticky top-0 shadow-sm">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
@@ -258,7 +258,7 @@ export default function DecisionSandboxPage() {
           </div>
           <div className="h-4 w-px bg-slate-200" />
           <p className="text-sm font-medium text-slate-500 italic">
-            Pair proposed actions with strategic offsets to reach a Stabilized State.
+            Pair actions with offsets to stabilize the heritage portfolio.
           </p>
         </div>
         <Button 
@@ -276,7 +276,7 @@ export default function DecisionSandboxPage() {
       </div>
 
       {/* Main Board */}
-      <div className="flex-1 overflow-auto p-12">
+      <div className="flex-1 p-12 bg-slate-50/50 pb-32">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16">
           
           {/* Column 1: Proposed Actions */}
@@ -474,9 +474,9 @@ export default function DecisionSandboxPage() {
         </div>
       </div>
 
-      {/* Decision Summary Bar */}
+      {/* Decision Summary Bar - Sticky to Bottom of the Page */}
       {activeSynergies.length > 0 && (
-        <div className="h-24 bg-white border-t border-slate-200 px-12 flex items-center justify-between z-30 shadow-[0_-4px_25px_rgba(0,0,0,0.1)] animate-in slide-in-from-bottom-full duration-500">
+        <div className="sticky bottom-0 h-24 bg-white border-t border-slate-200 px-12 flex items-center justify-between z-50 shadow-[0_-8px_30px_rgba(0,0,0,0.1)] animate-in slide-in-from-bottom-full duration-500">
           <div className="flex items-center gap-12">
             <div className="flex flex-col">
               <p className="text-[9px] font-bold uppercase text-slate-400 tracking-[0.2em] mb-1">Portfolio Balance</p>
@@ -513,9 +513,12 @@ export default function DecisionSandboxPage() {
               <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Stabilized State Detected</p>
               <p className="text-[11px] text-slate-500 italic">Financial deltas balanced across drafting board.</p>
             </div>
-            <div className="flex items-center justify-center h-12 w-12 rounded-full bg-primary/5 border border-primary/20">
-              <ArrowRight className="h-5 w-5 text-primary animate-pulse" />
-            </div>
+            <Button 
+              onClick={handleSendToWardroom}
+              className="bg-primary hover:bg-primary/90 text-white rounded-xl h-12 px-8 text-[10px] font-bold uppercase tracking-[0.2em] shadow-lg shadow-primary/20"
+            >
+              Commit to Wardroom
+            </Button>
           </div>
         </div>
       )}
