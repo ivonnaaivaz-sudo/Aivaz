@@ -32,7 +32,8 @@ import {
   X,
   PlusCircle,
   Loader2,
-  Trash2
+  Trash2,
+  ArrowRightLeft
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -45,7 +46,7 @@ interface DecisionCard {
   title: string;
   description: string;
   impactMetric: string;
-  liquidityValue: number; // Numeric for calculation
+  liquidityValue: number; 
   riskDelta: number; // -100 to 100
   logic: string;
   category: string;
@@ -111,18 +112,15 @@ export default function DecisionSandboxPage() {
   
   const [proposedActions, setProposedActions] = useState<DecisionCard[]>(INITIAL_PROPOSED_ACTIONS);
   const [strategicOffsets, setStrategicOffsets] = useState<DecisionCard[]>(INITIAL_STRATEGIC_OFFSETS);
-  const [pairedIds, setPairedIds] = useState<Record<string, string>>({});
+  const [pairedIds, setPairedIds] = useState<Record<string, string>>({}); // ActionId -> OffsetId
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const [isAddActionOpen, setIsAddActionOpen] = useState(false);
   const [isAddOffsetOpen, setIsAddOffsetOpen] = useState(false);
 
-  // New Offset Form State
-  const [newOffset, setNewOffset] = useState({
-    title: "",
-    description: "",
-    value: "0",
-    riskDelta: "0",
-    category: "Custom Strategy"
-  });
+  // New Card Form States
+  const [newAction, setNewAction] = useState({ title: "", description: "", value: "0", riskDelta: "0", category: "Capital Event" });
+  const [newOffset, setNewOffset] = useState({ title: "", description: "", value: "0", riskDelta: "0", category: "Custom Strategy" });
 
   const activeSynergies = useMemo(() => {
     return Object.entries(pairedIds).map(([actionId, offsetId]) => {
@@ -150,25 +148,49 @@ export default function DecisionSandboxPage() {
 
   const handlePairing = (actionId: string, offsetId: string) => {
     setPairedIds(prev => {
+      // If this action is already paired with THIS offset, unpair them
       if (prev[actionId] === offsetId) {
         const next = { ...prev };
         delete next[actionId];
         return next;
       }
+      // Otherwise, pair them (overwriting any previous pairing for this action)
       return { ...prev, [actionId]: offsetId };
     });
   };
 
+  const handleAddAction = () => {
+    const id = `user-a-${Date.now()}`;
+    const val = parseFloat(newAction.value) || 0;
+    const action: DecisionCard = {
+      id,
+      type: 'action',
+      title: newAction.title,
+      description: newAction.description,
+      impactMetric: `${val >= 0 ? '+' : ''}€${(val / 1000000).toFixed(1)}M Liquidity`,
+      liquidityValue: val,
+      riskDelta: parseFloat(newAction.riskDelta) || 0,
+      logic: "User-defined proposed action.",
+      category: newAction.category,
+      isUserGenerated: true
+    };
+    setProposedActions(prev => [...prev, action]);
+    setNewAction({ title: "", description: "", value: "0", riskDelta: "0", category: "Capital Event" });
+    setIsAddActionOpen(false);
+    toast({ title: "Proposed Action Added", description: "The outflow event has been added to the board." });
+  };
+
   const handleAddOffset = () => {
     const id = `user-o-${Date.now()}`;
+    const val = parseFloat(newOffset.value) || 0;
     const offset: DecisionCard = {
       id,
       type: 'offset',
       title: newOffset.title,
       description: newOffset.description,
-      impactMetric: `${parseFloat(newOffset.value) >= 0 ? '+' : ''}€${(parseFloat(newOffset.value) / 1000000).toFixed(1)}M Liquidity`,
-      liquidityValue: parseFloat(newOffset.value),
-      riskDelta: parseFloat(newOffset.riskDelta),
+      impactMetric: `${val >= 0 ? '+' : ''}€${(val / 1000000).toFixed(1)}M Liquidity`,
+      liquidityValue: val,
+      riskDelta: parseFloat(newOffset.riskDelta) || 0,
       logic: "User-defined strategic offset.",
       category: newOffset.category,
       isUserGenerated: true
@@ -176,7 +198,16 @@ export default function DecisionSandboxPage() {
     setStrategicOffsets(prev => [...prev, offset]);
     setNewOffset({ title: "", description: "", value: "0", riskDelta: "0", category: "Custom Strategy" });
     setIsAddOffsetOpen(false);
-    toast({ title: "Strategic Offset Created", description: "Your custom strategy has been added to the drafting board." });
+    toast({ title: "Strategic Offset Created", description: "Your custom strategy has been added to the board." });
+  };
+
+  const handleDismissAction = (id: string) => {
+    setProposedActions(prev => prev.filter(a => a.id !== id));
+    setPairedIds(prev => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
   };
 
   const handleDismissOffset = (id: string) => {
@@ -200,14 +231,14 @@ export default function DecisionSandboxPage() {
           await addDoc(msgRef, {
             senderId: "aivaz-system",
             senderName: "Decision Sandbox",
-            text: `STABILIZED PACKAGE: ${synergy.action.title} + ${synergy.offset.title}. Net Impact: €${(netImpact.liquidity / 1000000).toFixed(1)}M. Risk Delta: ${netImpact.risk > 0 ? '+' : ''}${netImpact.risk}%`,
+            text: `STABILIZED PACKAGE: ${synergy.action.title} + ${synergy.offset.title}. Net Impact: €${((synergy.action.liquidityValue + synergy.offset.liquidityValue) / 1000000).toFixed(1)}M. Risk Delta: ${synergy.action.riskDelta + synergy.offset.riskDelta > 0 ? '+' : ''}${synergy.action.riskDelta + synergy.offset.riskDelta}%`,
             type: "recommendation",
             timestamp: new Date().toISOString(),
             track: "strategy"
           });
         }
       }
-      toast({ title: "Package Transmitted", description: "Decision packages have been sent to the Wardroom for council validation." });
+      toast({ title: "Packages Transmitted", description: "Paired decisions have been sent to the Wardroom for council validation." });
       setPairedIds({});
     } catch (e) {
       console.error(e);
@@ -227,7 +258,7 @@ export default function DecisionSandboxPage() {
           </div>
           <div className="h-4 w-px bg-slate-200" />
           <p className="text-sm font-medium text-slate-500 italic">
-            Drafting Board: Pair actions with offsets to reach a Stabilized State.
+            Pair proposed actions with strategic offsets to reach a Stabilized State.
           </p>
         </div>
         <Button 
@@ -255,7 +286,40 @@ export default function DecisionSandboxPage() {
                 <LayoutGrid className="h-4 w-4 text-slate-400" />
                 <h2 className="text-[11px] font-bold uppercase tracking-[0.3em] text-slate-900">Proposed Actions</h2>
               </div>
-              <Badge variant="outline" className="text-[9px] uppercase tracking-widest text-slate-400">Primary Outflow</Badge>
+              <Dialog open={isAddActionOpen} onOpenChange={setIsAddActionOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-8 text-[9px] font-bold uppercase tracking-widest gap-2 text-slate-500 hover:bg-slate-100">
+                    <PlusCircle className="h-3.5 w-3.5" /> Add New Action
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Propose Capital Event</DialogTitle>
+                    <DialogDescription>Define a new expenditure or portfolio move that requires stabilization.</DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                      <Label>Title</Label>
+                      <Input placeholder="e.g. Zurich HQ Renovation" value={newAction.title} onChange={e => setNewAction({...newAction, title: e.target.value})} />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label>Impact (€) - Use negative for outflow</Label>
+                      <Input type="number" placeholder="-5000000" value={newAction.value} onChange={e => setNewAction({...newAction, value: e.target.value})} />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label>Risk Delta (0-100)</Label>
+                      <Input type="number" value={newAction.riskDelta} onChange={e => setNewAction({...newAction, riskDelta: e.target.value})} />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label>Description</Label>
+                      <Textarea placeholder="Explain the rationale..." value={newAction.description} onChange={e => setNewAction({...newAction, description: e.target.value})} />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button onClick={handleAddAction}>Register Action</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
             
             <div className="space-y-4">
@@ -266,10 +330,20 @@ export default function DecisionSandboxPage() {
                   <Card 
                     key={action.id}
                     className={cn(
-                      "border transition-all duration-300 relative shadow-sm",
-                      isPaired ? "border-primary ring-1 ring-primary/10" : "border-slate-200 hover:border-slate-300"
+                      "border transition-all duration-300 relative shadow-sm group",
+                      isPaired ? "border-primary ring-1 ring-primary/10 bg-primary/[0.01]" : "border-slate-200 hover:border-slate-300 bg-white"
                     )}
                   >
+                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-6 w-6 text-slate-300 hover:text-red-500"
+                        onClick={() => handleDismissAction(action.id)}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
                     <CardHeader className="pb-3">
                       <div className="flex justify-between items-start">
                         <Badge variant="outline" className="text-[8px] uppercase tracking-widest border-slate-100">{action.category}</Badge>
@@ -281,7 +355,7 @@ export default function DecisionSandboxPage() {
                       <p className="text-[11px] text-slate-500 leading-relaxed italic mb-4">"{action.description}"</p>
                       <div className="pt-3 border-t border-slate-50 flex items-center justify-between">
                         <span className="text-[9px] text-slate-400 uppercase font-bold tracking-widest">
-                          {isPaired ? "Synergy Active" : "Requires Offset"}
+                          {isPaired ? "Stabilization Active" : "Pending Offset"}
                         </span>
                         {isPaired && <CheckCircle2 className="h-4 w-4 text-primary" />}
                       </div>
@@ -349,23 +423,23 @@ export default function DecisionSandboxPage() {
                       handlePairing(targetActionId, offset.id);
                     }}
                     className={cn(
-                      "border transition-all duration-300 cursor-pointer relative shadow-sm overflow-hidden",
+                      "border transition-all duration-300 cursor-pointer relative shadow-sm overflow-hidden group",
                       offset.isCritical ? "border-amber-200 bg-amber-50/30" : "border-slate-200 hover:border-primary/20 bg-white",
                       isPaired && "border-primary bg-primary/[0.02]"
                     )}
                   >
-                    <div className="absolute top-2 right-2 flex gap-1">
+                    <div className="absolute top-2 right-2 flex gap-1 items-center opacity-0 group-hover:opacity-100 transition-opacity">
                       {offset.isCritical && <ShieldAlert className="h-3.5 w-3.5 text-amber-600" />}
                       <Button 
                         variant="ghost" 
                         size="icon" 
-                        className="h-5 w-5 rounded-full hover:bg-red-50 hover:text-red-500"
+                        className="h-6 w-6 text-slate-300 hover:text-red-500"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleDismissOffset(offset.id);
                         }}
                       >
-                        <X className="h-3 w-3" />
+                        <Trash2 className="h-3 w-3" />
                       </Button>
                     </div>
 
@@ -387,7 +461,7 @@ export default function DecisionSandboxPage() {
                       </p>
                       {isPaired && (
                         <div className="pt-3 border-t border-primary/10 flex items-center justify-between text-[8px] font-bold uppercase tracking-widest text-primary">
-                          <span>Pairing Active</span>
+                          <span className="flex items-center gap-1.5"><ArrowRightLeft className="h-3 w-3" /> Coupled with {proposedActions.find(a => a.id === pairedActionId)?.title}</span>
                           <CheckCircle2 className="h-3 w-3" />
                         </div>
                       )}
@@ -402,13 +476,13 @@ export default function DecisionSandboxPage() {
 
       {/* Decision Summary Bar */}
       {activeSynergies.length > 0 && (
-        <div className="h-24 bg-white border-t border-slate-200 px-12 flex items-center justify-between z-30 shadow-[0_-4px_15px_rgba(0,0,0,0.03)] animate-in slide-in-from-bottom-full duration-500">
+        <div className="h-24 bg-white border-t border-slate-200 px-12 flex items-center justify-between z-30 shadow-[0_-4px_25px_rgba(0,0,0,0.1)] animate-in slide-in-from-bottom-full duration-500">
           <div className="flex items-center gap-12">
             <div className="flex flex-col">
-              <p className="text-[9px] font-bold uppercase text-slate-400 tracking-[0.2em] mb-1">Active Synergies</p>
+              <p className="text-[9px] font-bold uppercase text-slate-400 tracking-[0.2em] mb-1">Portfolio Balance</p>
               <div className="flex items-center gap-2">
                 <p className="text-sm font-headline font-bold text-slate-900">
-                  {activeSynergies.length} Packages Drafted
+                  {activeSynergies.length} Pairings Active
                 </p>
               </div>
             </div>
@@ -416,30 +490,32 @@ export default function DecisionSandboxPage() {
             <div className="h-10 w-px bg-slate-100" />
             
             <div className="flex flex-col">
-              <p className="text-[9px] font-bold uppercase text-slate-400 tracking-[0.2em] mb-1">Net Portfolio Impact</p>
-              <div className="flex items-center gap-6">
-                <div className="flex items-center gap-2">
-                  <span className={cn("text-lg font-headline font-bold", netImpact.liquidity >= 0 ? "text-emerald-600" : "text-red-600")}>
+              <p className="text-[9px] font-bold uppercase text-slate-400 tracking-[0.2em] mb-1">Net Drafting Impact</p>
+              <div className="flex items-center gap-10">
+                <div className="flex items-center gap-3">
+                  <span className={cn("text-xl font-headline font-bold", netImpact.liquidity >= 0 ? "text-emerald-600" : "text-red-600")}>
                     {netImpact.liquidity >= 0 ? '+' : ''}€{(netImpact.liquidity / 1000000).toFixed(1)}M
                   </span>
-                  <span className="text-[9px] font-bold text-slate-400 uppercase">Liquidity</span>
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Net Liquidity</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className={cn("text-lg font-headline font-bold", netImpact.risk <= 0 ? "text-emerald-600" : "text-amber-600")}>
+                <div className="flex items-center gap-3">
+                  <span className={cn("text-xl font-headline font-bold", netImpact.risk <= 0 ? "text-emerald-600" : "text-amber-600")}>
                     {netImpact.risk > 0 ? '+' : ''}{netImpact.risk}%
                   </span>
-                  <span className="text-[9px] font-bold text-slate-400 uppercase">Risk Delta</span>
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Risk Shift</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-6">
             <div className="text-right hidden md:block">
               <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Stabilized State Detected</p>
-              <p className="text-[11px] text-slate-500 italic">Net liquidity outflow has been successfully offset.</p>
+              <p className="text-[11px] text-slate-500 italic">Financial deltas balanced across drafting board.</p>
             </div>
-            <ArrowRight className="h-5 w-5 text-primary animate-pulse" />
+            <div className="flex items-center justify-center h-12 w-12 rounded-full bg-primary/5 border border-primary/20">
+              <ArrowRight className="h-5 w-5 text-primary animate-pulse" />
+            </div>
           </div>
         </div>
       )}
