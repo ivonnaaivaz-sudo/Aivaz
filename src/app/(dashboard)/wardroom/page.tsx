@@ -21,7 +21,8 @@ import {
   FileText,
   UserPlus,
   MoreVertical,
-  ChevronRight
+  ChevronRight,
+  Smile
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -39,7 +40,7 @@ type Thread = {
 
 const HARTMANN_THREADS: Thread[] = [
   { id: 't1', name: 'Family Council (Governance)', type: 'group', lastMessage: 'Markus: The charter is ready for review.', members: ['Markus', 'Elena', 'Robert'], unread: true },
-  { id: 't2', name: 'G2 Trust & Liquidity', type: 'ai', lastMessage: 'AI: Proposal for $3M hedge generated.', members: ['Markus', 'Sophie', 'Alexander', 'AI'], unread: false },
+  { id: 't2', name: 'G2 Trust & Liquidity', type: 'ai', lastMessage: 'AI: Proposal for €3M hedge generated.', members: ['Markus', 'Sophie', 'Alexander', 'AI'], unread: false },
   { id: 't3', name: 'Singapore Expansion', type: 'group', lastMessage: 'Sophie: ESG targets updated.', members: ['Sophie', 'Elena'], unread: false },
   { id: 't4', name: 'Alexander Hartmann', type: 'direct', lastMessage: 'Dad, check the London report.', members: ['Markus', 'Alexander'], unread: false },
 ];
@@ -124,88 +125,89 @@ export default function WardroomPage() {
   return (
     <div className="h-[calc(100vh-100px)] flex flex-col gap-4 max-w-[1800px] mx-auto">
       {/* Ecosystem Presence Bar */}
-      <Card className="glass-panel border-white/5 bg-white/40 flex items-center justify-between p-4 px-6 shrink-0">
-        <div className="flex items-center gap-6">
-          <div className="pr-6 border-r border-black/5">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Ecosystem Presence</p>
-            <h3 className="text-sm font-bold flex items-center gap-2">
+      <Card className="border-none shadow-sm bg-white flex items-center justify-between p-4 px-8 shrink-0 rounded-2xl border-b border-slate-100">
+        <div className="flex items-center gap-8">
+          <div className="pr-8 border-r border-slate-100">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 mb-1">Council Status</p>
+            <h3 className="text-sm font-bold flex items-center gap-2 text-slate-900">
               <Users2 className="h-4 w-4 text-primary" />
-              Hartmann Council
+              Ecosystem Active
             </h3>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-5">
             {FAMILY_PRESENCE.map((member) => (
               <div key={member.name} className="flex flex-col items-center gap-1 group cursor-pointer">
                 <div className="relative">
-                  <Avatar className="h-10 w-10 border-2 border-white shadow-sm group-hover:border-primary/50 transition-all">
+                  <Avatar className="h-10 w-10 border-2 border-white shadow-md ring-1 ring-slate-100 group-hover:ring-primary/50 transition-all">
                     <AvatarImage src={member.avatar} />
-                    <AvatarFallback>{member.name[0]}</AvatarFallback>
+                    <AvatarFallback className="text-[10px] font-bold">{member.name[0]}</AvatarFallback>
                   </Avatar>
                   <div className={cn(
                     "absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white shadow-sm",
-                    member.status === 'online' ? "bg-emerald-500" : member.status === 'away' ? "bg-amber-500" : "bg-muted"
+                    member.status === 'online' ? "bg-emerald-500" : member.status === 'away' ? "bg-amber-500" : "bg-slate-300"
                   )} />
                 </div>
-                <span className="text-[9px] font-bold uppercase text-muted-foreground group-hover:text-primary transition-colors">{member.name}</span>
+                <span className="text-[9px] font-bold uppercase text-slate-400 group-hover:text-primary transition-colors tracking-tighter">{member.name.split(' ')[0]}</span>
               </div>
             ))}
             <Link href="/dna">
-              <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full border-2 border-dashed border-muted-foreground/20 hover:border-primary/50 group transition-all">
-                <UserPlus className="h-5 w-5 text-muted-foreground group-hover:text-primary" />
+              <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full border-2 border-dashed border-slate-200 hover:border-primary/50 hover:bg-primary/5 group transition-all">
+                <UserPlus className="h-4 w-4 text-slate-400 group-hover:text-primary" />
               </Button>
             </Link>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[9px] font-bold uppercase">5 Online</Badge>
-          <Button variant="outline" size="sm" className="h-9 px-4 text-[10px] font-bold uppercase tracking-widest bg-white/5 border-white/10" onClick={startVideoMeeting}>
-            <Video className="mr-2 h-3.5 w-3.5 text-primary" /> Instant Council Meeting
+        <div className="flex items-center gap-4">
+          <Button variant="outline" size="sm" className="h-10 px-6 text-[11px] font-bold uppercase tracking-widest border-slate-200 hover:bg-slate-50 shadow-sm" onClick={startVideoMeeting}>
+            <Video className="mr-2 h-4 w-4 text-primary" /> Start Secure Meeting
           </Button>
         </div>
       </Card>
 
       <div className="flex-1 flex gap-4 overflow-hidden">
         {/* Sidebar: Threads */}
-        <Card className="w-80 flex flex-col glass-panel border-white/5 bg-black/20 shrink-0">
-          <CardHeader className="p-4 border-b border-white/5 space-y-4">
+        <Card className="w-80 flex flex-col border-none shadow-sm bg-slate-50 shrink-0 rounded-2xl overflow-hidden border border-slate-100">
+          <CardHeader className="p-6 border-b border-slate-100 bg-white/50 space-y-4">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg font-headline">Tracks</CardTitle>
-              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-white/5">
-                <Plus className="h-4 w-4" />
+              <CardTitle className="text-xl font-headline font-bold text-slate-900">Tracks</CardTitle>
+              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-white shadow-sm border border-transparent hover:border-slate-100">
+                <Plus className="h-5 w-5 text-slate-600" />
               </Button>
             </div>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input placeholder="Search strategic tracks..." className="pl-9 h-9 bg-background/50 border-white/5 text-xs" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Input placeholder="Search tracks..." className="pl-10 h-10 bg-white border-slate-200 text-sm rounded-xl focus-visible:ring-primary/20 shadow-inner" />
             </div>
           </CardHeader>
           <ScrollArea className="flex-1">
-            <div className="p-2 space-y-1">
+            <div className="p-3 space-y-1.5">
               {HARTMANN_THREADS.map((thread) => (
                 <div 
                   key={thread.id} 
                   onClick={() => setActiveThreadId(thread.id)}
                   className={cn(
-                    "p-3 rounded-xl flex gap-3 cursor-pointer transition-all group",
-                    activeThreadId === thread.id ? "bg-primary/10 border border-primary/20" : "hover:bg-white/5 border border-transparent"
+                    "p-4 rounded-2xl flex gap-4 cursor-pointer transition-all border",
+                    activeThreadId === thread.id 
+                      ? "bg-white border-slate-200 shadow-md scale-[1.02]" 
+                      : "bg-transparent border-transparent hover:bg-white/40"
                   )}
                 >
-                  <div className="relative">
+                  <div className="relative shrink-0">
                     <div className={cn(
-                      "w-10 h-10 rounded-xl flex items-center justify-center border",
-                      thread.type === 'ai' ? "bg-primary/20 border-primary/30" : "bg-white/5 border-white/10"
+                      "w-11 h-11 rounded-2xl flex items-center justify-center border transition-colors",
+                      thread.type === 'ai' ? "bg-primary/10 border-primary/20" : "bg-white border-slate-200"
                     )}>
-                      {thread.type === 'ai' ? <Sparkles className="h-5 w-5 text-primary" /> : <Users2 className="h-5 w-5" />}
+                      {thread.type === 'ai' ? <Sparkles className="h-5 w-5 text-primary" /> : <Users2 className="h-5 w-5 text-slate-600" />}
                     </div>
-                    {thread.unread && <div className="absolute -top-1 -right-1 h-3 w-3 bg-primary rounded-full border-2 border-black" />}
+                    {thread.unread && <div className="absolute -top-1 -right-1 h-3.5 w-3.5 bg-primary rounded-full border-2 border-white shadow-sm" />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start">
-                      <p className={cn("text-xs font-bold truncate", activeThreadId === thread.id ? "text-primary" : "text-foreground")}>
+                      <p className={cn("text-sm font-bold truncate", activeThreadId === thread.id ? "text-primary" : "text-slate-900")}>
                         {thread.name}
                       </p>
                     </div>
-                    <p className="text-[10px] text-muted-foreground truncate mt-0.5">{thread.lastMessage}</p>
+                    <p className="text-[11px] text-slate-500 truncate mt-1 leading-tight">{thread.lastMessage}</p>
                   </div>
                 </div>
               ))}
@@ -214,37 +216,38 @@ export default function WardroomPage() {
         </Card>
 
         {/* Main Messenger Hub */}
-        <Card className="flex-1 glass-panel flex flex-col border-white/5 overflow-hidden shadow-2xl">
-          <CardHeader className="border-b border-white/5 py-3 px-6 flex flex-row items-center justify-between bg-black/20 shrink-0">
-            <div className="flex items-center gap-4">
+        <Card className="flex-1 flex flex-col border-none shadow-xl bg-white overflow-hidden rounded-3xl border border-slate-100 relative">
+          <CardHeader className="border-b border-slate-100 py-4 px-8 flex flex-row items-center justify-between bg-white shrink-0 z-10 shadow-sm">
+            <div className="flex items-center gap-5">
               <div className={cn(
-                "w-10 h-10 rounded-xl flex items-center justify-center border",
-                activeThread.type === 'ai' ? "bg-primary/20 border-primary/30 shadow-[0_0_15px_rgba(75,163,199,0.2)]" : "bg-white/5 border-white/10"
+                "w-12 h-12 rounded-2xl flex items-center justify-center border",
+                activeThread.type === 'ai' ? "bg-primary/10 border-primary/20 shadow-[0_0_20px_rgba(75,163,199,0.15)]" : "bg-slate-50 border-slate-100"
               )}>
-                {activeThread.type === 'ai' ? <Sparkles className="h-5 w-5 text-primary" /> : <Users2 className="h-5 w-5" />}
+                {activeThread.type === 'ai' ? <Sparkles className="h-6 w-6 text-primary" /> : <Users2 className="h-6 w-6 text-slate-600" />}
               </div>
               <div>
-                <p className="text-sm font-bold tracking-tight">{activeThread.name}</p>
+                <p className="text-base font-bold text-slate-900">{activeThread.name}</p>
                 <div className="flex items-center gap-2 mt-0.5">
-                  <Badge variant="outline" className="text-[8px] h-4 border-emerald-500/30 text-emerald-500 bg-emerald-500/5 px-1.5 uppercase font-bold tracking-widest">
-                    Encrypted Stream
+                  <Badge className="bg-emerald-50 text-emerald-600 border-emerald-100 text-[9px] h-4.5 px-2 font-bold uppercase tracking-widest">
+                    Secure Channel
                   </Badge>
-                  <span className="text-[9px] text-muted-foreground font-medium truncate">{activeThread.members.join(', ')}</span>
+                  <span className="text-[10px] text-slate-400 font-medium truncate">Members: {activeThread.members.join(', ')}</span>
                 </div>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
-                <MoreVertical className="h-4 w-4 text-muted-foreground" />
+              <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-slate-100">
+                <MoreVertical className="h-5 w-5 text-slate-400" />
               </Button>
             </div>
           </CardHeader>
           
-          <ScrollArea className="flex-1 px-6" ref={scrollRef}>
-            <div className="py-8 space-y-8">
-              <div className="flex flex-col items-center justify-center space-y-3 opacity-20">
-                <Shield className="h-6 w-6 text-primary" />
-                <p className="text-[9px] uppercase font-bold tracking-[0.3em] text-center">Multi-Generational Encrypted Session</p>
+          <ScrollArea className="flex-1 bg-white" ref={scrollRef}>
+            <div className="py-10 px-10 space-y-10">
+              <div className="flex flex-col items-center justify-center space-y-4 opacity-10 py-4">
+                <Shield className="h-8 w-8 text-primary" />
+                <div className="h-px w-64 bg-slate-300" />
+                <p className="text-[10px] uppercase font-bold tracking-[0.5em] text-center">Hartmann Heritage Encryption</p>
               </div>
 
               {messages.map((msg: any) => {
@@ -253,43 +256,47 @@ export default function WardroomPage() {
                 const isRecommendation = msg.type === "recommendation";
 
                 return (
-                  <div key={msg.id} className={cn("flex gap-4 max-w-[85%] animate-in fade-in duration-300", isCurrentUser ? 'ml-auto flex-row-reverse' : '')}>
-                    <Avatar className="h-8 w-8 border border-white/10 shrink-0">
-                      <AvatarFallback className={cn("text-[10px] font-bold", isAI ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground")}>
-                        {isAI ? <Sparkles className="h-4 w-4" /> : msg.senderName[0]}
+                  <div key={msg.id} className={cn("flex gap-5 max-w-[80%] animate-in fade-in slide-in-from-bottom-2 duration-500", isCurrentUser ? 'ml-auto flex-row-reverse' : '')}>
+                    <Avatar className="h-9 w-9 border border-slate-100 shadow-sm shrink-0">
+                      <AvatarFallback className={cn("text-[11px] font-bold", isAI ? "bg-primary/20 text-primary" : "bg-slate-100 text-slate-500")}>
+                        {isAI ? <Sparkles className="h-5 w-5" /> : msg.senderName[0]}
                       </AvatarFallback>
                     </Avatar>
-                    <div className={cn("space-y-1.5 flex flex-col", isCurrentUser ? 'items-end' : 'items-start')}>
-                      <div className="flex items-center gap-2 px-1">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">{msg.senderName}</span>
-                        <span className="text-[9px] text-muted-foreground/30 font-mono">{formatTime(msg.timestamp)}</span>
+                    <div className={cn("space-y-2 flex flex-col", isCurrentUser ? 'items-end' : 'items-start')}>
+                      <div className="flex items-center gap-3 px-1">
+                        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">{msg.senderName}</span>
+                        <span className="text-[10px] text-slate-300 font-medium">{formatTime(msg.timestamp)}</span>
                       </div>
 
                       {isRecommendation ? (
-                        <Card className="glass-panel border-primary/30 bg-primary/5 p-4 space-y-4 relative group max-w-md overflow-hidden shadow-lg">
-                          <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                            <Sparkles className="h-10 w-10 text-primary" />
+                        <Card className="border-primary/20 bg-primary/[0.03] p-5 space-y-5 relative group max-w-lg overflow-hidden shadow-lg rounded-2xl ring-1 ring-primary/10">
+                          <div className="absolute -top-4 -right-4 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                            <Sparkles className="h-16 w-16 text-primary" />
                           </div>
-                          <div className="space-y-2">
+                          <div className="space-y-3 relative">
                             <div className="flex items-center gap-2">
-                              <Badge className="bg-primary/20 text-primary border-primary/30 text-[8px] font-bold uppercase">Strategic Recommendation</Badge>
-                              <Badge variant="outline" className="text-[8px] border-amber-500/30 text-amber-500">Action Required</Badge>
+                              <Badge className="bg-primary/20 text-primary border-primary/20 text-[9px] font-bold uppercase tracking-widest px-2">AI Strategy</Badge>
+                              <div className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
                             </div>
-                            <p className="text-sm font-bold leading-relaxed">{msg.text}</p>
+                            <p className="text-sm font-bold text-slate-900 leading-relaxed italic border-l-2 border-primary/30 pl-3">
+                              "{msg.text}"
+                            </p>
                           </div>
-                          <div className="flex gap-2">
-                            <Button variant="outline" size="sm" className="h-8 text-[9px] font-bold bg-white/10 border-white/10 flex-1 hover:border-primary/50 transition-colors">
-                              <FileText className="mr-1.5 h-3 w-3" /> Draft Memo
+                          <div className="flex gap-3 relative">
+                            <Button variant="outline" size="sm" className="h-9 text-[10px] font-bold bg-white border-slate-200 flex-1 hover:border-primary/40 hover:text-primary shadow-sm rounded-xl">
+                              <FileText className="mr-2 h-3.5 w-3.5" /> Open Strategic Track
                             </Button>
-                            <Button size="sm" className="h-8 text-[9px] font-bold flex-1 shadow-md bg-primary hover:bg-primary/90">
-                              <CheckCircle2 className="mr-1.5 h-3 w-3" /> Approve Move
+                            <Button size="sm" className="h-9 text-[10px] font-bold flex-1 shadow-lg bg-primary hover:bg-primary/90 text-white rounded-xl">
+                              <CheckCircle2 className="mr-2 h-3.5 w-3.5" /> Approve & Execute
                             </Button>
                           </div>
                         </Card>
                       ) : (
                         <div className={cn(
-                          "p-3 px-4 rounded-2xl text-[13px] leading-relaxed border transition-all",
-                          isCurrentUser ? 'bg-primary/10 border-primary/10 rounded-tr-none' : 'bg-white/5 border-white/5 rounded-tl-none'
+                          "p-4 px-5 rounded-3xl text-[14px] leading-relaxed shadow-sm transition-all border",
+                          isCurrentUser 
+                            ? 'bg-primary/10 border-primary/10 text-slate-900 rounded-tr-none' 
+                            : 'bg-slate-100 border-slate-100 text-slate-700 rounded-tl-none'
                         )}>
                           {msg.text}
                         </div>
@@ -301,26 +308,32 @@ export default function WardroomPage() {
             </div>
           </ScrollArea>
 
-          <div className="p-4 px-6 border-t border-white/5 bg-black/40 shrink-0">
-            <div className="flex items-center gap-3 bg-background/50 border border-white/5 rounded-2xl p-2 pl-4 focus-within:border-primary/30 transition-all shadow-inner">
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
-                <Paperclip className="h-4 w-4" />
+          <div className="p-6 px-10 border-t border-slate-100 bg-white shrink-0">
+            <div className="flex items-center gap-4 bg-slate-50 border border-slate-200 rounded-3xl p-3 px-5 focus-within:border-primary/40 focus-within:bg-white focus-within:ring-4 focus-within:ring-primary/5 transition-all shadow-inner">
+              <Button variant="ghost" size="icon" className="h-10 w-10 text-slate-400 hover:text-primary hover:bg-white rounded-full transition-all">
+                <Paperclip className="h-5 w-5" />
               </Button>
               <Input 
-                placeholder={activeThread.type === 'ai' ? "Prompt Aivaz to draft or simulate..." : "Type a secure message..."}
-                className="border-none bg-transparent shadow-none focus-visible:ring-0 text-sm h-9 placeholder:text-muted-foreground/30" 
+                placeholder={activeThread.type === 'ai' ? "Command Aivaz to synthesize..." : "Write a secure message..."}
+                className="border-none bg-transparent shadow-none focus-visible:ring-0 text-base h-10 placeholder:text-slate-300" 
                 value={inputText} 
                 onChange={(e) => setInputText(e.target.value)} 
                 onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()} 
               />
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className={cn("h-8 w-8 transition-colors", activeThread.type === 'ai' ? "text-primary" : "text-muted-foreground hover:text-primary")}>
-                  <Sparkles className="h-4 w-4" />
+              <div className="flex items-center gap-3">
+                <Button variant="ghost" size="icon" className={cn("h-10 w-10 rounded-full transition-all hover:bg-white", activeThread.type === 'ai' ? "text-primary bg-primary/5" : "text-slate-400 hover:text-primary")}>
+                  <Sparkles className="h-5 w-5" />
                 </Button>
-                <Button size="icon" className="rounded-xl h-8 w-8 bg-primary hover:bg-primary/90 shadow-lg" onClick={handleSendMessage} disabled={!inputText.trim()}>
-                  <Send className="h-3.5 w-3.5" />
+                <div className="h-8 w-px bg-slate-200 mx-1" />
+                <Button size="icon" className="rounded-2xl h-11 w-11 bg-primary hover:bg-primary/90 shadow-[0_0_20px_rgba(75,163,199,0.4)] text-white transition-all transform active:scale-95" onClick={handleSendMessage} disabled={!inputText.trim()}>
+                  <Send className="h-5 w-5" />
                 </Button>
               </div>
+            </div>
+            <div className="flex justify-center mt-3">
+              <p className="text-[9px] uppercase font-bold tracking-[0.2em] text-slate-300 flex items-center gap-2">
+                <Shield className="h-2.5 w-2.5" /> Hartmann Heritage Secure Node
+              </p>
             </div>
           </div>
         </Card>
