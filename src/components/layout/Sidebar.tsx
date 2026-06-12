@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -58,8 +57,8 @@ export function Sidebar() {
   return (
     <aside className="fixed left-0 top-0 bottom-0 w-[280px] bg-sidebar border-r border-sidebar-border z-40 flex flex-col dark">
       <Link href="/dashboard" className="p-10 flex flex-col items-center">
-        <div className="flex flex-col items-center text-center cursor-pointer group">
-          <div className="w-16 h-16 rounded-2xl bg-primary/5 border border-primary/10 flex items-center justify-center mb-4 shadow-[0_0_30px_rgba(75,163,199,0.1)] group-hover:border-primary/30 transition-all duration-500 overflow-hidden relative">
+        <div className="flex flex-col items-center text-center cursor-pointer group w-full">
+          <div className="w-20 h-20 rounded-2xl bg-primary/5 border border-primary/10 flex items-center justify-center mb-4 shadow-[0_0_30px_rgba(75,163,199,0.1)] group-hover:border-primary/30 transition-all duration-500 overflow-hidden relative">
             {brandLogo ? (
               <Image 
                 src={brandLogo.imageUrl} 
@@ -67,6 +66,7 @@ export function Sidebar() {
                 fill
                 className="object-contain p-2"
                 priority
+                data-ai-hint={brandLogo.imageHint}
               />
             ) : (
               <div className="h-full w-full flex items-center justify-center bg-primary/10">
@@ -74,10 +74,10 @@ export function Sidebar() {
               </div>
             )}
           </div>
-          <span className="font-headline font-bold text-2xl tracking-tighter text-foreground leading-none uppercase">
+          <span className="font-headline font-bold text-xl tracking-tighter text-foreground leading-none uppercase">
             HARTMANN
           </span>
-          <span className="text-[9px] font-bold tracking-[0.4em] text-primary uppercase mt-2 opacity-60">
+          <span className="text-[8px] font-bold tracking-[0.4em] text-primary uppercase mt-2 opacity-60">
             Heritage
           </span>
         </div>
