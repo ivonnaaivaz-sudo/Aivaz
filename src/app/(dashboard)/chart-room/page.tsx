@@ -46,17 +46,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 
-const alignmentData = [
-  { time: '09:00', actual: 82, simulated: 82 },
-  { time: '10:00', actual: 84, simulated: 82 },
-  { time: '11:00', actual: 83, simulated: 75 },
-  { time: '12:00', actual: 84.2, simulated: 70 },
-  { time: '13:00', actual: 84.2, simulated: 65 },
-  { time: '14:00', actual: 84.2, simulated: 62 },
-  { time: '15:00', actual: 84.2, simulated: 62 },
-  { time: '16:00', actual: 84.2, simulated: 62 },
-];
-
 const TIME_HORIZONS = ["Current", "5 Years", "10 Years", "25 Years"];
 const FAMILY_MEMBERS = [
   { name: "Dr. Markus", role: "Principal" },
@@ -248,6 +237,7 @@ export default function ChartRoomPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Main Content Column */}
         <div className="lg:col-span-8 space-y-8">
           <Card className="glass-panel border-white/5 bg-white shadow-sm overflow-hidden">
             <CardHeader className="border-b border-black/5 bg-muted/30 p-8 flex flex-row items-center justify-between">
@@ -377,52 +367,61 @@ export default function ChartRoomPage() {
 
         {/* Side Column: The Captain's Deck */}
         <div className="lg:col-span-4 space-y-8">
-          <Card className="glass-panel border-white/5 bg-black/40 overflow-hidden relative group">
-            <CardHeader className="bg-primary/10 border-b border-white/10 z-10 relative">
+          <Card className="glass-panel border-white/5 bg-black/40 overflow-hidden relative group min-h-[600px] flex flex-col">
+            <CardHeader className="bg-primary/10 border-b border-white/10 z-10 relative shrink-0">
               <CardTitle className="text-sm uppercase font-bold tracking-widest text-primary flex items-center gap-2">
                 <Bot className="h-4 w-4" /> The Captain's Deck
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-0 relative">
-              {/* 3D Captain Image */}
-              <div className="relative h-[400px] w-full bg-gradient-to-b from-transparent to-black/60 overflow-hidden">
-                {captainImg?.imageUrl && (
-                  <Image 
-                    src={captainImg.imageUrl} 
-                    alt="The Captain" 
-                    fill 
-                    className="object-cover object-top opacity-90 group-hover:scale-105 transition-transform duration-1000"
-                  />
-                )}
-                {/* Proactive Speech Bubble */}
-                <div className="absolute bottom-6 left-6 right-6">
-                  <div className="glass-panel p-5 rounded-2xl border-white/20 bg-black/60 shadow-2xl space-y-3">
+            <CardContent className="p-0 relative flex-1 flex flex-col">
+              {/* Interaction Area */}
+              <div className="relative flex-1 bg-gradient-to-b from-transparent to-black/60 overflow-hidden p-8 flex flex-col items-center justify-end">
+                {/* Character Image - Large and pop-out effect */}
+                <div className="absolute top-10 w-[120%] h-[70%] z-0">
+                  {captainImg?.imageUrl && (
+                    <Image 
+                      src={captainImg.imageUrl} 
+                      alt="The Captain" 
+                      fill 
+                      className="object-contain object-top opacity-100 drop-shadow-[0_20px_50px_rgba(75,163,199,0.3)] group-hover:scale-105 transition-transform duration-1000"
+                    />
+                  )}
+                </div>
+
+                {/* Speech Bubble - Duolingo Style */}
+                <div className="relative z-10 w-full animate-in slide-in-from-bottom-8 duration-700">
+                  <div className="bg-white p-6 rounded-3xl border-2 border-primary/20 shadow-2xl space-y-4 relative">
+                    {/* Speech Bubble Arrow */}
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-6 h-6 bg-white border-t-2 border-l-2 border-primary/20 rotate-45 rounded-sm" />
+                    
                     <div className="flex items-center gap-2 mb-1">
-                      <Sparkles className="h-3 w-3 text-primary animate-pulse" />
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Strategic Insight</span>
+                      <Sparkles className="h-4 w-4 text-primary animate-pulse" />
+                      <span className="text-[11px] font-bold uppercase tracking-widest text-primary">Strategic Insight</span>
                     </div>
-                    <p className="text-xs leading-relaxed text-white font-medium italic">
+                    
+                    <p className="text-sm leading-relaxed text-slate-800 font-medium italic">
                       "{captainMessage}"
                     </p>
+
                     {captainProposal && (
-                      <div className="pt-3 space-y-3">
-                        <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 space-y-1">
-                          <p className="text-[10px] font-bold text-primary uppercase">{captainProposal.title}</p>
-                          <p className="text-[9px] text-white/60 leading-tight">{captainProposal.desc}</p>
+                      <div className="pt-2 space-y-4">
+                        <div className="p-4 rounded-2xl bg-primary/5 border-2 border-primary/10 space-y-1.5">
+                          <p className="text-xs font-bold text-primary uppercase">{captainProposal.title}</p>
+                          <p className="text-[11px] text-slate-600 leading-tight">{captainProposal.desc}</p>
                         </div>
                         <div className="flex gap-2">
                           <Button 
-                            className="flex-1 h-8 text-[9px] font-bold uppercase shadow-lg"
+                            className="flex-1 h-10 text-[10px] font-bold uppercase shadow-lg rounded-xl"
                             onClick={() => handleAddMove(captainProposal.title, captainProposal.desc)}
                           >
                             Add to Sandbox
                           </Button>
                           <Button 
                             variant="outline" 
-                            className="h-8 w-10 p-0 bg-white/5 border-white/10"
+                            className="h-10 w-12 p-0 bg-slate-50 border-slate-200 hover:bg-primary/10 rounded-xl"
                             asChild
                           >
-                            <Link href="/wardroom"><MessageSquare className="h-3.5 w-3.5" /></Link>
+                            <Link href="/wardroom"><MessageSquare className="h-4 w-4 text-primary" /></Link>
                           </Button>
                         </div>
                       </div>
@@ -431,33 +430,31 @@ export default function ChartRoomPage() {
                 </div>
               </div>
 
-              <div className="p-8 space-y-8 border-t border-white/5">
+              {/* Simulation Result Area - Integrated at the bottom */}
+              <div className="p-8 pt-0 shrink-0 bg-black/20">
                 {simLoading && (
-                  <div className="flex flex-col items-center justify-center py-10 space-y-4">
-                    <Loader2 className="h-10 w-10 text-primary animate-spin" />
-                    <p className="text-xs text-muted-foreground uppercase font-bold text-primary animate-pulse text-center">
+                  <div className="flex flex-col items-center justify-center py-6 space-y-4">
+                    <Loader2 className="h-8 w-8 text-primary animate-spin" />
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold text-primary animate-pulse text-center">
                       Synthesizing Hartmann Matrix...
                     </p>
                   </div>
                 )}
 
                 {simResult && !simLoading && (
-                  <div className="space-y-6 animate-in fade-in duration-700">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                        <p className="text-[9px] font-bold uppercase mb-1">Projected Wealth</p>
-                        <p className="text-lg font-bold text-primary">{simResult.projectedWealth}</p>
+                  <div className="space-y-4 animate-in fade-in duration-700">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                        <p className="text-[9px] font-bold uppercase text-white/50 mb-1">Projected Wealth</p>
+                        <p className="text-base font-bold text-primary">{simResult.projectedWealth}</p>
                       </div>
-                      <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                        <p className="text-[9px] font-bold uppercase mb-1">Risk Level</p>
-                        <p className={cn("text-lg font-bold", simResult.riskLevel === 'Critical' ? 'text-red-500' : 'text-amber-500')}>{simResult.riskLevel}</p>
+                      <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                        <p className="text-[9px] font-bold uppercase text-white/50 mb-1">Risk Level</p>
+                        <p className={cn("text-base font-bold", simResult.riskLevel === 'Critical' ? 'text-red-500' : 'text-amber-500')}>{simResult.riskLevel}</p>
                       </div>
                     </div>
-                    <div className="p-5 rounded-2xl bg-primary/5 border border-primary/10 italic text-sm leading-relaxed">
-                      "{simResult.scenarioSummary}"
-                    </div>
-                    <Button className="w-full h-12 shadow-lg" onClick={shareToWardroom}>
-                      <Send className="mr-2 h-4 w-4" /> Share with Council
+                    <Button className="w-full h-10 shadow-lg bg-primary/20 text-primary hover:bg-primary/30 border border-primary/30 uppercase text-[10px] font-bold" onClick={shareToWardroom}>
+                      <Send className="mr-2 h-4 w-4" /> Share Projections
                     </Button>
                   </div>
                 )}
