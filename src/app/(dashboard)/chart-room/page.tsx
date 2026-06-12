@@ -33,7 +33,9 @@ import {
   PlusCircle,
   Loader2,
   Trash2,
-  ArrowRightLeft
+  ArrowRightLeft,
+  Check,
+  Ban
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -52,9 +54,24 @@ interface DecisionCard {
   category: string;
   isCritical?: boolean;
   isUserGenerated?: boolean;
+  isAI?: boolean;
+  status?: 'pending' | 'accepted' | 'dismissed';
 }
 
 const INITIAL_PROPOSED_ACTIONS: DecisionCard[] = [
+  {
+    id: 'ai-b-1',
+    type: 'action',
+    title: "Inheritance Tax Gap",
+    description: "Detected €8M exposure in the G1 -> G3 transition path due to new EU-wide reporting standards.",
+    impactMetric: "-€8.0M Risk",
+    liquidityValue: -8000000,
+    riskDelta: 10,
+    logic: "System-detected tax blindspot.",
+    category: "AI Blindspot",
+    isAI: true,
+    status: 'pending'
+  },
   {
     id: 'a-1',
     type: 'action',
@@ -64,7 +81,8 @@ const INITIAL_PROPOSED_ACTIONS: DecisionCard[] = [
     liquidityValue: -6000000,
     riskDelta: 5,
     logic: "Sophie's professional relocation mandate.",
-    category: "Real Estate"
+    category: "Real Estate",
+    status: 'accepted'
   },
   {
     id: 'a-2',
@@ -75,7 +93,8 @@ const INITIAL_PROPOSED_ACTIONS: DecisionCard[] = [
     liquidityValue: -12000000,
     riskDelta: 15,
     logic: "Core business preservation through innovation.",
-    category: "Business"
+    category: "Business",
+    status: 'accepted'
   }
 ];
 
@@ -122,6 +141,9 @@ export default function DecisionSandboxPage() {
   const [newAction, setNewAction] = useState({ title: "", description: "", value: "0", riskDelta: "0", category: "Capital Event" });
   const [newOffset, setNewOffset] = useState({ title: "", description: "", value: "0", riskDelta: "0", category: "Custom Strategy" });
 
+  const aiBlindspots = useMemo(() => proposedActions.filter(a => a.isAI && a.status === 'pending'), [proposedActions]);
+  const activeProposedActions = useMemo(() => proposedActions.filter(a => a.status === 'accepted'), [proposedActions]);
+
   const activeSynergies = useMemo(() => {
     return Object.entries(pairedIds).map(([actionId, offsetId]) => {
       const action = proposedActions.find(c => c.id === actionId);
@@ -148,15 +170,23 @@ export default function DecisionSandboxPage() {
 
   const handlePairing = (actionId: string, offsetId: string) => {
     setPairedIds(prev => {
-      // If this action is already paired with THIS offset, unpair them
       if (prev[actionId] === offsetId) {
         const next = { ...prev };
         delete next[actionId];
         return next;
       }
-      // Otherwise, pair them (overwriting any previous pairing for this action)
       return { ...prev, [actionId]: offsetId };
     });
+  };
+
+  const handleAcceptAI = (id: string) => {
+    setProposedActions(prev => prev.map(a => a.id === id ? { ...a, status: 'accepted' } : a));
+    toast({ title: "Blindspot Accepted", description: "This risk is now on the drafting board for stabilization." });
+  };
+
+  const handleDismissAI = (id: string) => {
+    setProposedActions(prev => prev.filter(a => a.id !== id));
+    toast({ title: "Insight Dismissed", description: "You have chosen to override this system alert." });
   };
 
   const handleAddAction = () => {
@@ -172,7 +202,8 @@ export default function DecisionSandboxPage() {
       riskDelta: parseFloat(newAction.riskDelta) || 0,
       logic: "User-defined proposed action.",
       category: newAction.category,
-      isUserGenerated: true
+      isUserGenerated: true,
+      status: 'accepted'
     };
     setProposedActions(prev => [...prev, action]);
     setNewAction({ title: "", description: "", value: "0", riskDelta: "0", category: "Capital Event" });
@@ -249,7 +280,6 @@ export default function DecisionSandboxPage() {
 
   return (
     <div className="flex flex-col font-body antialiased relative">
-      {/* Header */}
       <div className="h-20 bg-white border-b border-slate-200 px-12 flex items-center justify-between z-40 sticky top-0 shadow-sm">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
@@ -258,7 +288,7 @@ export default function DecisionSandboxPage() {
           </div>
           <div className="h-4 w-px bg-slate-200" />
           <p className="text-sm font-medium text-slate-500 italic">
-            Pair actions with offsets to stabilize the heritage portfolio.
+            Pair proposed actions with offsets to stabilize the heritage portfolio.
           </p>
         </div>
         <Button 
@@ -275,12 +305,11 @@ export default function DecisionSandboxPage() {
         </Button>
       </div>
 
-      {/* Main Board */}
       <div className="flex-1 p-12 bg-slate-50/50 pb-32">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16">
           
           {/* Column 1: Proposed Actions */}
-          <div className="space-y-6">
+          <div className="space-y-8">
             <div className="flex items-center justify-between mb-4 border-b border-slate-200 pb-4">
               <div className="flex items-center gap-3">
                 <LayoutGrid className="h-4 w-4 text-slate-400" />
@@ -322,47 +351,97 @@ export default function DecisionSandboxPage() {
               </Dialog>
             </div>
             
-            <div className="space-y-4">
-              {proposedActions.map((action) => {
-                const pairedOffsetId = pairedIds[action.id];
-                const isPaired = !!pairedOffsetId;
-                return (
-                  <Card 
-                    key={action.id}
-                    className={cn(
-                      "border transition-all duration-300 relative shadow-sm group",
-                      isPaired ? "border-primary ring-1 ring-primary/10 bg-primary/[0.01]" : "border-slate-200 hover:border-slate-300 bg-white"
-                    )}
-                  >
-                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-6 w-6 text-slate-300 hover:text-red-500"
-                        onClick={() => handleDismissAction(action.id)}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                    <CardHeader className="pb-3">
-                      <div className="flex justify-between items-start">
-                        <Badge variant="outline" className="text-[8px] uppercase tracking-widest border-slate-100">{action.category}</Badge>
-                        <span className="text-[10px] font-bold text-red-600">{action.impactMetric}</span>
-                      </div>
-                      <CardTitle className="text-sm font-bold tracking-tight text-slate-900 mt-2">{action.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-[11px] text-slate-500 leading-relaxed italic mb-4">"{action.description}"</p>
-                      <div className="pt-3 border-t border-slate-50 flex items-center justify-between">
-                        <span className="text-[9px] text-slate-400 uppercase font-bold tracking-widest">
-                          {isPaired ? "Stabilization Active" : "Pending Offset"}
-                        </span>
-                        {isPaired && <CheckCircle2 className="h-4 w-4 text-primary" />}
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
+            <div className="space-y-8">
+              {/* AI Blindspots - Higher Priority */}
+              {aiBlindspots.length > 0 && (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 px-1">
+                    <Sparkles className="h-3 w-3 text-primary" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Intelligence: Considered Risks</span>
+                  </div>
+                  {aiBlindspots.map((action) => (
+                    <Card key={action.id} className="border-primary/20 bg-primary/[0.02] shadow-sm relative group overflow-hidden">
+                      <div className="absolute top-0 left-0 w-1 h-full bg-primary/40" />
+                      <CardHeader className="pb-3">
+                        <div className="flex justify-between items-start">
+                          <Badge variant="outline" className="text-[8px] uppercase tracking-widest border-primary/20 text-primary">AI Blindspot</Badge>
+                          <span className="text-[10px] font-bold text-red-600">{action.impactMetric}</span>
+                        </div>
+                        <CardTitle className="text-sm font-bold tracking-tight text-slate-900 mt-2">{action.title}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-[11px] text-slate-500 leading-relaxed italic mb-4">"{action.description}"</p>
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="flex-1 h-8 text-[9px] font-bold uppercase tracking-widest border-primary/20 text-primary hover:bg-primary/5"
+                            onClick={() => handleAcceptAI(action.id)}
+                          >
+                            <Check className="mr-2 h-3 w-3" /> Accept into Board
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-8 text-[9px] font-bold uppercase tracking-widest text-slate-400"
+                            onClick={() => handleDismissAI(action.id)}
+                          >
+                            <Ban className="mr-2 h-3 w-3" /> Dismiss
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+
+              {/* Standard Active Actions */}
+              <div className="space-y-4">
+                {activeProposedActions.map((action) => {
+                  const pairedOffsetId = pairedIds[action.id];
+                  const isPaired = !!pairedOffsetId;
+                  return (
+                    <Card 
+                      key={action.id}
+                      className={cn(
+                        "border transition-all duration-300 relative shadow-sm group",
+                        isPaired ? "border-primary ring-1 ring-primary/10 bg-primary/[0.01]" : "border-slate-200 hover:border-slate-300 bg-white"
+                      )}
+                    >
+                      {!action.isAI && (
+                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-6 w-6 text-slate-300 hover:text-red-500"
+                            onClick={() => handleDismissAction(action.id)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      )}
+                      <CardHeader className="pb-3">
+                        <div className="flex justify-between items-start">
+                          <Badge variant="outline" className="text-[8px] uppercase tracking-widest border-slate-100">
+                            {action.isAI ? "AI Accepted Risk" : action.category}
+                          </Badge>
+                          <span className="text-[10px] font-bold text-red-600">{action.impactMetric}</span>
+                        </div>
+                        <CardTitle className="text-sm font-bold tracking-tight text-slate-900 mt-2">{action.title}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-[11px] text-slate-500 leading-relaxed italic mb-4">"{action.description}"</p>
+                        <div className="pt-3 border-t border-slate-50 flex items-center justify-between">
+                          <span className="text-[9px] text-slate-400 uppercase font-bold tracking-widest">
+                            {isPaired ? "Stabilization Active" : "Pending Offset"}
+                          </span>
+                          {isPaired && <CheckCircle2 className="h-4 w-4 text-primary" />}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
@@ -418,9 +497,8 @@ export default function DecisionSandboxPage() {
                   <Card 
                     key={offset.id}
                     onClick={() => {
-                      // Smart pairing: find first unpaired action or default to a-1
-                      const targetActionId = proposedActions.find(a => !pairedIds[a.id])?.id || proposedActions[0].id;
-                      handlePairing(targetActionId, offset.id);
+                      const targetActionId = activeProposedActions.find(a => !pairedIds[a.id])?.id || activeProposedActions[0]?.id;
+                      if (targetActionId) handlePairing(targetActionId, offset.id);
                     }}
                     className={cn(
                       "border transition-all duration-300 cursor-pointer relative shadow-sm overflow-hidden group",
@@ -461,7 +539,7 @@ export default function DecisionSandboxPage() {
                       </p>
                       {isPaired && (
                         <div className="pt-3 border-t border-primary/10 flex items-center justify-between text-[8px] font-bold uppercase tracking-widest text-primary">
-                          <span className="flex items-center gap-1.5"><ArrowRightLeft className="h-3 w-3" /> Coupled with {proposedActions.find(a => a.id === pairedActionId)?.title}</span>
+                          <span className="flex items-center gap-1.5"><ArrowRightLeft className="h-3 w-3" /> Coupled with {activeProposedActions.find(a => a.id === pairedActionId)?.title}</span>
                           <CheckCircle2 className="h-3 w-3" />
                         </div>
                       )}
@@ -474,7 +552,6 @@ export default function DecisionSandboxPage() {
         </div>
       </div>
 
-      {/* Decision Summary Bar - Sticky to Bottom of the Page */}
       {activeSynergies.length > 0 && (
         <div className="sticky bottom-0 h-24 bg-white border-t border-slate-200 px-12 flex items-center justify-between z-50 shadow-[0_-8px_30px_rgba(0,0,0,0.1)] animate-in slide-in-from-bottom-full duration-500">
           <div className="flex items-center gap-12">
