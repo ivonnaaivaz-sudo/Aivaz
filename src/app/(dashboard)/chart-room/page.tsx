@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -29,22 +28,15 @@ import {
   ArrowDownRight,
   Sparkles,
   MessageSquare,
-  Bot
+  Bot,
+  X
 } from "lucide-react";
-import { 
-  AreaChart, 
-  Area, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip as RechartsTooltip, 
-  ResponsiveContainer
-} from "recharts";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import Image from "next/image";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const TIME_HORIZONS = ["Current", "5 Years", "10 Years", "25 Years"];
 const FAMILY_MEMBERS = [
@@ -74,6 +66,7 @@ export default function ChartRoomPage() {
   const [isAdding, setIsAdding] = useState(false);
   
   // Proactive Captain Logic
+  const [isCaptainExpanded, setIsCaptainExpanded] = useState(false);
   const [captainMessage, setCaptainMessage] = useState<string>("Analyzing the Hartmann matrix for hidden synergies...");
   const [captainProposal, setCaptainProposal] = useState<{title: string, desc: string} | null>(null);
 
@@ -101,11 +94,15 @@ export default function ChartRoomPage() {
     const alexBuyin = intentions["Alexander-10 Years"];
 
     if (markusPayout && sophiePayout && alexBuyin) {
-      setCaptainMessage(`Hey Markus, I've noticed a synergy. What if we leveraged your €15M and Sophie's €12M current payouts to accelerate Alexander's VC Buy-in move?`);
+      setCaptainMessage(`Hey Markus, I've noticed a synergy. Have you considered leveraging your €15M and Sophie's €12M current payouts to accelerate Alexander's VC Buy-in move?`);
       setCaptainProposal({
         title: "Capital Bridge: Payout Acceleration",
         desc: "Leveraging G1 and G3 current inflows to fund the G3 technology pivot, reducing total interest exposure by €4.2M over a 10-year horizon."
       });
+      // Automatically show the "teaser" if not already expanded
+      if (!isCaptainExpanded) {
+        // Trigger a subtle animation or state change if needed
+      }
     }
   }, [intentions]);
 
@@ -127,6 +124,7 @@ export default function ChartRoomPage() {
       });
       setNewMove({ title: "", description: "" });
       setIsAdding(false);
+      setIsCaptainExpanded(false);
       toast({ title: "Move Promoted", description: "This intention has been moved to the strategic sandbox." });
     } catch (e) { console.error(e); }
   };
@@ -160,21 +158,6 @@ export default function ChartRoomPage() {
     } finally {
       setSimLoading(false);
     }
-  };
-
-  const shareToWardroom = async () => {
-    if (!user || !db || !simResult) return;
-    try {
-      const msgRef = doc(collection(db, "users", user.uid, "messages"));
-      await setDoc(msgRef, {
-        senderId: user.uid,
-        senderName: "The Captain",
-        text: `STRATEGY PROJECTION: Strategic Sandbox Simulation.\n\nProjected Wealth: ${simResult.projectedWealth}\nRisk Level: ${simResult.riskLevel}\nSummary: ${simResult.scenarioSummary}`,
-        type: "recommendation",
-        timestamp: new Date().toISOString()
-      });
-      toast({ title: "Shared with Wardroom", description: "Projections shared with family stakeholders." });
-    } catch (e) { console.error(e); }
   };
 
   const toggleIntention = (member: string, horizon: string) => {
@@ -217,7 +200,7 @@ export default function ChartRoomPage() {
   }, [intentions]);
 
   return (
-    <div className="space-y-8 max-w-[1600px] mx-auto pb-32">
+    <div className="space-y-8 max-w-[1600px] mx-auto pb-32 relative">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-white/5 pb-8">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
@@ -365,47 +348,51 @@ export default function ChartRoomPage() {
           </Card>
         </div>
 
-        {/* Side Column: The Captain's Deck */}
-        <div className="lg:col-span-4 space-y-8">
-          <Card className="glass-panel border-white/5 bg-black/40 overflow-hidden relative group min-h-[600px] flex flex-col">
-            <CardHeader className="bg-primary/10 border-b border-white/10 z-10 relative shrink-0">
-              <CardTitle className="text-sm uppercase font-bold tracking-widest text-primary flex items-center gap-2">
-                <Bot className="h-4 w-4" /> The Captain's Deck
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0 relative flex-1 flex flex-col">
-              {/* Interaction Area */}
-              <div className="relative flex-1 bg-gradient-to-b from-transparent to-black/60 overflow-hidden p-8 flex flex-col items-center justify-end">
-                {/* Character Image - Large and pop-out effect */}
-                <div className="absolute top-10 w-[120%] h-[70%] z-0">
-                  {captainImg?.imageUrl && (
-                    <Image 
-                      src={captainImg.imageUrl} 
-                      alt="The Captain" 
-                      fill 
-                      className="object-contain object-top opacity-100 drop-shadow-[0_20px_50px_rgba(75,163,199,0.3)] group-hover:scale-105 transition-transform duration-1000"
-                    />
-                  )}
-                </div>
+        {/* Side Column: The Captain's AI Agent Interaction */}
+        <div className="lg:col-span-4 relative">
+          <div className="sticky top-8 space-y-6">
+            {/* The Captain's Avatar & Pop-up Trigger */}
+            <div className="flex flex-col items-end gap-4">
+              <div className="relative group cursor-pointer" onClick={() => setIsCaptainExpanded(!isCaptainExpanded)}>
+                <div className="absolute -inset-1 bg-gradient-to-r from-primary to-accent rounded-full blur opacity-40 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse"></div>
+                <Avatar className="h-20 w-20 border-4 border-white shadow-2xl relative">
+                  <AvatarImage src={captainImg?.imageUrl} className="object-cover" />
+                  <AvatarFallback className="bg-primary text-white"><Bot className="h-10 w-10" /></AvatarFallback>
+                </Avatar>
+                {/* Notification Badge */}
+                {!isCaptainExpanded && captainProposal && (
+                  <div className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 rounded-full border-2 border-white flex items-center justify-center animate-bounce">
+                    <span className="text-[8px] font-bold text-white">1</span>
+                  </div>
+                )}
+              </div>
 
-                {/* Speech Bubble - Duolingo Style */}
-                <div className="relative z-10 w-full animate-in slide-in-from-bottom-8 duration-700">
-                  <div className="bg-white p-6 rounded-3xl border-2 border-primary/20 shadow-2xl space-y-4 relative">
-                    {/* Speech Bubble Arrow */}
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-6 h-6 bg-white border-t-2 border-l-2 border-primary/20 rotate-45 rounded-sm" />
-                    
-                    <div className="flex items-center gap-2 mb-1">
-                      <Sparkles className="h-4 w-4 text-primary animate-pulse" />
-                      <span className="text-[11px] font-bold uppercase tracking-widest text-primary">Strategic Insight</span>
+              {/* Speech Bubble / Pop-up */}
+              <div className={cn(
+                "w-full transition-all duration-500 transform origin-top-right",
+                isCaptainExpanded ? "scale-100 opacity-100" : "scale-90 opacity-0 pointer-events-none"
+              )}>
+                <div className="bg-white rounded-3xl border-2 border-primary/20 shadow-2xl overflow-hidden">
+                  <div className="p-4 bg-primary/5 border-b border-primary/10 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-primary" />
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Strategic Insight</span>
                     </div>
-                    
-                    <p className="text-sm leading-relaxed text-slate-800 font-medium italic">
-                      "{captainMessage}"
-                    </p>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setIsCaptainExpanded(false)}>
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                  
+                  <div className="p-6 space-y-6">
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium leading-relaxed text-slate-800">
+                        {captainMessage}
+                      </p>
+                    </div>
 
                     {captainProposal && (
-                      <div className="pt-2 space-y-4">
-                        <div className="p-4 rounded-2xl bg-primary/5 border-2 border-primary/10 space-y-1.5">
+                      <div className="space-y-4 animate-in slide-in-from-bottom-2">
+                        <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 space-y-1.5">
                           <p className="text-xs font-bold text-primary uppercase">{captainProposal.title}</p>
                           <p className="text-[11px] text-slate-600 leading-tight">{captainProposal.desc}</p>
                         </div>
@@ -430,37 +417,51 @@ export default function ChartRoomPage() {
                 </div>
               </div>
 
-              {/* Simulation Result Area - Integrated at the bottom */}
-              <div className="p-8 pt-0 shrink-0 bg-black/20">
-                {simLoading && (
-                  <div className="flex flex-col items-center justify-center py-6 space-y-4">
-                    <Loader2 className="h-8 w-8 text-primary animate-spin" />
-                    <p className="text-[10px] text-muted-foreground uppercase font-bold text-primary animate-pulse text-center">
-                      Synthesizing Hartmann Matrix...
-                    </p>
-                  </div>
-                )}
+              {/* Simulation Result Area - Integrated with AI interaction */}
+              {isCaptainExpanded && simResult && !simLoading && (
+                <div className="w-full mt-4 animate-in fade-in duration-700">
+                  <Card className="border-none shadow-xl bg-black/5 backdrop-blur-sm overflow-hidden">
+                    <CardHeader className="p-4 pb-0">
+                      <CardTitle className="text-[10px] uppercase tracking-widest text-muted-foreground">Legacy Projection</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-4 space-y-4">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="p-3 rounded-xl bg-white/50 border border-black/5">
+                          <p className="text-[9px] font-bold uppercase text-muted-foreground mb-1">Total Wealth</p>
+                          <p className="text-sm font-bold text-primary">{simResult.projectedWealth}</p>
+                        </div>
+                        <div className="p-3 rounded-xl bg-white/50 border border-black/5">
+                          <p className="text-[9px] font-bold uppercase text-muted-foreground mb-1">Risk</p>
+                          <p className={cn("text-sm font-bold", simResult.riskLevel === 'Critical' ? 'text-red-500' : 'text-amber-500')}>{simResult.riskLevel}</p>
+                        </div>
+                      </div>
+                      <Button className="w-full h-9 shadow-lg bg-primary text-white uppercase text-[9px] font-bold rounded-xl" onClick={shareToWardroom}>
+                        <Send className="mr-2 h-3.5 w-3.5" /> Share with Council
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
 
-                {simResult && !simLoading && (
-                  <div className="space-y-4 animate-in fade-in duration-700">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="p-3 rounded-xl bg-white/5 border border-white/10">
-                        <p className="text-[9px] font-bold uppercase text-white/50 mb-1">Projected Wealth</p>
-                        <p className="text-base font-bold text-primary">{simResult.projectedWealth}</p>
-                      </div>
-                      <div className="p-3 rounded-xl bg-white/5 border border-white/10">
-                        <p className="text-[9px] font-bold uppercase text-white/50 mb-1">Risk Level</p>
-                        <p className={cn("text-base font-bold", simResult.riskLevel === 'Critical' ? 'text-red-500' : 'text-amber-500')}>{simResult.riskLevel}</p>
-                      </div>
-                    </div>
-                    <Button className="w-full h-10 shadow-lg bg-primary/20 text-primary hover:bg-primary/30 border border-primary/30 uppercase text-[10px] font-bold" onClick={shareToWardroom}>
-                      <Send className="mr-2 h-4 w-4" /> Share Projections
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+              {simLoading && (
+                <div className="w-full flex flex-col items-center justify-center py-6 space-y-2 opacity-60">
+                  <Loader2 className="h-6 w-6 text-primary animate-spin" />
+                  <p className="text-[8px] uppercase font-bold tracking-widest text-primary animate-pulse">Processing Hartmann Matrix...</p>
+                </div>
+              )}
+            </div>
+
+            {/* Quick Context Card */}
+            <Card className="glass-panel border-white/5 bg-white/40 p-6 space-y-4">
+               <div className="flex items-center gap-2">
+                 <Bot className="h-4 w-4 text-primary" />
+                 <h3 className="text-[10px] font-bold uppercase tracking-widest">Captain's Brief</h3>
+               </div>
+               <p className="text-[11px] text-muted-foreground leading-relaxed">
+                 I'm currently analyzing {Object.keys(intentions).length} family intentions. High-alignment path detected through G3 technology rebalancing.
+               </p>
+            </Card>
+          </div>
         </div>
       </div>
     </div>
