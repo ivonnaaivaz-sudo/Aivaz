@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useUser, useDoc, useFirestore, useCollection } from "@/firebase";
 import { collection, doc, setDoc, query, orderBy, deleteDoc } from "firebase/firestore";
 import { wealthScenarioSimulation, type WealthScenarioSimulationOutput } from "@/ai/flows/wealth-scenario-simulation";
@@ -21,15 +21,15 @@ import {
   Send, 
   Sticker, 
   Target, 
-  Clock, 
   ChevronRight,
   TrendingDown,
   TrendingUp,
-  Info,
   ArrowDownToLine,
-  Sparkles,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  Sparkles,
+  MessageSquare,
+  Bot
 } from "lucide-react";
 import { 
   AreaChart, 
@@ -43,6 +43,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import Image from "next/image";
+import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 const alignmentData = [
   { time: '09:00', actual: 82, simulated: 82 },
@@ -75,18 +77,23 @@ export default function ChartRoomPage() {
   const db = useFirestore();
   const { toast } = useToast();
   const { data: dna } = useDoc(user ? `users/${user.uid}/dna/current` : null);
+  const captainImg = PlaceHolderImages.find(img => img.id === 'captain-avatar');
 
   const [newMove, setNewMove] = useState({ title: "", description: "" });
   const [simLoading, setSimLoading] = useState(false);
   const [simResult, setSimResult] = useState<WealthScenarioSimulationOutput | null>(null);
   const [isAdding, setIsAdding] = useState(false);
+  
+  // Proactive Captain Logic
+  const [captainMessage, setCaptainMessage] = useState<string>("Analyzing the Hartmann matrix for hidden synergies...");
+  const [captainProposal, setCaptainProposal] = useState<{title: string, desc: string} | null>(null);
 
-  // Intentions Matrix Data (Cash Inflows vs Outflows)
+  // Intentions Matrix Data
   const [intentions, setIntentions] = useState<Record<string, Intention>>({
     "Dr. Markus-Current": { value: 15, type: 'inflow', label: "Inheritance Payout" },
     "Dr. Markus-5 Years": { value: 25, type: 'outflow', label: "Estate Diversification" },
     "Elena-Current": { value: 5, type: 'outflow', label: "Philanthropy Grant" },
-    "Sophie-5 Years": { value: 12, type: 'inflow', label: "Trust Distribution" },
+    "Sophie-Current": { value: 12, type: 'inflow', label: "Trust Distribution" },
     "Alexander-10 Years": { value: 40, type: 'outflow', label: "VC Fund Buy-in" },
     "Lina-25 Years": { value: 10, type: 'inflow', label: "Legacy Dividend" },
   });
@@ -97,6 +104,21 @@ export default function ChartRoomPage() {
   }, [user, db]);
 
   const { data: scenarios } = useCollection(scenariosQuery);
+
+  // Update Captain's Proposal when intentions change
+  useEffect(() => {
+    const markusPayout = intentions["Dr. Markus-Current"];
+    const sophiePayout = intentions["Sophie-Current"];
+    const alexBuyin = intentions["Alexander-10 Years"];
+
+    if (markusPayout && sophiePayout && alexBuyin) {
+      setCaptainMessage(`Hey Markus, I've noticed a synergy. What if we leveraged your €15M and Sophie's €12M current payouts to accelerate Alexander's VC Buy-in move?`);
+      setCaptainProposal({
+        title: "Capital Bridge: Payout Acceleration",
+        desc: "Leveraging G1 and G3 current inflows to fund the G3 technology pivot, reducing total interest exposure by €4.2M over a 10-year horizon."
+      });
+    }
+  }, [intentions]);
 
   const handleAddMove = async (manualTitle?: string, manualDesc?: string) => {
     if (!user || !db) return;
@@ -109,7 +131,7 @@ export default function ChartRoomPage() {
       const scenarioRef = doc(collection(db, "users", user.uid, "scenarios"));
       await setDoc(scenarioRef, {
         title,
-        description: description || "Auto-generated from Intentions Matrix.",
+        description: description || "Auto-generated from Hartmann Matrix.",
         author: user.displayName || "Family Member",
         status: "draft",
         createdAt: new Date().toISOString()
@@ -117,9 +139,7 @@ export default function ChartRoomPage() {
       setNewMove({ title: "", description: "" });
       setIsAdding(false);
       toast({ title: "Move Promoted", description: "This intention has been moved to the strategic sandbox." });
-    } catch (e) { 
-      console.error(e); 
-    }
+    } catch (e) { console.error(e); }
   };
 
   const handleDeleteMove = async (id: string) => {
@@ -132,7 +152,7 @@ export default function ChartRoomPage() {
 
   const runSimulation = async (context?: string) => {
     setSimLoading(true);
-    const combinedContext = scenarios.map(s => `${s.title}: ${s.description}`).join("\n") + (context ? `\n\nActive Trigger: ${context}` : "");
+    const combinedContext = (scenarios || []).map(s => `${s.title}: ${s.description}`).join("\n") + (context ? `\n\nActive Trigger: ${context}` : "");
 
     try {
       const output = await wealthScenarioSimulation({
@@ -144,7 +164,7 @@ export default function ChartRoomPage() {
       setSimResult(output);
       toast({
         title: "Simulation Complete",
-        description: "Aivaz has synthesized the projected impact of your strategic sandbox.",
+        description: "The Captain has synthesized the projected impact of your strategic sandbox.",
       });
     } catch (error) {
       console.error(error);
@@ -159,7 +179,7 @@ export default function ChartRoomPage() {
       const msgRef = doc(collection(db, "users", user.uid, "messages"));
       await setDoc(msgRef, {
         senderId: user.uid,
-        senderName: "Julian Aivaz",
+        senderName: "The Captain",
         text: `STRATEGY PROJECTION: Strategic Sandbox Simulation.\n\nProjected Wealth: ${simResult.projectedWealth}\nRisk Level: ${simResult.riskLevel}\nSummary: ${simResult.scenarioSummary}`,
         type: "recommendation",
         timestamp: new Date().toISOString()
@@ -178,7 +198,6 @@ export default function ChartRoomPage() {
           [key]: { value: 10, type: 'outflow', label: "New Outflow Move" }
         };
       }
-      // Cycle: Outflow -> Inflow -> Off
       if (existing.type === 'outflow') {
         return { ...prev, [key]: { ...existing, type: 'inflow', label: "New Inflow Move" } };
       }
@@ -191,9 +210,8 @@ export default function ChartRoomPage() {
   const promoteToSandbox = (member: string, horizon: string) => {
     const intent = intentions[`${member}-${horizon}`];
     if (!intent) return;
-
     const title = `${member}: ${intent.label} (${horizon})`;
-    const description = `This strategic event is classified as a ${intent.type} of €${intent.value}M. It represents a major generational milestone impacting ${member}'s stake and overall inheritance health.`;
+    const description = `This strategic event is classified as a ${intent.type} of €${intent.value}M.`;
     handleAddMove(title, description);
   };
 
@@ -204,8 +222,6 @@ export default function ChartRoomPage() {
       if (i.type === 'inflow') totalInflow += i.value;
       else totalOutflow += i.value;
     });
-    
-    // Balance score: More inflows improve it, more outflows stress it
     const net = totalInflow - totalOutflow;
     const score = 75 + (net / 2);
     return Math.min(100, Math.max(0, score));
@@ -232,14 +248,12 @@ export default function ChartRoomPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Main Column */}
         <div className="lg:col-span-8 space-y-8">
-          {/* 1. Family Intentions Matrix (Heat Map) */}
           <Card className="glass-panel border-white/5 bg-white shadow-sm overflow-hidden">
             <CardHeader className="border-b border-black/5 bg-muted/30 p-8 flex flex-row items-center justify-between">
               <div className="space-y-1">
                 <CardTitle className="text-2xl font-headline font-bold">Legacy Intentions Matrix</CardTitle>
-                <CardDescription>Plan family milestones. Green cells represent cash coming in (Inheritance, Payouts), red represents outflows (Purchases, Payouts).</CardDescription>
+                <CardDescription>Plan family milestones. Green: Cash Inflows, Red: Outflows.</CardDescription>
               </div>
               <div className="text-right">
                 <p className="text-[10px] font-bold uppercase text-muted-foreground">Inheritance Stability</p>
@@ -250,7 +264,6 @@ export default function ChartRoomPage() {
             </CardHeader>
             <CardContent className="p-8 overflow-x-auto">
               <div className="min-w-[700px]">
-                {/* Header row */}
                 <div className="grid grid-cols-[180px_repeat(4,1fr)] gap-3 mb-6">
                   <div />
                   {TIME_HORIZONS.map(h => (
@@ -259,8 +272,6 @@ export default function ChartRoomPage() {
                     </div>
                   ))}
                 </div>
-
-                {/* Body rows */}
                 {FAMILY_MEMBERS.map(member => (
                   <div key={member.name} className="grid grid-cols-[180px_repeat(4,1fr)] gap-3 mb-3">
                     <div className="flex flex-col justify-center">
@@ -271,15 +282,14 @@ export default function ChartRoomPage() {
                       const key = `${member.name}-${horizon}`;
                       const intent = intentions[key];
                       const isActive = !!intent;
-                      
                       return (
                         <div 
                           key={horizon}
                           className={cn(
                             "h-24 rounded-xl cursor-pointer transition-all border border-transparent flex flex-col items-center justify-center group relative overflow-hidden text-center p-2",
                             !isActive ? 'bg-muted/30 opacity-40 hover:opacity-100 hover:bg-muted/50' : 
-                            intent.type === 'inflow' ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20' :
-                            'bg-red-500/10 text-red-700 border-red-500/20'
+                            intent.type === 'inflow' ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20 shadow-[inset_0_0_20px_rgba(16,185,129,0.05)]' :
+                            'bg-red-500/10 text-red-700 border-red-500/20 shadow-[inset_0_0_20px_rgba(239,68,68,0.05)]'
                           )}
                           onClick={() => toggleIntention(member.name, horizon)}
                         >
@@ -289,18 +299,11 @@ export default function ChartRoomPage() {
                               <span className="text-[10px] font-bold uppercase tracking-tighter leading-tight">{intent.label}</span>
                               <span className="text-[10px] font-mono mt-1">€{intent.value}M</span>
                             </>
-                          ) : (
-                            <Target className="h-4 w-4 opacity-20" />
-                          )}
-                          
-                          {/* Promotion Overlay */}
+                          ) : <Target className="h-4 w-4 opacity-20" />}
                           {isActive && (
                             <div 
                               className="absolute inset-0 bg-primary flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity translate-y-full group-hover:translate-y-0 text-white"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                promoteToSandbox(member.name, horizon);
-                              }}
+                              onClick={(e) => { e.stopPropagation(); promoteToSandbox(member.name, horizon); }}
                             >
                               <div className="flex flex-col items-center gap-1">
                                 <ArrowDownToLine className="h-5 w-5 animate-bounce" />
@@ -314,32 +317,17 @@ export default function ChartRoomPage() {
                   </div>
                 ))}
               </div>
-              <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-center gap-4 p-4 bg-emerald-500/5 rounded-xl border border-emerald-500/10">
-                  <TrendingUp className="h-4 w-4 text-emerald-500" />
-                  <p className="text-[10px] text-muted-foreground font-medium">
-                    <strong>Green (Inflow):</strong> Funds entering the family ecosystem (Inheritance, Distributions, Revenue). Improves stability score.
-                  </p>
-                </div>
-                <div className="flex items-center gap-4 p-4 bg-red-500/5 rounded-xl border border-red-500/10">
-                  <TrendingDown className="h-4 w-4 text-red-500" />
-                  <p className="text-[10px] text-muted-foreground font-medium">
-                    <strong>Red (Outflow):</strong> Capital leaving or being redeployed (Asset purchases, Buy-outs, Lifestyle). Stresses stability score.
-                  </p>
-                </div>
-              </div>
             </CardContent>
           </Card>
 
-          {/* 2. Strategic Sandbox (Notion-like) */}
           <Card className="glass-panel border-white/5 bg-white shadow-sm overflow-hidden min-h-[400px]">
             <CardHeader className="border-b border-black/5 bg-muted/30 p-8">
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-2xl font-headline font-bold">Strategic Sandbox</CardTitle>
-                  <CardDescription>Aggregate moves projected for the Hartmann Council. Drag objectives from the Matrix to simulate.</CardDescription>
+                  <CardDescription>Collaborative life moves. Drag intentions here to simulate legacy impact.</CardDescription>
                 </div>
-                <Button onClick={() => setIsAdding(true)} className="rounded-full h-10 px-6 shadow-lg bg-primary hover:bg-primary/90">
+                <Button onClick={() => setIsAdding(true)} className="rounded-full h-10 px-6 shadow-lg">
                   <PlusCircle className="mr-2 h-4 w-4" /> Add Life Move
                 </Button>
               </div>
@@ -348,57 +336,33 @@ export default function ChartRoomPage() {
               <div className="divide-y divide-black/5">
                 {isAdding && (
                   <div className="p-8 bg-primary/5 space-y-4 animate-in slide-in-from-top duration-300">
-                    <Input 
-                      placeholder="Title of Move (e.g., 'Alexander's House Purchase')" 
-                      className="text-lg font-bold border-none bg-transparent focus-visible:ring-0 px-0"
-                      value={newMove.title}
-                      onChange={(e) => setNewMove({...newMove, title: e.target.value})}
-                    />
-                    <Textarea 
-                      placeholder="Describe the details, goals, and emotional drivers..."
-                      className="min-h-[100px] border-none bg-transparent focus-visible:ring-0 px-0 resize-none text-muted-foreground"
-                      value={newMove.description}
-                      onChange={(e) => setNewMove({...newMove, description: e.target.value})}
-                    />
+                    <Input placeholder="Title of Move" className="text-lg font-bold border-none bg-transparent px-0" value={newMove.title} onChange={(e) => setNewMove({...newMove, title: e.target.value})} />
+                    <Textarea placeholder="Details and goals..." className="min-h-[100px] border-none bg-transparent px-0 resize-none" value={newMove.description} onChange={(e) => setNewMove({...newMove, description: e.target.value})} />
                     <div className="flex justify-end gap-3 pt-4 border-t border-black/5">
                       <Button variant="ghost" onClick={() => setIsAdding(false)}>Cancel</Button>
                       <Button onClick={() => handleAddMove()}>Save Move</Button>
                     </div>
                   </div>
                 )}
-
-                {(scenarios?.length || 0) === 0 && !isAdding && (
-                  <div className="py-24 flex flex-col items-center justify-center text-center space-y-4 text-muted-foreground opacity-30">
-                    <ArrowDownToLine className="h-12 w-12 animate-pulse" />
-                    <div>
-                      <p className="font-bold">Sandbox Empty</p>
-                      <p className="text-xs">Promote objectives from the Matrix above to start simulating your legacy.</p>
-                    </div>
-                  </div>
-                )}
-
                 {scenarios?.map((s) => (
                   <div key={s.id} className="p-8 hover:bg-muted/30 transition-all group relative border-l-4 border-transparent hover:border-primary">
-                    <div className="absolute top-8 right-8 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => handleDeleteMove(s.id)}>
+                    <div className="absolute top-8 right-8 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDeleteMove(s.id)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                     <div className="flex items-start gap-6">
-                      <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+                      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                         <MapPin className="h-6 w-6 text-primary" />
                       </div>
                       <div className="space-y-2 flex-1">
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-xl font-bold">{s.title}</h3>
-                          <Badge variant="outline" className="text-[8px] uppercase">{s.author}</Badge>
-                        </div>
-                        <p className="text-muted-foreground leading-relaxed text-sm">{s.description}</p>
+                        <h3 className="text-xl font-bold">{s.title}</h3>
+                        <p className="text-muted-foreground text-sm">{s.description}</p>
                         <div className="pt-4 flex items-center gap-4">
-                          <Button variant="outline" size="sm" className="h-8 text-[10px] font-bold uppercase tracking-widest" onClick={() => runSimulation(s.title)}>
-                            <Cpu className="mr-2 h-3.5 w-3.5" /> Simulate Move
+                          <Button variant="outline" size="sm" className="h-8 text-[10px] font-bold uppercase" onClick={() => runSimulation(s.title)}>
+                            <Cpu className="mr-2 h-3.5 w-3.5" /> Simulate
                           </Button>
-                          <Button variant="ghost" size="sm" className="h-8 text-[10px] font-bold uppercase tracking-widest" asChild>
+                          <Button variant="ghost" size="sm" className="h-8 text-[10px] font-bold uppercase" asChild>
                              <Link href="/wardroom">Discuss</Link>
                           </Button>
                         </div>
@@ -411,45 +375,69 @@ export default function ChartRoomPage() {
           </Card>
         </div>
 
-        {/* Side Column: Projection Engine */}
+        {/* Side Column: The Captain's Deck */}
         <div className="lg:col-span-4 space-y-8">
-          <Card className="glass-panel border-white/5 bg-black/40 overflow-hidden">
-            <CardHeader className="bg-primary/10 border-b border-white/10">
+          <Card className="glass-panel border-white/5 bg-black/40 overflow-hidden relative group">
+            <CardHeader className="bg-primary/10 border-b border-white/10 z-10 relative">
               <CardTitle className="text-sm uppercase font-bold tracking-widest text-primary flex items-center gap-2">
-                <Zap className="h-4 w-4" /> Matrix Projection
+                <Bot className="h-4 w-4" /> The Captain's Deck
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-0">
-              <div className="h-[250px] w-full p-4">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={alignmentData}>
-                    <defs>
-                      <linearGradient id="colorActual" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.2}/><stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/></linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsla(var(--foreground), 0.05)" vertical={false} />
-                    <XAxis dataKey="time" hide />
-                    <YAxis domain={[0, 100]} hide />
-                    <RechartsTooltip contentStyle={{ backgroundColor: 'rgba(0,0,0,0.9)', border: '1px solid hsla(var(--primary), 0.3)', borderRadius: '12px' }} />
-                    <Area type="monotone" dataKey="actual" name="Alignment" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorActual)" strokeWidth={2} />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-              
-              <div className="p-8 space-y-8 border-t border-white/5">
-                {!simResult && !simLoading && (
-                  <div className="text-center py-10 space-y-4">
-                    <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold">Ready for Synthesis</p>
-                    <Button className="w-full h-12 shadow-xl" onClick={() => runSimulation()} disabled={(scenarios?.length || 0) === 0}>
-                      <Cpu className="mr-2 h-4 w-4" /> Execute Aggregate Simulation
-                    </Button>
-                    <p className="text-[10px] text-muted-foreground italic">Simulation incorporates all Sandbox items and Matrix inflows/outflows.</p>
-                  </div>
+            <CardContent className="p-0 relative">
+              {/* 3D Captain Image */}
+              <div className="relative h-[400px] w-full bg-gradient-to-b from-transparent to-black/60 overflow-hidden">
+                {captainImg?.imageUrl && (
+                  <Image 
+                    src={captainImg.imageUrl} 
+                    alt="The Captain" 
+                    fill 
+                    className="object-cover object-top opacity-90 group-hover:scale-105 transition-transform duration-1000"
+                  />
                 )}
+                {/* Proactive Speech Bubble */}
+                <div className="absolute bottom-6 left-6 right-6">
+                  <div className="glass-panel p-5 rounded-2xl border-white/20 bg-black/60 shadow-2xl space-y-3">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Sparkles className="h-3 w-3 text-primary animate-pulse" />
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Strategic Insight</span>
+                    </div>
+                    <p className="text-xs leading-relaxed text-white font-medium italic">
+                      "{captainMessage}"
+                    </p>
+                    {captainProposal && (
+                      <div className="pt-3 space-y-3">
+                        <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 space-y-1">
+                          <p className="text-[10px] font-bold text-primary uppercase">{captainProposal.title}</p>
+                          <p className="text-[9px] text-white/60 leading-tight">{captainProposal.desc}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button 
+                            className="flex-1 h-8 text-[9px] font-bold uppercase shadow-lg"
+                            onClick={() => handleAddMove(captainProposal.title, captainProposal.desc)}
+                          >
+                            Add to Sandbox
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            className="h-8 w-10 p-0 bg-white/5 border-white/10"
+                            asChild
+                          >
+                            <Link href="/wardroom"><MessageSquare className="h-3.5 w-3.5" /></Link>
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
 
+              <div className="p-8 space-y-8 border-t border-white/5">
                 {simLoading && (
                   <div className="flex flex-col items-center justify-center py-10 space-y-4">
                     <Loader2 className="h-10 w-10 text-primary animate-spin" />
-                    <p className="text-xs text-muted-foreground uppercase font-bold tracking-widest text-primary animate-pulse">Processing Hartmann Matrix...</p>
+                    <p className="text-xs text-muted-foreground uppercase font-bold text-primary animate-pulse text-center">
+                      Synthesizing Hartmann Matrix...
+                    </p>
                   </div>
                 )}
 
@@ -465,38 +453,15 @@ export default function ChartRoomPage() {
                         <p className={cn("text-lg font-bold", simResult.riskLevel === 'Critical' ? 'text-red-500' : 'text-amber-500')}>{simResult.riskLevel}</p>
                       </div>
                     </div>
-                    <div className="p-5 rounded-2xl bg-primary/5 border border-primary/10 italic text-sm leading-relaxed text-foreground/80">
+                    <div className="p-5 rounded-2xl bg-primary/5 border border-primary/10 italic text-sm leading-relaxed">
                       "{simResult.scenarioSummary}"
                     </div>
                     <Button className="w-full h-12 shadow-lg" onClick={shareToWardroom}>
                       <Send className="mr-2 h-4 w-4" /> Share with Council
                     </Button>
-                    <Button variant="ghost" className="w-full text-[10px] font-bold uppercase tracking-widest" onClick={() => setSimResult(null)}>
-                      Clear Projection
-                    </Button>
                   </div>
                 )}
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="glass-panel border-white/5 bg-black/40 shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-xs uppercase font-bold tracking-widest text-muted-foreground">Strategic Overlay</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {[
-                { label: "Matrix Complexity", value: "High", icon: Activity },
-                { label: "G3 Capital Lockup", value: "€55M Risk", icon: Clock },
-                { label: "Inheritance Stability", value: `${inheritanceHealth.toFixed(1)}%`, icon: Target }
-              ].map((stat, i) => (
-                <div key={i} className="flex justify-between items-center text-xs">
-                  <span className="flex items-center gap-2 text-muted-foreground">
-                    <stat.icon className="h-3.5 w-3.5" /> {stat.label}
-                  </span>
-                  <span className="font-bold text-foreground">{stat.value}</span>
-                </div>
-              ))}
             </CardContent>
           </Card>
         </div>

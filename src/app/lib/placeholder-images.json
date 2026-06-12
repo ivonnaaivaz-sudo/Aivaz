@@ -8,6 +8,12 @@
       "imageHint": "heritage logo"
     },
     {
+      "id": "captain-avatar",
+      "description": "The Captain - 3D AI Strategist",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/studio-9632545142-53067.firebasestorage.app/o/Branding%2FIMG_1687.png?alt=media",
+      "imageHint": "3d character"
+    },
+    {
       "id": "portfolio-hero",
       "description": "Abstract wealth and data visualization",
       "imageUrl": "https://picsum.photos/seed/aivaz-portfolio/1200/400",
