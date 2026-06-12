@@ -1,431 +1,333 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { useUser, useDoc, useFirestore, useCollection } from "@/firebase";
-import { collection, query, orderBy, addDoc } from "firebase/firestore";
-import { wealthScenarioSimulation, type WealthScenarioSimulationOutput } from "@/ai/flows/wealth-scenario-simulation";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { useUser, useDoc, useFirestore } from "@/firebase";
+import { collection, addDoc } from "firebase/firestore";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
-  Cpu, 
-  Loader2, 
+  Sparkles, 
+  ShieldCheck, 
+  ArrowRight, 
+  Zap, 
+  CheckCircle2, 
+  Info, 
   Plus, 
-  ChevronLeft, 
-  ChevronRight,
-  Sparkles,
-  Bot,
-  History,
-  Share2,
-  FolderOpen,
-  Zap,
-  Wallet,
-  Home,
-  TrendingUp,
-  X,
   LayoutGrid,
-  Info
+  TrendingUp,
+  AlertTriangle,
+  Lock,
+  FileText,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
-type HeritageCard = {
+type CardType = 'manual' | 'ai';
+
+interface SandboxCard {
   id: string;
+  type: CardType;
   title: string;
-  type: 'source' | 'expenditure' | 'strategy';
-  value: number; // in Millions
   description: string;
-  impactLabel: string;
-};
+  impactMetric: string;
+  logic: string;
+  category: string;
+  color: string;
+}
 
-const INITIAL_CARDS: HeritageCard[] = [
-  { 
-    id: 'source-1', 
-    title: "Dr. Markus's Inheritance", 
-    type: 'source', 
-    value: 15, 
-    description: "Primary source of funds for the current legacy cycle.",
-    impactLabel: "Liquidity Source"
+const INITIAL_MANUAL_PROPOSALS: SandboxCard[] = [
+  {
+    id: 'm-1',
+    type: 'manual',
+    title: "G3 London Property",
+    description: "Lump-sum capital expenditure for Sophie's primary residence in London.",
+    impactMetric: "-€6.0M Liquidity",
+    logic: "Sophie's professional relocation mandate.",
+    category: "Real Estate",
+    color: "bg-amber-500"
   },
-  { 
-    id: 'exp-1', 
-    title: "Mom's Proposal: Buy Flat", 
-    type: 'expenditure', 
-    value: 6, 
-    description: "Lump-sum capital expenditure for G3 property in London.",
-    impactLabel: "40% Liquidity Drain"
-  },
-  { 
-    id: 'strat-1', 
-    title: "Daughter's Hedge Strategy", 
-    type: 'strategy', 
-    value: 1.5, 
-    description: "15-year mortgage + Dividend reinvestment plan.",
-    impactLabel: "Liquidity Retention"
+  {
+    id: 'm-2',
+    type: 'manual',
+    title: "Industrial Tech R&D",
+    description: "Self-funding a new chemical synthesis lab in Munich.",
+    impactMetric: "-€12.0M Capex",
+    logic: "Core business preservation through innovation.",
+    category: "Business",
+    color: "bg-blue-500"
   }
 ];
 
-type SimulationLog = {
-  id: string;
-  timestamp: string;
-  context: string;
-  result: WealthScenarioSimulationOutput;
-};
+const INITIAL_AI_INSIGHTS: SandboxCard[] = [
+  {
+    id: 'ai-1',
+    type: 'ai',
+    title: "Dividend-Backed Mortgage",
+    description: "Finance the London property via a 15-year interest-only loan backed by Specialty Chem dividends.",
+    impactMetric: "+€5.4M Liquidity Retention",
+    logic: "Preserves dry powder for market volatility while satisfying the housing need.",
+    category: "Strategy",
+    color: "bg-emerald-500"
+  },
+  {
+    id: 'ai-2',
+    type: 'ai',
+    title: "Venture Buy-In Hedge",
+    description: "Convert the R&D budget into a venture-style buy-in with tax credits in Singapore.",
+    impactMetric: "+22% Tax Efficiency",
+    logic: "Offsets capex drain through cross-jurisdictional heritage credits.",
+    category: "Tax",
+    color: "bg-primary"
+  }
+];
 
-export default function TableOfTruthPage() {
+export default function DecisionSandboxPage() {
   const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
-  const { data: dna } = useDoc(user ? `users/${user.uid}/dna/current` : null);
-  const captainImg = PlaceHolderImages.find(img => img.id === 'captain-avatar');
+  const [showFinancialImpact, setShowFinancialImpact] = useState(false);
+  const [pairedIds, setPairedIds] = useState<Record<string, string>>({});
+  const [sealing, setSealing] = useState(false);
 
-  // UI State
-  const [isLeftDrawerOpen, setIsLeftDrawerOpen] = useState(true);
-  const [isRightDrawerOpen, setIsRightDrawerOpen] = useState(true);
-  const [activeCardIds, setActiveCardIds] = useState<string[]>(['source-1']);
-  const [simLoading, setSimLoading] = useState(false);
-  const [simLogs, setSimLogs] = useState<SimulationLog[]>([]);
-  const [isCaptainActive, setIsCaptainActive] = useState(false);
-  const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
+  // Canvas State
+  const [manualCards, setManualCards] = useState<SandboxCard[]>(INITIAL_MANUAL_PROPOSALS);
+  const [aiCards, setAiCards] = useState<SandboxCard[]>(INITIAL_AI_INSIGHTS);
 
-  // Firestore Queries
-  const projectsQuery = useMemo(() => {
-    if (!user || !db) return null;
-    return query(collection(db, "users", user.uid, "projects"), orderBy("createdAt", "desc"));
-  }, [user, db]);
-  const { data: projects } = useCollection(projectsQuery);
+  const activeSynergies = useMemo(() => {
+    return Object.entries(pairedIds).map(([mId, aiId]) => {
+      const manual = manualCards.find(c => c.id === mId);
+      const ai = aiCards.find(c => c.id === aiId);
+      return { manual, ai };
+    });
+  }, [pairedIds, manualCards, aiCards]);
 
-  // Table Logic
-  const metrics = useMemo(() => {
-    const active = INITIAL_CARDS.filter(c => activeCardIds.includes(c.id));
-    const hasSource = active.some(c => c.type === 'source');
-    const hasExp = active.some(c => c.id === 'exp-1');
-    const hasStrat = active.some(c => c.id === 'strat-1');
-
-    let liquidity = 100;
-    let debt = 0;
-    let tension = false;
-    let story = "Establishing the Hartmann Heritage Canvas...";
-
-    if (hasSource && hasExp && !hasStrat) {
-      liquidity = 60;
-      tension = true;
-      story = "Choosing Mom's path results in a 40% immediate liquidity drain with no debt offset.";
-    } else if (hasSource && hasExp && hasStrat) {
-      liquidity = 90;
-      debt = 1.5;
-      tension = false;
-      story = "By choosing the mortgage strategy, you keep €13.5M in liquidity at the cost of a managed 15-year obligation.";
-    }
-
-    return { liquidity, debt, tension, story };
-  }, [activeCardIds]);
-
-  const toggleCard = (id: string) => {
-    setActiveCardIds(prev => {
-      const isRemoving = prev.includes(id);
-      const next = isRemoving ? prev.filter(c => c !== id) : [...prev, id];
-      // Auto-trigger Captain if tension rises
-      if (!isRemoving && id === 'exp-1' && !prev.includes('strat-1')) {
-        setIsCaptainActive(true);
+  const handlePairing = (manualId: string, aiId: string) => {
+    setPairedIds(prev => {
+      if (prev[manualId] === aiId) {
+        const next = { ...prev };
+        delete next[manualId];
+        return next;
       }
-      return next;
+      return { ...prev, [manualId]: aiId };
     });
   };
 
-  const handleRunSimulation = async () => {
-    if (!user || !db) return;
-    setSimLoading(true);
+  const handleSealAgreement = async () => {
+    if (!user || !db || activeSynergies.length === 0) return;
+    setSealing(true);
     try {
-      const output = await wealthScenarioSimulation({
-        currentFinancialOverview: `Table of Truth Session. Liquidity: ${metrics.liquidity}%. Debt Exposure: ${metrics.debt}M.`,
-        familyDNADynamics: dna ? JSON.stringify(dna.familyProfile.relationalDynamics) : "Tension between G1 preservation and G3 growth.",
-        scenarioDescription: metrics.story
-      });
-      
-      const newLog: SimulationLog = {
-        id: Math.random().toString(36).substr(2, 9),
-        timestamp: new Date().toISOString(),
-        context: activeProjectId ? "Project: " + activeProjectId : "General Simulation",
-        result: output
-      };
-
-      setSimLogs(prev => [newLog, ...prev]);
-      toast({ title: "Simulation Captured", description: "Strategic delta saved to archive." });
+      const msgRef = collection(db, "users", user.uid, "messages");
+      for (const synergy of activeSynergies) {
+        if (synergy.manual && synergy.ai) {
+          await addDoc(msgRef, {
+            senderId: "aivaz-system",
+            senderName: "Decision Sandbox",
+            text: `SYNERGY SEALED: ${synergy.manual.title} + ${synergy.ai.title}. Logical Resolution: ${synergy.ai.logic}`,
+            type: "recommendation",
+            timestamp: new Date().toISOString(),
+            track: "strategy"
+          });
+        }
+      }
+      toast({ title: "Agreement Sealed", description: "Synergy packages transmitted to the Wardroom Council." });
+      setPairedIds({});
     } catch (e) {
       console.error(e);
     } finally {
-      setSimLoading(false);
+      setSealing(false);
     }
   };
 
-  const handleShareLog = async (log: SimulationLog) => {
-    if (!user || !db) return;
-    try {
-      const msgRef = collection(db, "users", user.uid, "messages");
-      await addDoc(msgRef, {
-        senderId: "aivaz-captain",
-        senderName: "Captain (AI)",
-        text: `SANDBOX ALERT: ${log.result.scenarioSummary}. Risk Level: ${log.result.riskLevel}. Path ready for Wardroom validation.`,
-        type: "recommendation",
-        timestamp: new Date().toISOString()
-      });
-      toast({ title: "Transmitted", description: "Sent to Wardroom for Council discussion." });
-    } catch (e) { console.error(e); }
-  };
+  // Ambient UI feedback based on state
+  const canvasIntensity = useMemo(() => {
+    const pairings = Object.keys(pairedIds).length;
+    if (pairings === 0) return "bg-slate-50";
+    if (pairings === 1) return "bg-blue-50/30";
+    return "bg-emerald-50/40";
+  }, [pairedIds]);
 
   return (
-    <div className="fixed inset-0 top-[0px] left-[280px] bg-slate-50 text-slate-900 overflow-hidden flex font-body antialiased">
-      {/* 1. Project Drawer (Left) */}
-      <div className={cn(
-        "bg-white border-r border-slate-200 transition-all duration-500 flex flex-col z-30 shadow-sm",
-        isLeftDrawerOpen ? "w-72" : "w-16"
-      )}>
-        <div className="p-4 border-b border-slate-100 flex items-center justify-between h-16 shrink-0">
-          {isLeftDrawerOpen && <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Heritage Projects</span>}
-          <Button variant="ghost" size="icon" onClick={() => setIsLeftDrawerOpen(!isLeftDrawerOpen)} className="h-8 w-8 hover:bg-slate-50 text-slate-400">
-            {isLeftDrawerOpen ? <ChevronLeft className="h-4 w-4" /> : <FolderOpen className="h-4 w-4 text-primary" />}
+    <div className={cn("fixed inset-0 top-0 left-[280px] transition-colors duration-1000 flex flex-col font-body antialiased", canvasIntensity)}>
+      {/* 1. System Synthesis Header (The Captain's Banner) */}
+      <div className="h-20 bg-white border-b border-slate-100 px-12 flex items-center justify-between z-30 shadow-sm">
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary">Aivaz Synthesis</span>
+          </div>
+          <div className="h-4 w-px bg-slate-200" />
+          <p className="text-sm font-medium text-slate-600 italic">
+            {activeSynergies.length > 0 
+              ? `Alignment detected: ${activeSynergies.length} synergy package(s) ready for Wardroom validation.`
+              : "Awaiting decision pairing. Align human intentions with AI strategic insights."}
+          </p>
+        </div>
+        <div className="flex items-center gap-6">
+          <div className="flex items-center space-x-2">
+            <Switch 
+              id="impact-mode" 
+              checked={showFinancialImpact} 
+              onCheckedChange={setShowFinancialImpact} 
+            />
+            <Label htmlFor="impact-mode" className="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2 cursor-pointer">
+              {showFinancialImpact ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+              Financial Impact
+            </Label>
+          </div>
+          <Button 
+            disabled={activeSynergies.length === 0 || sealing}
+            onClick={handleSealAgreement}
+            className="bg-primary text-white h-10 px-8 rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-primary/20"
+          >
+            {sealing ? "Sealing..." : "Seal Agreement"}
           </Button>
         </div>
-        <ScrollArea className="flex-1">
-          <div className="p-3 space-y-1">
-            {isLeftDrawerOpen ? (
-              projects?.map((project) => (
-                <div 
-                  key={project.id}
-                  className={cn(
-                    "p-3 rounded-xl cursor-pointer transition-all flex items-center gap-3",
-                    activeProjectId === project.id ? "bg-primary/5 text-primary border border-primary/10" : "hover:bg-slate-50 text-slate-500 border border-transparent"
-                  )}
-                  onClick={() => setActiveProjectId(project.id)}
-                >
-                  <div className={cn("w-1.5 h-1.5 rounded-full", activeProjectId === project.id ? "bg-primary" : "bg-slate-300")} />
-                  <span className="text-xs font-bold truncate">{project.title}</span>
-                </div>
-              ))
-            ) : (
-              <div className="flex flex-col items-center gap-6 py-4 opacity-40">
-                <LayoutGrid className="h-4 w-4 text-slate-400" />
-                <Zap className="h-4 w-4 text-slate-400" />
-              </div>
-            )}
-          </div>
-        </ScrollArea>
       </div>
 
-      {/* 2. Central Table of Truth Canvas */}
-      <div className="flex-1 relative flex flex-col bg-slate-50">
-        {/* The Portfolio Floor */}
-        <div className={cn(
-          "absolute inset-0 transition-all duration-1000",
-          metrics.tension ? "bg-red-50" : "bg-slate-50"
-        )} style={{ 
-          backgroundImage: 'radial-gradient(circle at center, rgba(75,163,199,0.03) 0%, transparent 80%), linear-gradient(rgba(0,0,0,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.02) 1px, transparent 1px)',
-          backgroundSize: '100% 100%, 60px 60px, 60px 60px'
-        }} />
-
-        {/* Header Bar - Fixed and Docked */}
-        <div className="h-16 flex items-center justify-between px-8 border-b border-slate-200 z-20 bg-white shadow-sm">
-          <div className="flex items-center gap-4">
-            <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 tracking-[0.2em] font-bold uppercase text-[9px] px-3">
-              Boardroom Table
-            </Badge>
-            <h1 className="text-[10px] font-bold uppercase tracking-[0.4em] text-slate-400">Hartmann Table of Truth</h1>
+      {/* 2. Collaborative Workspace (The Table) */}
+      <div className="flex-1 overflow-hidden flex flex-col items-center justify-center p-12">
+        <div className="max-w-6xl w-full grid grid-cols-2 gap-24 relative">
+          
+          {/* Tension Lines Overlay */}
+          <div className="absolute inset-0 pointer-events-none z-0">
+             {/* Dynamic lines between paired cards would go here */}
           </div>
-          <div className="flex items-center gap-8">
-            <div className="flex items-center gap-2">
-              <span className="text-[9px] font-bold uppercase text-slate-400 tracking-widest">Liquidity:</span>
-              <span className={cn("text-xs font-bold font-mono", metrics.tension ? "text-red-500" : "text-emerald-500")}>{metrics.liquidity}%</span>
-            </div>
-            <div className="flex items-center gap-2 border-l border-slate-100 pl-8">
-              <span className="text-[9px] font-bold uppercase text-slate-400 tracking-widest">Debt Exposure:</span>
-              <span className="text-xs font-bold font-mono text-primary">€{metrics.debt}M</span>
-            </div>
-          </div>
-        </div>
 
-        {/* Active Boardroom Canvas */}
-        <div className="flex-1 relative flex items-center justify-center p-20">
-          {/* Tension Line (SVG) */}
-          {metrics.tension && (
-            <svg className="absolute inset-0 w-full h-full pointer-events-none z-10">
-              <line 
-                x1="35%" y1="50%" x2="65%" y2="50%" 
-                stroke="#ef4444" 
-                strokeWidth="1.5" 
-                strokeDasharray="4 4" 
-                className="animate-[dash_1s_linear_infinite]" 
-              />
-            </svg>
-          )}
-
-          {/* Cards Container - Snapped to Grid */}
-          <div className="relative z-20 flex gap-10">
-            {INITIAL_CARDS.map(card => {
-              const isActive = activeCardIds.includes(card.id);
+          {/* Manual Proposals Column */}
+          <div className="space-y-8 flex flex-col items-center">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-slate-100 border border-slate-200">
+                <LayoutGrid className="h-4 w-4 text-slate-400" />
+              </div>
+              <h2 className="text-[11px] font-bold uppercase tracking-[0.4em] text-slate-400">Human Intentions</h2>
+            </div>
+            {manualCards.map((card) => {
+              const isPaired = !!pairedIds[card.id];
               return (
                 <Card 
                   key={card.id}
-                  onClick={() => toggleCard(card.id)}
                   className={cn(
-                    "w-64 border transition-all duration-700 cursor-pointer transform shadow-sm hover:shadow-md",
-                    isActive 
-                      ? "bg-white border-primary ring-1 ring-primary/20 scale-105" 
-                      : "bg-white/80 border-slate-200 opacity-60 grayscale hover:grayscale-0 hover:opacity-100"
+                    "w-80 border-2 transition-all duration-500 relative z-10 shadow-sm",
+                    isPaired ? "border-emerald-500/30 ring-4 ring-emerald-500/5" : "border-slate-100 hover:border-primary/20"
                   )}
                 >
                   <CardHeader className="pb-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className={cn("p-2 rounded-lg", isActive ? "bg-primary/10" : "bg-slate-100")}>
-                        {card.type === 'source' ? <Wallet className="h-4 w-4 text-primary" /> : 
-                         card.type === 'expenditure' ? <Home className="h-4 w-4 text-slate-400" /> : <TrendingUp className="h-4 w-4 text-primary" />}
-                      </div>
-                      <Badge variant="outline" className="text-[7px] border-slate-100 uppercase tracking-widest">{card.type}</Badge>
+                    <div className="flex justify-between items-start mb-2">
+                      <div className={cn("h-1.5 w-1.5 rounded-full", card.color)} />
+                      <Badge variant="outline" className="text-[7px] uppercase tracking-widest border-slate-100">Intention</Badge>
                     </div>
-                    <CardTitle className="text-sm font-bold tracking-tight">{card.title}</CardTitle>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{card.impactLabel}</p>
+                    <CardTitle className="text-sm font-bold tracking-tight text-slate-900">{card.title}</CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <p className="text-[10px] text-slate-500 leading-relaxed italic">"{card.description}"</p>
+                  <CardContent className="space-y-4">
+                    <p className="text-[11px] text-slate-500 leading-relaxed italic">"{card.description}"</p>
+                    {showFinancialImpact && (
+                      <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 animate-in fade-in zoom-in-95 duration-300">
+                        <div className="flex justify-between items-center text-[9px] font-bold uppercase tracking-widest">
+                          <span className="text-slate-400">Exposure Impact</span>
+                          <span className="text-amber-600">{card.impactMetric}</span>
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
-                  {isActive && (
-                    <div className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-primary rounded-full flex items-center justify-center shadow-lg">
-                      <Zap className="h-2.5 w-2.5 text-white" />
-                    </div>
-                  )}
                 </Card>
               );
             })}
-
-            {/* Ghost Card Creation */}
-            <div className="w-64 h-[180px] border border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center text-slate-400 hover:border-primary/40 hover:text-primary transition-all cursor-pointer group bg-white/40">
-              <Plus className="h-6 w-6 mb-2 group-hover:scale-110 transition-transform" />
-              <span className="text-[10px] font-bold uppercase tracking-widest">Add Life Move</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Footer: Resolution Story Bar - Docked */}
-        <div className="h-28 bg-white border-t border-slate-200 px-12 flex items-center justify-between gap-12 z-20 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
-          <div className="flex-1 max-w-4xl">
-            <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="h-3.5 w-3.5 text-primary" />
-              <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-primary">Council Synthesis</span>
-            </div>
-            <p className="text-base font-headline font-medium italic text-slate-700 leading-relaxed">
-              "{metrics.story}"
-            </p>
-          </div>
-          <div className="flex gap-4 shrink-0">
-            <Button 
-              variant="outline" 
-              className="border-slate-200 bg-slate-50 text-[10px] font-bold uppercase h-11 px-8 hover:bg-slate-100 rounded-xl"
-              onClick={handleRunSimulation}
-              disabled={simLoading || activeCardIds.length < 2}
-            >
-              {simLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Cpu className="h-4 w-4 mr-2" />}
-              Run Matrix
-            </Button>
-            <Button className="bg-primary text-white text-[10px] font-bold uppercase h-11 px-8 shadow-lg shadow-primary/20 rounded-xl">
-              Validate Strategy
+            <Button variant="ghost" className="w-80 border-2 border-dashed border-slate-200 text-slate-400 h-16 rounded-2xl hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center gap-2 group">
+              <Plus className="h-4 w-4 group-hover:scale-110 transition-transform" />
+              <span className="text-[10px] font-bold uppercase tracking-widest">New Proposal</span>
             </Button>
           </div>
-        </div>
 
-        {/* Captain Pop-up Interaction - Integrated into the Grid */}
-        {isCaptainActive && (
-          <div className="absolute right-12 bottom-32 z-40 animate-in slide-in-from-right-4 duration-500">
-            <Card className="w-80 bg-white border-2 border-primary/30 shadow-2xl rounded-[2rem] overflow-hidden">
-              <div className="p-4 bg-primary/5 border-b border-primary/10 flex items-center gap-3">
-                <div className="relative">
-                  <Avatar className="h-12 w-12 border-2 border-primary shadow-sm">
-                    <AvatarImage src={captainImg?.imageUrl} className="object-cover" />
-                    <AvatarFallback><Bot className="h-6 w-6" /></AvatarFallback>
-                  </Avatar>
-                  <div className="absolute -top-1 -right-1 h-3.5 w-3.5 bg-emerald-500 rounded-full border-2 border-white shadow-sm" />
-                </div>
-                <div>
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-primary">Captain's Proposal</p>
-                  <p className="text-xs font-bold text-slate-900">Synergy Strategy</p>
-                </div>
-                <Button variant="ghost" size="icon" className="ml-auto h-7 w-7 text-slate-400 hover:text-primary" onClick={() => setIsCaptainActive(false)}>
-                  <X className="h-4 w-4" />
-                </Button>
+          {/* AI Strategic Insights Column */}
+          <div className="space-y-8 flex flex-col items-center">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-primary/5 border border-primary/10">
+                <Sparkles className="h-4 w-4 text-primary" />
               </div>
-              <div className="p-6 space-y-5">
-                <p className="text-sm text-slate-600 leading-relaxed italic">
-                  "Markus, I've identified a liquidity gap. By activating the **Hedge Strategy**, we can preserve the core floor while satisfying the G3 tech mandate."
-                </p>
-                <div className="flex gap-2">
-                  <Button size="sm" className="flex-1 text-[9px] font-bold uppercase h-9 rounded-xl shadow-md" onClick={() => { toggleCard('strat-1'); setIsCaptainActive(false); }}>
-                    Apply Move
-                  </Button>
-                  <Button variant="outline" size="sm" className="flex-1 text-[9px] font-bold uppercase h-9 border-slate-200 hover:bg-slate-50 rounded-xl">
-                    Archive
-                  </Button>
-                </div>
-              </div>
-            </Card>
+              <h2 className="text-[11px] font-bold uppercase tracking-[0.4em] text-primary/60">AI Resolution Tracks</h2>
+            </div>
+            {aiCards.map((card) => {
+              const pairedManualId = Object.keys(pairedIds).find(key => pairedIds[key] === card.id);
+              const isPaired = !!pairedManualId;
+              
+              return (
+                <Card 
+                  key={card.id}
+                  onClick={() => {
+                    // Simple pairing logic for the demo: pair top with top, bottom with bottom or similar
+                    const targetManualId = card.id === 'ai-1' ? 'm-1' : 'm-2';
+                    handlePairing(targetManualId, card.id);
+                  }}
+                  className={cn(
+                    "w-80 border-2 transition-all duration-700 cursor-pointer relative z-10 shadow-sm",
+                    isPaired ? "border-primary bg-primary/[0.02] ring-4 ring-primary/5 scale-105" : "border-slate-100 hover:border-primary/40 bg-white/60"
+                  )}
+                >
+                  <CardHeader className="pb-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <div className={cn("p-1.5 rounded-lg", isPaired ? "bg-primary text-white" : "bg-primary/10 text-primary")}>
+                        <Zap className="h-3 w-3" />
+                      </div>
+                      <Badge variant="outline" className="text-[7px] uppercase tracking-widest border-primary/10 text-primary">Insight</Badge>
+                    </div>
+                    <CardTitle className="text-sm font-bold tracking-tight text-slate-900">{card.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <p className="text-[11px] text-slate-600 leading-relaxed font-medium">"{card.description}"</p>
+                    {showFinancialImpact && (
+                      <div className="p-3 rounded-xl bg-primary/5 border border-primary/10 animate-in fade-in zoom-in-95 duration-300">
+                        <div className="flex justify-between items-center text-[9px] font-bold uppercase tracking-widest">
+                          <span className="text-primary/60">Offset Capability</span>
+                          <span className="text-emerald-600">{card.impactMetric}</span>
+                        </div>
+                      </div>
+                    )}
+                    {isPaired && (
+                      <div className="pt-2 border-t border-primary/10 flex items-center justify-between text-[8px] font-bold uppercase tracking-widest text-primary animate-in slide-in-from-bottom-2">
+                        <span>Synergy Package Active</span>
+                        <CheckCircle2 className="h-3 w-3" />
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
-        )}
+
+        </div>
       </div>
 
-      {/* 3. Simulation Archive (Right) - Docked and Light */}
-      <div className={cn(
-        "bg-white border-l border-slate-200 transition-all duration-500 flex flex-col z-30 shadow-sm",
-        isRightDrawerOpen ? "w-80" : "w-16"
-      )}>
-        <div className="p-4 border-b border-slate-100 flex items-center justify-between h-16 shrink-0">
-          <Button variant="ghost" size="icon" onClick={() => setIsRightDrawerOpen(!isRightDrawerOpen)} className="h-8 w-8 hover:bg-slate-50 text-slate-400">
-            {isRightDrawerOpen ? <ChevronRight className="h-4 w-4" /> : <History className="h-4 w-4 text-primary" />}
-          </Button>
-          {isRightDrawerOpen && <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Scenario Archive</span>}
-        </div>
-        <ScrollArea className="flex-1">
-          <div className="p-4 space-y-4">
-            {isRightDrawerOpen ? (
-              simLogs.map((log) => (
-                <Card key={log.id} className="p-4 bg-slate-50 border-slate-100 hover:border-primary/30 transition-all space-y-3 group shadow-none">
-                  <div className="flex justify-between items-start">
-                    <p className="text-[9px] font-bold text-primary uppercase tracking-widest truncate max-w-[140px]">{log.context}</p>
-                    <Badge variant="outline" className="text-[7px] uppercase border-slate-200 bg-white">{log.result.riskLevel}</Badge>
-                  </div>
-                  <p className="text-[10px] text-slate-500 line-clamp-2 leading-tight font-medium">{log.result.scenarioSummary}</p>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="w-full h-8 text-[8px] font-bold uppercase border-slate-200 bg-white hover:bg-primary hover:text-white mt-2 rounded-lg"
-                    onClick={() => handleShareLog(log)}
-                  >
-                    <Share2 className="mr-2 h-3 w-3" /> Transmit to Council
-                  </Button>
-                </Card>
-              ))
-            ) : (
-              <div className="flex flex-col items-center gap-8 py-6 opacity-30">
-                <History className="h-4 w-4 text-slate-400" />
-                <Share2 className="h-4 w-4 text-slate-400" />
-              </div>
-            )}
-            
-            {isRightDrawerOpen && simLogs.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-20 text-center opacity-30">
-                <Info className="h-8 w-8 mb-3 text-slate-300" />
-                <p className="text-[10px] font-bold uppercase tracking-widest">No Simulations Logged</p>
-              </div>
-            )}
+      {/* 3. Decision Footer (Synthesis Bar) */}
+      <div className="h-28 bg-white border-t border-slate-200 px-12 flex items-center justify-between z-30 shadow-[0_-4px_15px_rgba(0,0,0,0.03)]">
+        <div className="flex-1 max-w-4xl">
+          <div className="flex items-center gap-2 mb-2">
+            <Info className="h-3.5 w-3.5 text-slate-400" />
+            <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-slate-400">Collaborative Synthesis</span>
           </div>
-        </ScrollArea>
+          <p className="text-sm font-headline font-medium text-slate-700 leading-relaxed max-w-3xl truncate">
+            {activeSynergies.length > 0 
+              ? `Bundling ${activeSynergies.length} package(s). Narrative: ${activeSynergies[0].manual?.title} resolved via ${activeSynergies[0].ai?.title}.`
+              : "Select and pair human intentions with AI strategic insights to form a Decision Package."}
+          </p>
+        </div>
+        <div className="flex gap-4 shrink-0">
+          <div className="flex flex-col items-end gap-1">
+             <p className="text-[9px] font-bold uppercase text-slate-400 tracking-widest">Heritage Stability</p>
+             <p className={cn("text-lg font-headline font-bold", activeSynergies.length > 0 ? "text-emerald-500" : "text-slate-400")}>
+               {activeSynergies.length > 0 ? "OPTIMIZED" : "NEUTRAL"}
+             </p>
+          </div>
+        </div>
       </div>
 
       <style jsx global>{`
-        @keyframes dash {
-          to {
-            stroke-dashoffset: -8;
-          }
+        body {
+          overflow: hidden;
         }
       `}</style>
     </div>
