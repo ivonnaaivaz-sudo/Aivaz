@@ -35,10 +35,16 @@ import {
   Trash2,
   ArrowRightLeft,
   Check,
-  Ban
+  Ban,
+  ChevronUp,
+  ChevronDown,
+  Activity,
+  ShieldCheck,
+  Landmark
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell } from "recharts";
 
 type CardType = 'action' | 'offset';
 
@@ -50,6 +56,7 @@ interface DecisionCard {
   impactMetric: string;
   liquidityValue: number; 
   riskDelta: number; // -100 to 100
+  taxImpact?: number;
   logic: string;
   category: string;
   isCritical?: boolean;
@@ -67,6 +74,7 @@ const INITIAL_PROPOSED_ACTIONS: DecisionCard[] = [
     impactMetric: "-€8.0M Risk",
     liquidityValue: -8000000,
     riskDelta: 10,
+    taxImpact: 8000000,
     logic: "System-detected tax blindspot.",
     category: "AI Blindspot",
     isAI: true,
@@ -107,6 +115,7 @@ const INITIAL_STRATEGIC_OFFSETS: DecisionCard[] = [
     impactMetric: "+€15.0M Liquidity",
     liquidityValue: 15000000,
     riskDelta: -25,
+    taxImpact: -2000000,
     logic: "Mitigates the 55% real estate concentration risk detected in Hartmann DNA.",
     category: "Risk Management",
     isCritical: true
@@ -133,6 +142,7 @@ export default function DecisionSandboxPage() {
   const [strategicOffsets, setStrategicOffsets] = useState<DecisionCard[]>(INITIAL_STRATEGIC_OFFSETS);
   const [pairedIds, setPairedIds] = useState<Record<string, string>>({}); // ActionId -> OffsetId
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAnalysisExpanded, setIsAnalysisExpanded] = useState(false);
   
   const [isAddActionOpen, setIsAddActionOpen] = useState(false);
   const [isAddOffsetOpen, setIsAddOffsetOpen] = useState(false);
@@ -155,18 +165,28 @@ export default function DecisionSandboxPage() {
   const netImpact = useMemo(() => {
     let liquidity = 0;
     let risk = 0;
+    let tax = 0;
     activeSynergies.forEach(({ action, offset }) => {
       if (action) {
         liquidity += action.liquidityValue;
         risk += action.riskDelta;
+        tax += action.taxImpact || 0;
       }
       if (offset) {
         liquidity += offset.liquidityValue;
         risk += offset.riskDelta;
+        tax += offset.taxImpact || 0;
       }
     });
-    return { liquidity, risk };
+    return { liquidity, risk, tax };
   }, [activeSynergies]);
+
+  // Baseline for charts
+  const baselineData = [
+    { name: 'Liquidity', baseline: 42, projected: 42 + (netImpact.liquidity / 1000000), unit: '€M' },
+    { name: 'Risk', baseline: 55, projected: 55 + netImpact.risk, unit: '%' },
+    { name: 'Tax Gap', baseline: 8, projected: 8 + (netImpact.tax / 1000000), unit: '€M' },
+  ];
 
   const handlePairing = (actionId: string, offsetId: string) => {
     setPairedIds(prev => {
@@ -279,7 +299,7 @@ export default function DecisionSandboxPage() {
   };
 
   return (
-    <div className="flex flex-col font-body antialiased relative">
+    <div className="flex flex-col font-body antialiased relative min-h-screen">
       <div className="h-20 bg-white border-b border-slate-200 px-12 flex items-center justify-between z-40 sticky top-0 shadow-sm">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
@@ -305,7 +325,7 @@ export default function DecisionSandboxPage() {
         </Button>
       </div>
 
-      <div className="flex-1 p-12 bg-slate-50/50 pb-32">
+      <div className="flex-1 p-12 bg-slate-50/50 pb-40">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16">
           
           {/* Column 1: Proposed Actions */}
@@ -553,49 +573,118 @@ export default function DecisionSandboxPage() {
       </div>
 
       {activeSynergies.length > 0 && (
-        <div className="sticky bottom-0 h-24 bg-white border-t border-slate-200 px-12 flex items-center justify-between z-50 shadow-[0_-8px_30px_rgba(0,0,0,0.1)] animate-in slide-in-from-bottom-full duration-500">
-          <div className="flex items-center gap-12">
-            <div className="flex flex-col">
-              <p className="text-[9px] font-bold uppercase text-slate-400 tracking-[0.2em] mb-1">Portfolio Balance</p>
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-headline font-bold text-slate-900">
-                  {activeSynergies.length} Pairings Active
-                </p>
+        <div 
+          className={cn(
+            "sticky bottom-0 bg-white border-t border-slate-200 z-50 shadow-[0_-8px_30px_rgba(0,0,0,0.1)] transition-all duration-500 ease-in-out",
+            isAnalysisExpanded ? "h-96" : "h-24"
+          )}
+        >
+          {/* Expanded Analysis Content */}
+          <div className={cn(
+            "absolute top-0 left-0 w-full h-[calc(100%-6rem)] px-12 pt-12 transition-opacity duration-300",
+            isAnalysisExpanded ? "opacity-100 visible" : "opacity-0 invisible"
+          )}>
+            <div className="max-w-7xl mx-auto">
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-3">
+                  <ShieldCheck className="h-5 w-5 text-primary" />
+                  <h3 className="text-sm font-bold uppercase tracking-widest text-slate-900">Truth Check: Comprehensive Portfolio Shift</h3>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => setIsAnalysisExpanded(false)} className="h-8 text-[10px] font-bold uppercase tracking-widest">
+                  Minimize Analysis
+                </Button>
               </div>
-            </div>
-            
-            <div className="h-10 w-px bg-slate-100" />
-            
-            <div className="flex flex-col">
-              <p className="text-[9px] font-bold uppercase text-slate-400 tracking-[0.2em] mb-1">Net Drafting Impact</p>
-              <div className="flex items-center gap-10">
-                <div className="flex items-center gap-3">
-                  <span className={cn("text-xl font-headline font-bold", netImpact.liquidity >= 0 ? "text-emerald-600" : "text-red-600")}>
-                    {netImpact.liquidity >= 0 ? '+' : ''}€{(netImpact.liquidity / 1000000).toFixed(1)}M
-                  </span>
-                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Net Liquidity</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className={cn("text-xl font-headline font-bold", netImpact.risk <= 0 ? "text-emerald-600" : "text-amber-600")}>
-                    {netImpact.risk > 0 ? '+' : ''}{netImpact.risk}%
-                  </span>
-                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Risk Shift</span>
-                </div>
+
+              <div className="grid grid-cols-3 gap-12">
+                {baselineData.map((data, idx) => (
+                  <div key={idx} className="space-y-4">
+                    <div className="flex justify-between items-end border-b border-slate-100 pb-2">
+                      <span className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">{data.name} Analysis</span>
+                      <span className="text-xs font-bold text-slate-900">Delta: {(data.projected - data.baseline).toFixed(1)}{data.unit}</span>
+                    </div>
+                    <div className="h-32 w-full flex items-end gap-4 px-2">
+                      <div className="flex-1 flex flex-col items-center gap-2">
+                        <div className="w-full bg-slate-100 rounded-t-lg transition-all" style={{ height: `${(data.baseline / (Math.max(data.baseline, data.projected) * 1.2)) * 100}%` }} />
+                        <span className="text-[9px] font-bold text-slate-400">Baseline</span>
+                      </div>
+                      <div className="flex-1 flex flex-col items-center gap-2">
+                        <div 
+                          className={cn(
+                            "w-full rounded-t-lg transition-all",
+                            data.name === 'Risk' 
+                              ? (data.projected < data.baseline ? 'bg-emerald-500' : 'bg-red-500')
+                              : (data.projected > data.baseline ? 'bg-emerald-500' : 'bg-red-500')
+                          )} 
+                          style={{ height: `${(data.projected / (Math.max(data.baseline, data.projected) * 1.2)) * 100}%` }} 
+                        />
+                        <span className="text-[9px] font-bold text-slate-900">Projected</span>
+                      </div>
+                    </div>
+                    <div className="pt-2">
+                      <p className="text-[10px] text-slate-500 italic leading-relaxed">
+                        {data.name === 'Liquidity' && "Stabilized state achieved by converting stagnant assets into operational cash."}
+                        {data.name === 'Risk' && "Net concentration reduction via multi-generational diversification."}
+                        {data.name === 'Tax Gap' && "Mitigated inheritance exposure via compliant trust structures."}
+                      </p>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-6">
-            <div className="text-right hidden md:block">
-              <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Stabilized State Detected</p>
-              <p className="text-[11px] text-slate-500 italic">Financial deltas balanced across drafting board.</p>
+          {/* Main Banner Bar (Grounded) */}
+          <div className="absolute bottom-0 left-0 w-full h-24 flex items-center justify-between px-12 border-t border-slate-50 bg-white">
+            <div className="flex items-center gap-12">
+              <div 
+                className="flex flex-col cursor-pointer group"
+                onClick={() => setIsAnalysisExpanded(!isAnalysisExpanded)}
+              >
+                <p className="text-[9px] font-bold uppercase text-slate-400 tracking-[0.2em] mb-1 group-hover:text-primary transition-colors">Portfolio Balance</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-headline font-bold text-slate-900 flex items-center gap-2">
+                    {activeSynergies.length} Pairings Active
+                    {isAnalysisExpanded ? <ChevronDown className="h-3.5 w-3.5 text-primary" /> : <ChevronUp className="h-3.5 w-3.5 text-primary" />}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="h-10 w-px bg-slate-100" />
+              
+              <div 
+                className="flex flex-col cursor-pointer group"
+                onClick={() => setIsAnalysisExpanded(!isAnalysisExpanded)}
+              >
+                <p className="text-[9px] font-bold uppercase text-slate-400 tracking-[0.2em] mb-1 group-hover:text-primary transition-colors">Net Drafting Impact</p>
+                <div className="flex items-center gap-10">
+                  <div className="flex items-center gap-3">
+                    <span className={cn("text-xl font-headline font-bold", netImpact.liquidity >= 0 ? "text-emerald-600" : "text-red-600")}>
+                      {netImpact.liquidity >= 0 ? '+' : ''}€{(netImpact.liquidity / 1000000).toFixed(1)}M
+                    </span>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Net Liquidity</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className={cn("text-xl font-headline font-bold", netImpact.risk <= 0 ? "text-emerald-600" : "text-amber-600")}>
+                      {netImpact.risk > 0 ? '+' : ''}{netImpact.risk}%
+                    </span>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Risk Shift</span>
+                  </div>
+                </div>
+              </div>
             </div>
-            <Button 
-              onClick={handleSendToWardroom}
-              className="bg-primary hover:bg-primary/90 text-white rounded-xl h-12 px-8 text-[10px] font-bold uppercase tracking-[0.2em] shadow-lg shadow-primary/20"
-            >
-              Commit to Wardroom
-            </Button>
+
+            <div className="flex items-center gap-6">
+              <div className="text-right hidden md:block">
+                <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Stabilized State Detected</p>
+                <p className="text-[11px] text-slate-500 italic">Financial deltas balanced across drafting board.</p>
+              </div>
+              <Button 
+                onClick={handleSendToWardroom}
+                className="bg-primary hover:bg-primary/90 text-white rounded-xl h-12 px-8 text-[10px] font-bold uppercase tracking-[0.2em] shadow-lg shadow-primary/20"
+              >
+                Commit to Wardroom
+              </Button>
+            </div>
           </div>
         </div>
       )}
