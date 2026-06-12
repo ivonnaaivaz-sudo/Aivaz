@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   PieChart as PieChartIcon, 
   Landmark, 
@@ -22,13 +22,15 @@ import {
   ShieldCheck,
   User,
   Users,
-  Eye,
-  EyeOff,
   TrendingUp,
-  ArrowUpRight,
   AlertTriangle,
-  Euro,
-  Globe
+  Globe,
+  RefreshCw,
+  FileText,
+  MapPin,
+  Calendar,
+  Gem,
+  Palmtree
 } from "lucide-react";
 import { 
   PieChart, 
@@ -43,20 +45,28 @@ import Link from "next/link";
 
 const AGGREGATED_ALLOCATION = [
   { name: 'Commercial Real Estate', value: 55, color: 'hsl(var(--primary))' },
-  { name: 'Traditional Manufacturing', value: 25, color: 'hsl(var(--secondary))' },
+  { name: 'Industrial Chemicals', value: 25, color: 'hsl(var(--secondary))' },
   { name: 'Cash (Idle)', value: 11, color: 'hsl(var(--accent))' },
   { name: 'Tech/Growth Equity', value: 9, color: 'hsl(var(--muted-foreground))' },
 ];
 
 const INDIVIDUAL_ALLOCATION = [
   { name: 'Commercial Real Estate', value: 80, color: 'hsl(var(--primary))' },
-  { name: 'Traditional Manufacturing', value: 15, color: 'hsl(var(--secondary))' },
+  { name: 'Industrial Chemicals', value: 15, color: 'hsl(var(--secondary))' },
   { name: 'Cash (Idle)', value: 5, color: 'hsl(var(--accent))' },
+];
+
+const HARTMANN_ACCOUNTS = [
+  { id: 1, name: "Hartmann Family Trust", institution: "Morgan Stanley", balance: "€45,200,000", type: "Irrevocable Trust", owner: "Aggregated", status: "Active" },
+  { id: 2, name: "Offshore Strategic Reserve", institution: "UBS Zurich", balance: "€28,150,000", type: "Private Banking", owner: "Markus", status: "Synchronized" },
+  { id: 3, name: "Industrial Holding Co", institution: "Deutsche Bank", balance: "€12,400,000", type: "Business Account", owner: "Markus", status: "Active" },
+  { id: 4, name: "Singapore Real Estate Fund", institution: "DBS Singapore", balance: "€56,750,230", type: "Investment Account", owner: "Aggregated", status: "Active" },
+  { id: 5, name: "Alexander London Growth", institution: "Goldman Sachs", balance: "€5,200,000", type: "Venture Fund", owner: "Next Gen", status: "Active" },
 ];
 
 const memberExposure = [
   { name: "Dr. Markus (G1)", percent: 65, color: "bg-primary" },
-  { name: "Elena (G2)", percent: 15, color: "bg-primary/60" },
+  { name: "Elena (G1)", percent: 15, color: "bg-primary/60" },
   { name: "Sophie (G3)", percent: 10, color: "bg-primary/40" },
   { name: "Alexander (G3)", percent: 10, color: "bg-primary/20" }
 ];
@@ -82,6 +92,13 @@ export default function BridgeHub() {
   }, [user, db]);
 
   const { data: manualAssets } = useCollection(assetsQuery);
+
+  const filteredAccounts = useMemo(() => {
+    if (viewMode === 'individual') {
+      return HARTMANN_ACCOUNTS.filter(acc => acc.owner === 'Markus');
+    }
+    return HARTMANN_ACCOUNTS;
+  }, [viewMode]);
 
   const handleAddAsset = async () => {
     if (!user || !db) return;
@@ -116,16 +133,73 @@ export default function BridgeHub() {
           <p className="text-muted-foreground italic text-sm">Consolidated operational hub for multi-jurisdictional Hartmann assets.</p>
         </div>
 
-        <Tabs value={viewMode} onValueChange={(val) => setViewMode(val as any)} className="bg-white/5 p-1 rounded-xl">
-          <TabsList className="bg-transparent border-none">
-            <TabsTrigger value="individual" className="text-[10px] font-bold uppercase px-4">
-              <User className="mr-2 h-3.5 w-3.5" /> My View
-            </TabsTrigger>
-            <TabsTrigger value="aggregated" className="text-[10px] font-bold uppercase px-4">
-              <Users className="mr-2 h-3.5 w-3.5" /> Hartmann Aggregated
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <div className="flex flex-wrap items-center gap-4">
+          <Tabs value={viewMode} onValueChange={(val) => setViewMode(val as any)} className="bg-white/5 p-1 rounded-xl">
+            <TabsList className="bg-transparent border-none">
+              <TabsTrigger value="individual" className="text-[10px] font-bold uppercase px-4">
+                <User className="mr-2 h-3.5 w-3.5" /> My View
+              </TabsTrigger>
+              <TabsTrigger value="aggregated" className="text-[10px] font-bold uppercase px-4">
+                <Users className="mr-2 h-3.5 w-3.5" /> Hartmann Aggregated
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" className="glass-card">
+              <LinkIcon className="mr-2 h-4 w-4" /> Link Account
+            </Button>
+            <Dialog open={isAddAssetOpen} onOpenChange={setIsAddAssetOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" className="shadow-[0_0_15px_rgba(75,163,199,0.3)]">
+                  <Plus className="mr-2 h-4 w-4" /> Add Asset
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="glass-panel border-white/10 sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Register Manual Asset</DialogTitle>
+                  <DialogDescription>
+                    Manually track assets like real estate, art, or private holdings that aren't linked via banking APIs.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="name">Asset Name</Label>
+                    <Input id="name" placeholder="e.g. Aspen Ski Lodge" value={newAsset.name} onChange={(e) => setNewAsset({...newAsset, name: e.target.value})} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label>Asset Type</Label>
+                      <Select value={newAsset.type} onValueChange={(val) => setNewAsset({...newAsset, type: val})}>
+                        <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Real Estate">Real Estate</SelectItem>
+                          <SelectItem value="Art">Fine Art</SelectItem>
+                          <SelectItem value="Collectibles">Collectibles</SelectItem>
+                          <SelectItem value="Jewelry">Jewelry</SelectItem>
+                          <SelectItem value="Private Equity">Private Equity</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="value">Appraisal Value (€)</Label>
+                      <Input id="value" type="number" placeholder="5000000" value={newAsset.appraisalValue} onChange={(e) => setNewAsset({...newAsset, appraisalValue: e.target.value})} />
+                    </div>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="location">Location / Jurisdiction</Label>
+                    <Input id="location" placeholder="e.g. Munich, Germany" value={newAsset.location} onChange={(e) => setNewAsset({...newAsset, location: e.target.value})} />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button onClick={handleAddAsset} disabled={isSubmitting || !newAsset.name || !newAsset.appraisalValue}>
+                    {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Register Asset"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </div>
       </div>
 
       <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-1000">
@@ -153,10 +227,10 @@ export default function BridgeHub() {
         </Card>
         <Card className="glass-panel border-white/5">
           <CardContent className="p-6">
-            <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1">Real Estate Concentration</p>
+            <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1">Concentration Risk</p>
             <h3 className="text-3xl font-headline font-bold text-amber-500">{viewMode === 'aggregated' ? '55%' : '80%'}</h3>
             <div className="mt-4 flex items-center gap-2 text-[10px] text-muted-foreground uppercase font-bold">
-              <AlertTriangle className="h-3.5 w-3.5" /> <span>High Regional Exposure</span>
+              <AlertTriangle className="h-3.5 w-3.5" /> <span>Industrial Real Estate</span>
             </div>
           </CardContent>
         </Card>
@@ -247,85 +321,113 @@ export default function BridgeHub() {
         </Card>
       </div>
 
-      <div className="flex justify-end pt-4">
-        <Dialog open={isAddAssetOpen} onOpenChange={setIsAddAssetOpen}>
-          <DialogTrigger asChild>
-            <Button size="lg" className="shadow-[0_0_20px_rgba(75,163,199,0.3)]">
-              <Plus className="mr-2 h-4 w-4" /> Add Asset
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="glass-panel border-white/10 sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Register Manual Asset</DialogTitle>
-              <DialogDescription>
-                Manually track assets like real estate, art, or private holdings that aren't linked via banking APIs.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="name">Asset Name</Label>
-                <Input 
-                  id="name" 
-                  placeholder="e.g. Aspen Ski Lodge" 
-                  value={newAsset.name}
-                  onChange={(e) => setNewAsset({...newAsset, name: e.target.value})}
-                />
+      <Tabs defaultValue="linked" className="space-y-6">
+        <TabsList className="bg-white/5 border border-white/10 p-1">
+          <TabsTrigger value="linked" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary text-[10px] font-bold uppercase px-6">
+            Financial Ledger
+          </TabsTrigger>
+          <TabsTrigger value="physical" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary text-[10px] font-bold uppercase px-6">
+            Manual Generational Assets
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="linked">
+          <Card className="glass-panel border-white/5">
+            <CardHeader>
+              <CardTitle className="text-lg">Connected Accounts</CardTitle>
+              <CardDescription>Real-time banking feeds and private trust holdings.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-white/5 hover:bg-transparent">
+                    <TableHead className="text-muted-foreground font-bold uppercase text-[10px] tracking-widest">Account</TableHead>
+                    <TableHead className="text-muted-foreground font-bold uppercase text-[10px] tracking-widest">Institution</TableHead>
+                    <TableHead className="text-muted-foreground font-bold uppercase text-[10px] tracking-widest">Status</TableHead>
+                    <TableHead className="text-right text-muted-foreground font-bold uppercase text-[10px] tracking-widest">Balance</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredAccounts.map((acc) => (
+                    <TableRow key={acc.id} className="border-white/5 hover:bg-white/5 transition-colors group">
+                      <TableCell className="font-medium py-4">
+                        <div>
+                          <p>{acc.name}</p>
+                          <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest opacity-60">{acc.type}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm">{acc.institution}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={cn(
+                          "text-[8px] font-bold px-2 py-0",
+                          acc.status === 'Active' ? 'bg-emerald-500/5 text-emerald-500 border-emerald-500/20' : 'bg-primary/5 text-primary border-primary/20'
+                        )}>
+                          {acc.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right font-headline font-bold text-primary">{acc.balance}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="physical">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {manualAssets.map((asset) => (
+              <Card key={asset.id} className="glass-panel border-white/5 hover:border-primary/20 transition-all group">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between mb-2">
+                    <Badge variant="outline" className="bg-primary/5 border-primary/20 text-primary text-[9px] font-bold uppercase">
+                      {asset.type}
+                    </Badge>
+                    <div className="p-2 rounded-lg bg-white/5 border border-white/10 group-hover:border-primary/30 transition-colors">
+                      {asset.type === 'Real Estate' ? <Home className="h-4 w-4" /> : 
+                       asset.type === 'Art' ? <Palmtree className="h-4 w-4" /> : <Gem className="h-4 w-4" />}
+                    </div>
+                  </div>
+                  <CardTitle className="text-xl group-hover:text-primary transition-colors">{asset.name}</CardTitle>
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <MapPin className="h-3 w-3" />
+                    <span className="text-[10px] uppercase font-bold tracking-widest">{asset.location}</span>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-1">
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.2em]">Latest Appraisal</p>
+                    <p className="text-2xl font-headline font-bold text-primary">€{asset.appraisalValue?.toLocaleString()}</p>
+                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-1">
+                      <Calendar className="h-3 w-3" />
+                      <span>{asset.appraisalDate}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                    <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                      <FileText className="h-3.5 w-3.5" />
+                      <span>{asset.documentCount} Document(s)</span>
+                    </div>
+                    <Button variant="ghost" size="sm" className="h-8 text-[10px] font-bold uppercase tracking-widest group-hover:text-primary">
+                      Manage
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+            
+            <Card className="glass-panel border-dashed border-white/10 hover:border-primary/50 transition-all cursor-pointer flex flex-col items-center justify-center p-8 text-center space-y-4" onClick={() => setIsAddAssetOpen(true)}>
+              <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+                <Plus className="h-6 w-6 text-muted-foreground" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label>Asset Type</Label>
-                  <Select value={newAsset.type} onValueChange={(val) => setNewAsset({...newAsset, type: val})}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Real Estate">Real Estate</SelectItem>
-                      <SelectItem value="Art">Fine Art</SelectItem>
-                      <SelectItem value="Collectibles">Collectibles</SelectItem>
-                      <SelectItem value="Jewelry">Jewelry</SelectItem>
-                      <SelectItem value="Private Equity">Private Equity</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="value">Appraisal Value (€)</Label>
-                  <Input 
-                    id="value" 
-                    type="number" 
-                    placeholder="5000000" 
-                    value={newAsset.appraisalValue}
-                    onChange={(e) => setNewAsset({...newAsset, appraisalValue: e.target.value})}
-                  />
-                </div>
+              <div>
+                <p className="font-bold text-sm">Add New Manual Asset</p>
+                <p className="text-[10px] text-muted-foreground mt-1 px-4">Register non-liquid assets, art, or private real estate holdings.</p>
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="location">Location / Jurisdiction</Label>
-                <Input 
-                  id="location" 
-                  placeholder="e.g. Munich, Germany" 
-                  value={newAsset.location}
-                  onChange={(e) => setNewAsset({...newAsset, location: e.target.value})}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="date">Last Appraisal Date</Label>
-                <Input 
-                  id="date" 
-                  type="date" 
-                  value={newAsset.appraisalDate}
-                  onChange={(e) => setNewAsset({...newAsset, appraisalDate: e.target.value})}
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button onClick={handleAddAsset} disabled={isSubmitting || !newAsset.name || !newAsset.appraisalValue}>
-                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Register Asset"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
