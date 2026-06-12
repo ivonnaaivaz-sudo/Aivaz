@@ -40,11 +40,12 @@ import {
   ChevronDown,
   Activity,
   ShieldCheck,
-  Landmark
+  Landmark,
+  CircleAlert,
+  CheckCircle
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell } from "recharts";
 
 type CardType = 'action' | 'offset';
 
@@ -147,7 +148,6 @@ export default function DecisionSandboxPage() {
   const [isAddActionOpen, setIsAddActionOpen] = useState(false);
   const [isAddOffsetOpen, setIsAddOffsetOpen] = useState(false);
 
-  // New Card Form States
   const [newAction, setNewAction] = useState({ title: "", description: "", value: "0", riskDelta: "0", category: "Capital Event" });
   const [newOffset, setNewOffset] = useState({ title: "", description: "", value: "0", riskDelta: "0", category: "Custom Strategy" });
 
@@ -181,12 +181,43 @@ export default function DecisionSandboxPage() {
     return { liquidity, risk, tax };
   }, [activeSynergies]);
 
-  // Baseline for charts
-  const baselineData = [
-    { name: 'Liquidity', baseline: 42, projected: 42 + (netImpact.liquidity / 1000000), unit: '€M' },
-    { name: 'Risk', baseline: 55, projected: 55 + netImpact.risk, unit: '%' },
-    { name: 'Tax Gap', baseline: 8, projected: 8 + (netImpact.tax / 1000000), unit: '€M' },
-  ];
+  const analysisBreakdown = useMemo(() => {
+    // Find key drivers
+    const maxLiqAction = activeProposedActions.reduce((prev, curr) => 
+      (Math.abs(curr.liquidityValue) > Math.abs(prev?.liquidityValue || 0)) ? curr : prev
+    , null as DecisionCard | null);
+    
+    const maxRiskAction = activeProposedActions.reduce((prev, curr) => 
+      (Math.abs(curr.riskDelta) > Math.abs(prev?.riskDelta || 0)) ? curr : prev
+    , null as DecisionCard | null);
+
+    return [
+      { 
+        name: 'Liquidity', 
+        baseline: 42, 
+        projected: 42 + (netImpact.liquidity / 1000000), 
+        unit: '€M',
+        driver: maxLiqAction?.title || 'Stable Balance',
+        status: netImpact.liquidity < -15000000 ? 'warning' : 'healthy'
+      },
+      { 
+        name: 'Risk Shift', 
+        baseline: 55, 
+        projected: 55 + netImpact.risk, 
+        unit: '%',
+        driver: maxRiskAction?.title || 'Diversified',
+        status: netImpact.risk > 0 ? 'warning' : 'healthy'
+      },
+      { 
+        name: 'Tax/Compliance', 
+        baseline: 8, 
+        projected: 8 + (netImpact.tax / 1000000), 
+        unit: '€M',
+        driver: 'Trust Provisions',
+        status: netImpact.tax > 0 ? 'warning' : 'healthy'
+      },
+    ];
+  }, [netImpact, activeProposedActions]);
 
   const handlePairing = (actionId: string, offsetId: string) => {
     setPairedIds(prev => {
@@ -201,12 +232,12 @@ export default function DecisionSandboxPage() {
 
   const handleAcceptAI = (id: string) => {
     setProposedActions(prev => prev.map(a => a.id === id ? { ...a, status: 'accepted' } : a));
-    toast({ title: "Blindspot Accepted", description: "This risk is now on the drafting board for stabilization." });
+    toast({ title: "Blindspot Accepted", description: "Risk is now on the board for stabilization." });
   };
 
   const handleDismissAI = (id: string) => {
     setProposedActions(prev => prev.filter(a => a.id !== id));
-    toast({ title: "Insight Dismissed", description: "You have chosen to override this system alert." });
+    toast({ title: "Insight Dismissed", description: "System alert bypassed." });
   };
 
   const handleAddAction = () => {
@@ -220,7 +251,7 @@ export default function DecisionSandboxPage() {
       impactMetric: `${val >= 0 ? '+' : ''}€${(val / 1000000).toFixed(1)}M Liquidity`,
       liquidityValue: val,
       riskDelta: parseFloat(newAction.riskDelta) || 0,
-      logic: "User-defined proposed action.",
+      logic: "User-defined capital event.",
       category: newAction.category,
       isUserGenerated: true,
       status: 'accepted'
@@ -228,7 +259,6 @@ export default function DecisionSandboxPage() {
     setProposedActions(prev => [...prev, action]);
     setNewAction({ title: "", description: "", value: "0", riskDelta: "0", category: "Capital Event" });
     setIsAddActionOpen(false);
-    toast({ title: "Proposed Action Added", description: "The outflow event has been added to the board." });
   };
 
   const handleAddOffset = () => {
@@ -249,7 +279,6 @@ export default function DecisionSandboxPage() {
     setStrategicOffsets(prev => [...prev, offset]);
     setNewOffset({ title: "", description: "", value: "0", riskDelta: "0", category: "Custom Strategy" });
     setIsAddOffsetOpen(false);
-    toast({ title: "Strategic Offset Created", description: "Your custom strategy has been added to the board." });
   };
 
   const handleDismissAction = (id: string) => {
@@ -282,14 +311,14 @@ export default function DecisionSandboxPage() {
           await addDoc(msgRef, {
             senderId: "aivaz-system",
             senderName: "Decision Sandbox",
-            text: `STABILIZED PACKAGE: ${synergy.action.title} + ${synergy.offset.title}. Net Impact: €${((synergy.action.liquidityValue + synergy.offset.liquidityValue) / 1000000).toFixed(1)}M. Risk Delta: ${synergy.action.riskDelta + synergy.offset.riskDelta > 0 ? '+' : ''}${synergy.action.riskDelta + synergy.offset.riskDelta}%`,
+            text: `STABILIZED PACKAGE: ${synergy.action.title} + ${synergy.offset.title}. Net Impact: €${((synergy.action.liquidityValue + synergy.offset.liquidityValue) / 1000000).toFixed(1)}M.`,
             type: "recommendation",
             timestamp: new Date().toISOString(),
             track: "strategy"
           });
         }
       }
-      toast({ title: "Packages Transmitted", description: "Paired decisions have been sent to the Wardroom for council validation." });
+      toast({ title: "Decision Package Sent", description: "Synergies transmitted to the family council." });
       setPairedIds({});
     } catch (e) {
       console.error(e);
@@ -299,17 +328,16 @@ export default function DecisionSandboxPage() {
   };
 
   return (
-    <div className="flex flex-col font-body antialiased relative min-h-screen">
-      <div className="h-20 bg-white border-b border-slate-200 px-12 flex items-center justify-between z-40 sticky top-0 shadow-sm">
+    <div className="flex flex-col h-screen overflow-hidden bg-white antialiased">
+      {/* Fixed Header */}
+      <header className="h-20 border-b border-slate-200 px-12 flex items-center justify-between shrink-0 bg-white z-50">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
             <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary">Decision Sandbox</span>
           </div>
           <div className="h-4 w-px bg-slate-200" />
-          <p className="text-sm font-medium text-slate-500 italic">
-            Pair proposed actions with offsets to stabilize the heritage portfolio.
-          </p>
+          <p className="text-sm font-medium text-slate-500 italic">Finding viable pairings to reach heritage stabilization.</p>
         </div>
         <Button 
           disabled={activeSynergies.length === 0 || isSubmitting}
@@ -317,146 +345,142 @@ export default function DecisionSandboxPage() {
           className={cn(
             "h-10 px-8 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
             activeSynergies.length > 0 
-              ? "bg-primary text-white shadow-lg shadow-primary/20" 
+              ? "bg-primary text-white shadow-lg" 
               : "bg-slate-100 text-slate-400 border border-slate-200"
           )}
         >
           {isSubmitting ? "Transmitting..." : "Send to Wardroom"}
         </Button>
-      </div>
+      </header>
 
-      <div className="flex-1 p-12 bg-slate-50/50 pb-40">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16">
-          
-          {/* Column 1: Proposed Actions */}
-          <div className="space-y-8">
-            <div className="flex items-center justify-between mb-4 border-b border-slate-200 pb-4">
-              <div className="flex items-center gap-3">
-                <LayoutGrid className="h-4 w-4 text-slate-400" />
-                <h2 className="text-[11px] font-bold uppercase tracking-[0.3em] text-slate-900">Proposed Actions</h2>
-              </div>
-              <Dialog open={isAddActionOpen} onOpenChange={setIsAddActionOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 text-[9px] font-bold uppercase tracking-widest gap-2 text-slate-500 hover:bg-slate-100">
-                    <PlusCircle className="h-3.5 w-3.5" /> Add New Action
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Propose Capital Event</DialogTitle>
-                    <DialogDescription>Define a new expenditure or portfolio move that requires stabilization.</DialogDescription>
-                  </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                    <div className="grid gap-2">
-                      <Label>Title</Label>
-                      <Input placeholder="e.g. Zurich HQ Renovation" value={newAction.title} onChange={e => setNewAction({...newAction, title: e.target.value})} />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label>Impact (€) - Use negative for outflow</Label>
-                      <Input type="number" placeholder="-5000000" value={newAction.value} onChange={e => setNewAction({...newAction, value: e.target.value})} />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label>Risk Delta (0-100)</Label>
-                      <Input type="number" value={newAction.riskDelta} onChange={e => setNewAction({...newAction, riskDelta: e.target.value})} />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label>Description</Label>
-                      <Textarea placeholder="Explain the rationale..." value={newAction.description} onChange={e => setNewAction({...newAction, description: e.target.value})} />
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button onClick={handleAddAction}>Register Action</Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </div>
+      {/* Scrollable Drafting Area */}
+      <main className="flex-1 overflow-hidden flex bg-slate-50/50">
+        <div className="flex-1 overflow-y-auto px-12 pt-12 pb-32">
+          <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16">
             
-            <div className="space-y-8">
-              {/* AI Blindspots - Higher Priority */}
-              {aiBlindspots.length > 0 && (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 px-1">
-                    <Sparkles className="h-3 w-3 text-primary" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Intelligence: Considered Risks</span>
-                  </div>
-                  {aiBlindspots.map((action) => (
-                    <Card key={action.id} className="border-primary/20 bg-primary/[0.02] shadow-sm relative group overflow-hidden">
-                      <div className="absolute top-0 left-0 w-1 h-full bg-primary/40" />
-                      <CardHeader className="pb-3">
-                        <div className="flex justify-between items-start">
-                          <Badge variant="outline" className="text-[8px] uppercase tracking-widest border-primary/20 text-primary">AI Blindspot</Badge>
-                          <span className="text-[10px] font-bold text-red-600">{action.impactMetric}</span>
-                        </div>
-                        <CardTitle className="text-sm font-bold tracking-tight text-slate-900 mt-2">{action.title}</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-[11px] text-slate-500 leading-relaxed italic mb-4">"{action.description}"</p>
-                        <div className="flex gap-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="flex-1 h-8 text-[9px] font-bold uppercase tracking-widest border-primary/20 text-primary hover:bg-primary/5"
-                            onClick={() => handleAcceptAI(action.id)}
-                          >
-                            <Check className="mr-2 h-3 w-3" /> Accept into Board
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-8 text-[9px] font-bold uppercase tracking-widest text-slate-400"
-                            onClick={() => handleDismissAI(action.id)}
-                          >
-                            <Ban className="mr-2 h-3 w-3" /> Dismiss
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+            {/* Column 1: Proposed Actions */}
+            <div className="space-y-8 h-full">
+              <div className="flex items-center justify-between mb-4 border-b border-slate-200 pb-4">
+                <div className="flex items-center gap-3">
+                  <LayoutGrid className="h-4 w-4 text-slate-400" />
+                  <h2 className="text-[11px] font-bold uppercase tracking-[0.3em] text-slate-900">Proposed Actions</h2>
                 </div>
-              )}
+                <Dialog open={isAddActionOpen} onOpenChange={setIsAddActionOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-8 text-[9px] font-bold uppercase tracking-widest gap-2 text-slate-500 hover:bg-slate-100">
+                      <PlusCircle className="h-3.5 w-3.5" /> Add New Action
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Propose Capital Event</DialogTitle>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <div className="grid gap-2"><Label>Title</Label><Input value={newAction.title} onChange={e => setNewAction({...newAction, title: e.target.value})} /></div>
+                      <div className="grid gap-2"><Label>Value (€) - Outflow as negative</Label><Input type="number" value={newAction.value} onChange={e => setNewAction({...newAction, value: e.target.value})} /></div>
+                      <div className="grid gap-2"><Label>Risk Delta (0-100)</Label><Input type="number" value={newAction.riskDelta} onChange={e => setNewAction({...newAction, riskDelta: e.target.value})} /></div>
+                    </div>
+                    <DialogFooter><Button onClick={handleAddAction}>Register Action</Button></DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+              
+              <div className="space-y-6">
+                {aiBlindspots.length > 0 && (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 px-1">
+                      <Sparkles className="h-3 w-3 text-primary" />
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Intelligence: Critical Blindspots</span>
+                    </div>
+                    {aiBlindspots.map((action) => (
+                      <Card key={action.id} className="border-primary/20 bg-primary/[0.02] shadow-sm relative group overflow-hidden">
+                        <div className="absolute top-0 left-0 w-1 h-full bg-primary/40" />
+                        <CardHeader className="pb-3">
+                          <div className="flex justify-between items-start">
+                            <Badge variant="outline" className="text-[8px] uppercase tracking-widest border-primary/20 text-primary">AI Proposed</Badge>
+                            <span className="text-[10px] font-bold text-red-600">{action.impactMetric}</span>
+                          </div>
+                          <CardTitle className="text-sm font-bold tracking-tight text-slate-900 mt-2">{action.title}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-[11px] text-slate-500 leading-relaxed italic mb-4">"{action.description}"</p>
+                          <div className="flex gap-2">
+                            <Button variant="outline" size="sm" className="flex-1 h-8 text-[9px] font-bold uppercase tracking-widest border-primary/20 text-primary" onClick={() => handleAcceptAI(action.id)}><Check className="mr-2 h-3 w-3" /> Accept</Button>
+                            <Button variant="ghost" size="sm" className="h-8 text-[9px] font-bold uppercase tracking-widest text-slate-400" onClick={() => handleDismissAI(action.id)}><Ban className="mr-2 h-3 w-3" /> Dismiss</Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+                {activeProposedActions.map((action) => (
+                  <Card key={action.id} className={cn("border transition-all relative shadow-sm group", pairedIds[action.id] ? "border-primary ring-1 ring-primary/10 bg-primary/[0.01]" : "border-slate-200 bg-white")}>
+                    {!action.isAI && <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"><Button variant="ghost" size="icon" className="h-6 w-6 text-slate-300 hover:text-red-500" onClick={() => handleDismissAction(action.id)}><Trash2 className="h-3 w-3" /></Button></div>}
+                    <CardHeader className="pb-3">
+                      <div className="flex justify-between items-start">
+                        <Badge variant="outline" className="text-[8px] uppercase tracking-widest border-slate-100">{action.category}</Badge>
+                        <span className="text-[10px] font-bold text-red-600">{action.impactMetric}</span>
+                      </div>
+                      <CardTitle className="text-sm font-bold tracking-tight text-slate-900 mt-2">{action.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-[11px] text-slate-500 leading-relaxed italic mb-4">"{action.description}"</p>
+                      <div className="pt-3 border-t border-slate-50 flex items-center justify-between">
+                        <span className="text-[9px] text-slate-400 uppercase font-bold tracking-widest">{pairedIds[action.id] ? "Stabilized" : "Unpaired"}</span>
+                        {pairedIds[action.id] && <CheckCircle2 className="h-4 w-4 text-primary" />}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
 
-              {/* Standard Active Actions */}
+            {/* Column 2: Strategic Offsets */}
+            <div className="space-y-6 h-full">
+              <div className="flex items-center justify-between mb-4 border-b border-slate-200 pb-4">
+                <div className="flex items-center gap-3">
+                  <Zap className="h-4 w-4 text-primary/60" />
+                  <h2 className="text-[11px] font-bold uppercase tracking-[0.3em] text-slate-900">Strategic Offsets</h2>
+                </div>
+                <Dialog open={isAddOffsetOpen} onOpenChange={setIsAddOffsetOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-8 text-[9px] font-bold uppercase tracking-widest gap-2 text-primary hover:bg-primary/5">
+                      <PlusCircle className="h-3.5 w-3.5" /> Add New Offset
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader><DialogTitle>Define Strategic Offset</DialogTitle></DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <div className="grid gap-2"><Label>Title</Label><Input value={newOffset.title} onChange={e => setNewOffset({...newOffset, title: e.target.value})} /></div>
+                      <div className="grid gap-2"><Label>Impact (€)</Label><Input type="number" value={newOffset.value} onChange={e => setNewOffset({...newOffset, value: e.target.value})} /></div>
+                    </div>
+                    <DialogFooter><Button onClick={handleAddOffset}>Register Offset</Button></DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+
               <div className="space-y-4">
-                {activeProposedActions.map((action) => {
-                  const pairedOffsetId = pairedIds[action.id];
-                  const isPaired = !!pairedOffsetId;
+                {strategicOffsets.map((offset) => {
+                  const pairedActionId = Object.keys(pairedIds).find(key => pairedIds[key] === offset.id);
                   return (
                     <Card 
-                      key={action.id}
-                      className={cn(
-                        "border transition-all duration-300 relative shadow-sm group",
-                        isPaired ? "border-primary ring-1 ring-primary/10 bg-primary/[0.01]" : "border-slate-200 hover:border-slate-300 bg-white"
-                      )}
+                      key={offset.id}
+                      onClick={() => {
+                        const targetId = activeProposedActions.find(a => !pairedIds[a.id])?.id || activeProposedActions[0]?.id;
+                        if (targetId) handlePairing(targetId, offset.id);
+                      }}
+                      className={cn("border transition-all cursor-pointer relative shadow-sm group overflow-hidden", offset.isCritical ? "border-amber-200 bg-amber-50/30" : "border-slate-200 bg-white", !!pairedActionId && "border-primary bg-primary/[0.02]")}
                     >
-                      {!action.isAI && (
-                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-6 w-6 text-slate-300 hover:text-red-500"
-                            onClick={() => handleDismissAction(action.id)}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      )}
                       <CardHeader className="pb-3">
                         <div className="flex justify-between items-start">
-                          <Badge variant="outline" className="text-[8px] uppercase tracking-widest border-slate-100">
-                            {action.isAI ? "AI Accepted Risk" : action.category}
-                          </Badge>
-                          <span className="text-[10px] font-bold text-red-600">{action.impactMetric}</span>
+                          <Badge variant="outline" className={cn("text-[8px] uppercase tracking-widest", offset.isCritical ? "border-amber-400 text-amber-600" : "border-slate-100")}>{offset.category}</Badge>
+                          <span className="text-[10px] font-bold text-emerald-600">{offset.impactMetric}</span>
                         </div>
-                        <CardTitle className="text-sm font-bold tracking-tight text-slate-900 mt-2">{action.title}</CardTitle>
+                        <CardTitle className="text-sm font-bold tracking-tight text-slate-900 mt-2">{offset.title}</CardTitle>
                       </CardHeader>
-                      <CardContent>
-                        <p className="text-[11px] text-slate-500 leading-relaxed italic mb-4">"{action.description}"</p>
-                        <div className="pt-3 border-t border-slate-50 flex items-center justify-between">
-                          <span className="text-[9px] text-slate-400 uppercase font-bold tracking-widest">
-                            {isPaired ? "Stabilization Active" : "Pending Offset"}
-                          </span>
-                          {isPaired && <CheckCircle2 className="h-4 w-4 text-primary" />}
-                        </div>
+                      <CardContent className="space-y-3">
+                        <p className="text-[11px] leading-relaxed text-slate-600 font-medium">"{offset.description}"</p>
+                        {!!pairedActionId && <div className="pt-3 border-t border-primary/10 flex items-center justify-between text-[8px] font-bold uppercase tracking-widest text-primary"><span className="flex items-center gap-1.5"><ArrowRightLeft className="h-3 w-3" /> Stabilizing {activeProposedActions.find(a => a.id === pairedActionId)?.title}</span><CheckCircle2 className="h-3 w-3" /></div>}
                       </CardContent>
                     </Card>
                   );
@@ -464,168 +488,56 @@ export default function DecisionSandboxPage() {
               </div>
             </div>
           </div>
-
-          {/* Column 2: Strategic Offsets */}
-          <div className="space-y-6">
-            <div className="flex items-center justify-between mb-4 border-b border-slate-200 pb-4">
-              <div className="flex items-center gap-3">
-                <Zap className="h-4 w-4 text-primary/60" />
-                <h2 className="text-[11px] font-bold uppercase tracking-[0.3em] text-slate-900">Strategic Offsets</h2>
-              </div>
-              <Dialog open={isAddOffsetOpen} onOpenChange={setIsAddOffsetOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 text-[9px] font-bold uppercase tracking-widest gap-2 text-primary hover:bg-primary/5">
-                    <PlusCircle className="h-3.5 w-3.5" /> Add New Offset
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Define Strategic Offset</DialogTitle>
-                    <DialogDescription>Input a custom financial or structural strategy to counter proposed actions.</DialogDescription>
-                  </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                    <div className="grid gap-2">
-                      <Label>Title</Label>
-                      <Input placeholder="e.g. Asset-Backed Credit Line" value={newOffset.title} onChange={e => setNewOffset({...newOffset, title: e.target.value})} />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label>Impact (€)</Label>
-                      <Input type="number" placeholder="5000000" value={newOffset.value} onChange={e => setNewOffset({...newOffset, value: e.target.value})} />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label>Risk Delta (-100 to 100)</Label>
-                      <Input type="number" value={newOffset.riskDelta} onChange={e => setNewOffset({...newOffset, riskDelta: e.target.value})} />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label>Description</Label>
-                      <Textarea placeholder="Explain the mechanics..." value={newOffset.description} onChange={e => setNewOffset({...newOffset, description: e.target.value})} />
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button onClick={handleAddOffset}>Register Offset</Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </div>
-
-            <div className="space-y-4">
-              {strategicOffsets.map((offset) => {
-                const pairedActionId = Object.keys(pairedIds).find(key => pairedIds[key] === offset.id);
-                const isPaired = !!pairedActionId;
-                
-                return (
-                  <Card 
-                    key={offset.id}
-                    onClick={() => {
-                      const targetActionId = activeProposedActions.find(a => !pairedIds[a.id])?.id || activeProposedActions[0]?.id;
-                      if (targetActionId) handlePairing(targetActionId, offset.id);
-                    }}
-                    className={cn(
-                      "border transition-all duration-300 cursor-pointer relative shadow-sm overflow-hidden group",
-                      offset.isCritical ? "border-amber-200 bg-amber-50/30" : "border-slate-200 hover:border-primary/20 bg-white",
-                      isPaired && "border-primary bg-primary/[0.02]"
-                    )}
-                  >
-                    <div className="absolute top-2 right-2 flex gap-1 items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      {offset.isCritical && <ShieldAlert className="h-3.5 w-3.5 text-amber-600" />}
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-6 w-6 text-slate-300 hover:text-red-500"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDismissOffset(offset.id);
-                        }}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-
-                    <CardHeader className="pb-3">
-                      <div className="flex justify-between items-start">
-                        <Badge variant="outline" className={cn(
-                          "text-[8px] uppercase tracking-widest",
-                          offset.isCritical ? "border-amber-400 text-amber-600" : "border-slate-100"
-                        )}>
-                          {offset.isCritical ? "AI Critical Insight" : offset.category}
-                        </Badge>
-                        <span className="text-[10px] font-bold text-emerald-600">{offset.impactMetric}</span>
-                      </div>
-                      <CardTitle className="text-sm font-bold tracking-tight text-slate-900 mt-2">{offset.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <p className="text-[11px] leading-relaxed text-slate-600 font-medium">
-                        "{offset.description}"
-                      </p>
-                      {isPaired && (
-                        <div className="pt-3 border-t border-primary/10 flex items-center justify-between text-[8px] font-bold uppercase tracking-widest text-primary">
-                          <span className="flex items-center gap-1.5"><ArrowRightLeft className="h-3 w-3" /> Coupled with {activeProposedActions.find(a => a.id === pairedActionId)?.title}</span>
-                          <CheckCircle2 className="h-3 w-3" />
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
         </div>
-      </div>
+      </main>
 
+      {/* Grounded Truth Check Panel */}
       {activeSynergies.length > 0 && (
-        <div 
-          className={cn(
-            "sticky bottom-0 bg-white border-t border-slate-200 z-50 shadow-[0_-8px_30px_rgba(0,0,0,0.1)] transition-all duration-500 ease-in-out",
-            isAnalysisExpanded ? "h-96" : "h-24"
-          )}
-        >
-          {/* Expanded Analysis Content */}
-          <div className={cn(
-            "absolute top-0 left-0 w-full h-[calc(100%-6rem)] px-12 pt-12 transition-opacity duration-300",
-            isAnalysisExpanded ? "opacity-100 visible" : "opacity-0 invisible"
-          )}>
+        <div className={cn("sticky bottom-0 bg-white border-t border-slate-200 z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transition-all duration-500 ease-in-out", isAnalysisExpanded ? "h-[420px]" : "h-24")}>
+          <div className={cn("absolute top-0 left-0 w-full h-[calc(100%-6rem)] px-12 pt-12 transition-opacity duration-300", isAnalysisExpanded ? "opacity-100 visible" : "opacity-0 invisible")}>
             <div className="max-w-7xl mx-auto">
-              <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center justify-between mb-10">
                 <div className="flex items-center gap-3">
                   <ShieldCheck className="h-5 w-5 text-primary" />
-                  <h3 className="text-sm font-bold uppercase tracking-widest text-slate-900">Truth Check: Comprehensive Portfolio Shift</h3>
+                  <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-slate-900">Truth Check: Professional Legacy Diagnostic</h3>
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => setIsAnalysisExpanded(false)} className="h-8 text-[10px] font-bold uppercase tracking-widest">
-                  Minimize Analysis
-                </Button>
+                <Button variant="ghost" size="sm" onClick={() => setIsAnalysisExpanded(false)} className="h-8 text-[10px] font-bold uppercase tracking-widest hover:bg-slate-50">Minimize Diagnostic</Button>
               </div>
 
-              <div className="grid grid-cols-3 gap-12">
-                {baselineData.map((data, idx) => (
-                  <div key={idx} className="space-y-4">
-                    <div className="flex justify-between items-end border-b border-slate-100 pb-2">
-                      <span className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">{data.name} Analysis</span>
-                      <span className="text-xs font-bold text-slate-900">Delta: {(data.projected - data.baseline).toFixed(1)}{data.unit}</span>
-                    </div>
-                    <div className="h-32 w-full flex items-end gap-4 px-2">
-                      <div className="flex-1 flex flex-col items-center gap-2">
-                        <div className="w-full bg-slate-100 rounded-t-lg transition-all" style={{ height: `${(data.baseline / (Math.max(data.baseline, data.projected) * 1.2)) * 100}%` }} />
-                        <span className="text-[9px] font-bold text-slate-400">Baseline</span>
+              <div className="grid grid-cols-3 gap-16">
+                {analysisBreakdown.map((item, idx) => (
+                  <div key={idx} className="space-y-6">
+                    <div className="flex justify-between items-end border-b border-slate-100 pb-3">
+                      <div className="flex items-center gap-2">
+                        {item.status === 'healthy' ? <CheckCircle className="h-3.5 w-3.5 text-emerald-500" /> : <CircleAlert className="h-3.5 w-3.5 text-amber-500" />}
+                        <span className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">{item.name}</span>
                       </div>
-                      <div className="flex-1 flex flex-col items-center gap-2">
+                      <span className="text-xs font-bold text-slate-900">Delta: {(item.projected - item.baseline).toFixed(1)}{item.unit}</span>
+                    </div>
+                    
+                    {/* Professional Micro-Bar Visualization */}
+                    <div className="space-y-4">
+                      <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden relative">
+                        <div className="absolute top-0 left-1/2 w-0.5 h-full bg-slate-300 z-10" />
                         <div 
-                          className={cn(
-                            "w-full rounded-t-lg transition-all",
-                            data.name === 'Risk' 
-                              ? (data.projected < data.baseline ? 'bg-emerald-500' : 'bg-red-500')
-                              : (data.projected > data.baseline ? 'bg-emerald-500' : 'bg-red-500')
-                          )} 
-                          style={{ height: `${(data.projected / (Math.max(data.baseline, data.projected) * 1.2)) * 100}%` }} 
+                          className={cn("h-full transition-all duration-1000", item.status === 'healthy' ? 'bg-emerald-500' : 'bg-amber-500')} 
+                          style={{ 
+                            width: `${Math.abs((item.projected - item.baseline) / item.baseline) * 50}%`,
+                            marginLeft: item.projected >= item.baseline ? '50%' : `${50 - Math.abs((item.projected - item.baseline) / item.baseline) * 50}%`
+                          }} 
                         />
-                        <span className="text-[9px] font-bold text-slate-900">Projected</span>
+                      </div>
+                      <div className="flex justify-between text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
+                        <span>Original: {item.baseline}{item.unit}</span>
+                        <span>Projected: {item.projected.toFixed(1)}{item.unit}</span>
                       </div>
                     </div>
+
                     <div className="pt-2">
-                      <p className="text-[10px] text-slate-500 italic leading-relaxed">
-                        {data.name === 'Liquidity' && "Stabilized state achieved by converting stagnant assets into operational cash."}
-                        {data.name === 'Risk' && "Net concentration reduction via multi-generational diversification."}
-                        {data.name === 'Tax Gap' && "Mitigated inheritance exposure via compliant trust structures."}
-                      </p>
+                      <div className="flex items-center gap-2 text-[10px] text-slate-500 italic">
+                        <span className="font-bold text-primary not-italic">Key Driver:</span>
+                        <span className="truncate">{item.driver}</span>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -633,57 +545,40 @@ export default function DecisionSandboxPage() {
             </div>
           </div>
 
-          {/* Main Banner Bar (Grounded) */}
           <div className="absolute bottom-0 left-0 w-full h-24 flex items-center justify-between px-12 border-t border-slate-50 bg-white">
             <div className="flex items-center gap-12">
-              <div 
-                className="flex flex-col cursor-pointer group"
-                onClick={() => setIsAnalysisExpanded(!isAnalysisExpanded)}
-              >
-                <p className="text-[9px] font-bold uppercase text-slate-400 tracking-[0.2em] mb-1 group-hover:text-primary transition-colors">Portfolio Balance</p>
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-headline font-bold text-slate-900 flex items-center gap-2">
-                    {activeSynergies.length} Pairings Active
-                    {isAnalysisExpanded ? <ChevronDown className="h-3.5 w-3.5 text-primary" /> : <ChevronUp className="h-3.5 w-3.5 text-primary" />}
-                  </p>
-                </div>
+              <div className="flex flex-col cursor-pointer group" onClick={() => setIsAnalysisExpanded(!isAnalysisExpanded)}>
+                <p className="text-[9px] font-bold uppercase text-slate-400 tracking-[0.2em] mb-1 group-hover:text-primary transition-colors">Drafting Stability</p>
+                <p className="text-sm font-headline font-bold text-slate-900 flex items-center gap-2">
+                  {activeSynergies.length} Packages Established
+                  {isAnalysisExpanded ? <ChevronDown className="h-3.5 w-3.5 text-primary" /> : <ChevronUp className="h-3.5 w-3.5 text-primary" />}
+                </p>
               </div>
-              
               <div className="h-10 w-px bg-slate-100" />
-              
-              <div 
-                className="flex flex-col cursor-pointer group"
-                onClick={() => setIsAnalysisExpanded(!isAnalysisExpanded)}
-              >
-                <p className="text-[9px] font-bold uppercase text-slate-400 tracking-[0.2em] mb-1 group-hover:text-primary transition-colors">Net Drafting Impact</p>
+              <div className="flex flex-col cursor-pointer group" onClick={() => setIsAnalysisExpanded(!isAnalysisExpanded)}>
+                <p className="text-[9px] font-bold uppercase text-slate-400 tracking-[0.2em] mb-1 group-hover:text-primary transition-colors">Net Analysis</p>
                 <div className="flex items-center gap-10">
                   <div className="flex items-center gap-3">
                     <span className={cn("text-xl font-headline font-bold", netImpact.liquidity >= 0 ? "text-emerald-600" : "text-red-600")}>
                       {netImpact.liquidity >= 0 ? '+' : ''}€{(netImpact.liquidity / 1000000).toFixed(1)}M
                     </span>
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Net Liquidity</span>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase">Liquidity</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className={cn("text-xl font-headline font-bold", netImpact.risk <= 0 ? "text-emerald-600" : "text-amber-600")}>
                       {netImpact.risk > 0 ? '+' : ''}{netImpact.risk}%
                     </span>
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Risk Shift</span>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase">Risk</span>
                   </div>
                 </div>
               </div>
             </div>
-
             <div className="flex items-center gap-6">
               <div className="text-right hidden md:block">
-                <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Stabilized State Detected</p>
-                <p className="text-[11px] text-slate-500 italic">Financial deltas balanced across drafting board.</p>
+                <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Stabilized State Confirmed</p>
+                <p className="text-[11px] text-slate-500 italic">Financial pillars balanced on table.</p>
               </div>
-              <Button 
-                onClick={handleSendToWardroom}
-                className="bg-primary hover:bg-primary/90 text-white rounded-xl h-12 px-8 text-[10px] font-bold uppercase tracking-[0.2em] shadow-lg shadow-primary/20"
-              >
-                Commit to Wardroom
-              </Button>
+              <Button onClick={handleSendToWardroom} className="bg-primary hover:bg-primary/90 text-white rounded-xl h-12 px-8 text-[10px] font-bold uppercase tracking-[0.2em] shadow-lg shadow-primary/20">Commit Strategy</Button>
             </div>
           </div>
         </div>
