@@ -1,28 +1,30 @@
-
 "use client";
 
 import { useUser, useDoc } from "@/firebase";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   BrainCircuit, 
   Fingerprint, 
   Globe, 
   History, 
   Heart, 
-  ShieldAlert, 
   User, 
   Users, 
   Landmark, 
   Zap, 
   BookOpen,
-  Anchor,
-  Compass,
   Link2,
-  Info
+  ShieldCheck,
+  UserPlus,
+  Mail,
+  Shield,
+  MoreVertical
 } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
+import { Progress } from "@/components/ui/progress";
 
 const HARTMANN_DNA = {
   personalProfile: {
@@ -54,11 +56,11 @@ const HARTMANN_DNA = {
       notableTransitions: ["1992 Foundation", "2008 Singapore Expansion", "2024 Institutional Pivot"]
     },
     identifiedMembers: [
-      { name: "Dr. Markus Hartmann", relationship: "Founder", generationalStage: "G1", role: "Principal" },
-      { name: "Elena Hartmann", relationship: "Spouse", generationalStage: "G1", role: "Philanthropy Chair" },
-      { name: "Sophie Hartmann", relationship: "Child", generationalStage: "G3", role: "ESG/Impact Lead" },
-      { name: "Alexander Hartmann", relationship: "Child", generationalStage: "G3", role: "Tech Entrepreneur" },
-      { name: "Lina Hartmann", relationship: "Child", generationalStage: "G3", role: "Art & Heritage" }
+      { name: "Dr. Markus Hartmann", relationship: "Founder", generationalStage: "G1", role: "Principal", status: "Active", alignment: 92, avatar: "https://picsum.photos/seed/markus/100/100" },
+      { name: "Elena Hartmann", relationship: "Spouse", generationalStage: "G1", role: "Philanthropy Chair", status: "Engaged", alignment: 88, avatar: "https://picsum.photos/seed/elena/100/100" },
+      { name: "Sophie Hartmann", relationship: "Child", generationalStage: "G3", role: "ESG/Impact Lead", status: "Active", alignment: 65, avatar: "https://picsum.photos/seed/sophie/100/100" },
+      { name: "Alexander Hartmann", relationship: "Child", generationalStage: "G3", role: "Tech Entrepreneur", status: "Critical", alignment: 42, avatar: "https://picsum.photos/seed/alexander/100/100" },
+      { name: "Lina Hartmann", relationship: "Child", generationalStage: "G3", role: "Next Gen", status: "Onboarding", alignment: 75, avatar: "https://picsum.photos/seed/lina/100/100" }
     ],
     socialCapital: {
       reputationIndicators: ["German Industrial Excellence", "Swiss Banking Pedigree (via Elena)", "Sustainable Fashion Innovation (via Sophie)"],
@@ -110,11 +112,19 @@ export default function FamilyDNAPage() {
             )}
           </div>
           <h1 className="font-headline text-5xl font-bold tracking-tighter">
-            {f.familyName} Profile
+            {f.familyName} DNA
           </h1>
           <p className="text-xl text-muted-foreground italic font-headline max-w-3xl leading-relaxed">
-            A comprehensive generational extraction derived from the Hartmann Heritage Repository.
+            The synthesized human architecture of the Hartmann legacy.
           </p>
+        </div>
+        <div className="flex gap-3">
+          <Button variant="outline" className="bg-white/5 border-white/10">
+            <ShieldCheck className="mr-2 h-4 w-4" /> Governance Audit
+          </Button>
+          <Button className="shadow-lg">
+            <UserPlus className="mr-2 h-4 w-4" /> Expand Ecosystem
+          </Button>
         </div>
       </div>
 
@@ -132,7 +142,7 @@ export default function FamilyDNAPage() {
                     { label: "Principal", value: "Dr. Markus Hartmann", icon: User },
                     { label: "Origin", value: "Munich, Germany", icon: Globe },
                     { label: "Wealth Source", value: "Chemicals & Real Estate", icon: Landmark },
-                    { label: "Net Worth", value: f.estimatedTotalNetWorth, icon: Landmark },
+                    { label: "AUM", value: f.estimatedTotalNetWorth, icon: Landmark },
                   ].map((item, i) => (
                     <div key={i} className="flex items-center justify-between text-[11px] py-1">
                       <div className="flex items-center gap-2 text-muted-foreground">
@@ -152,17 +162,78 @@ export default function FamilyDNAPage() {
           <section className="space-y-6">
             <h2 className="text-2xl font-headline font-bold flex items-center gap-2 border-b border-white/5 pb-2">
               <Zap className="h-5 w-5 text-primary" />
-              1. Personal Synthesis
+              1. Family Narrative
             </h2>
             <div className="p-8 rounded-2xl bg-primary/5 border border-primary/10 italic text-xl font-headline">
-              "{p.aiSummary}"
+              "{f.familyLegacyNarrative}"
+            </div>
+            <Card className="glass-panel border-white/5 bg-white/[0.01]">
+              <CardContent className="p-8">
+                <p className="text-muted-foreground leading-relaxed">
+                  {f.history.summary}
+                </p>
+              </CardContent>
+            </Card>
+          </section>
+
+          <section className="space-y-8">
+            <h2 className="text-2xl font-headline font-bold flex items-center gap-2 border-b border-white/5 pb-2">
+              <Users className="h-5 w-5 text-primary" />
+              2. Family Ecosystem
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {f.identifiedMembers.map((member: any) => (
+                <Card key={member.name} className="glass-panel border-white/5 hover:border-primary/20 transition-all group">
+                  <CardHeader className="flex flex-row items-center gap-4 pb-4">
+                    <Avatar className="h-12 w-12 border border-white/10">
+                      <AvatarImage src={member.avatar} />
+                      <AvatarFallback>{member.name[0]}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold truncate group-hover:text-primary transition-colors">{member.name}</p>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{member.role}</p>
+                    </div>
+                    <Badge variant="outline" className="text-[8px] uppercase">{member.generationalStage}</Badge>
+                  </Header>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between items-center text-[9px] uppercase font-bold tracking-widest">
+                        <span className="text-muted-foreground">Alignment Score</span>
+                        <span className={member.alignment < 50 ? 'text-red-500' : 'text-primary'}>{member.alignment}%</span>
+                      </div>
+                      <Progress value={member.alignment} className="h-1" />
+                    </div>
+                    <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                      <div className="flex items-center gap-2">
+                        <div className={cn(
+                          "h-1.5 w-1.5 rounded-full",
+                          member.status === 'Active' ? 'bg-emerald-500' : member.status === 'Critical' ? 'bg-red-500' : 'bg-amber-500'
+                        )} />
+                        <span className="text-[10px] font-bold uppercase tracking-tighter text-muted-foreground">{member.status}</span>
+                      </div>
+                      <Button variant="ghost" size="icon" className="h-6 w-6">
+                        <MoreVertical className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+              <Card className="border-2 border-dashed border-muted-foreground/10 hover:border-primary/50 transition-all cursor-pointer flex flex-col items-center justify-center p-8 text-center space-y-4 bg-transparent group">
+                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                  <UserPlus className="h-6 w-6 text-muted-foreground group-hover:text-primary" />
+                </div>
+                <div>
+                  <p className="font-bold text-sm">Invite Stakeholder</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">Add G2 or G3 members to the ecosystem.</p>
+                </div>
+              </Card>
             </div>
           </section>
 
           <section className="space-y-8">
             <h2 className="text-2xl font-headline font-bold flex items-center gap-2 border-b border-white/5 pb-2">
               <Heart className="h-5 w-5 text-primary" />
-              2. Psychological Architecture
+              3. Relational Architecture
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="p-5 rounded-xl bg-white/[0.02] border border-white/5">
@@ -170,28 +241,22 @@ export default function FamilyDNAPage() {
                 <p className="text-base font-medium">{p.psychologicalProfile.biggestHeadache}</p>
               </div>
               <div className="p-5 rounded-xl bg-amber-500/5 border border-amber-500/10 text-amber-500">
-                <p className="text-[10px] font-bold uppercase tracking-widest mb-3">Relational Tension</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest mb-3">Psychological Alignment</p>
                 <p className="text-sm italic">{p.psychologicalProfile.emotionalFrictionPoints[0]}</p>
               </div>
             </div>
           </section>
 
-          <section className="space-y-8">
-            <h2 className="text-2xl font-headline font-bold flex items-center gap-2 border-b border-white/5 pb-2">
-              <Users className="h-5 w-5 text-primary" />
-              3. Generational Alignment
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="glass-panel p-6 text-center space-y-2">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Succession Score</p>
-                <p className="text-3xl font-headline font-bold text-primary">{f.relationalDynamics.successionReadinessScore}%</p>
-              </div>
-              <div className="glass-panel p-6 text-center space-y-2">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Alignment</p>
-                <p className="text-3xl font-headline font-bold">{f.relationalDynamics.alignmentLevel}</p>
-              </div>
+          <div className="bg-white/[0.02] p-10 rounded-3xl border border-white/5 text-center">
+            <p className="text-lg text-foreground/80 leading-relaxed font-body italic max-w-2xl mx-auto">
+              "The Hartmann legacy is defined by industrial excellence and a deep commitment to precision as a means of wealth preservation."
+            </p>
+            <div className="mt-8 flex items-center justify-center gap-6 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/30">
+              <Shield className="h-4 w-4" />
+              <span>SECURE ARCHIVE: HARTMANN-HERITAGE-STABLE</span>
+              <Shield className="h-4 w-4" />
             </div>
-          </section>
+          </div>
         </div>
       </div>
     </div>
