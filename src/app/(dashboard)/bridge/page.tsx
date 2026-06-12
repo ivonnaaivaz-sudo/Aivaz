@@ -28,7 +28,8 @@ import {
   TrendingUp,
   ArrowUpRight,
   AlertTriangle,
-  Euro
+  Euro,
+  Globe
 } from "lucide-react";
 import { 
   PieChart, 
@@ -53,12 +54,6 @@ const memberExposure = [
   { name: "Elena (G1)", percent: 15, color: "bg-primary/60" },
   { name: "Sophie (G3)", percent: 12.5, color: "bg-primary/40" },
   { name: "Alexander (G3)", percent: 12.5, color: "bg-primary/20" }
-];
-
-const mockLinkedAccounts = [
-  { id: 1, name: "Hartmann Munich Office", institution: "Deutsche Bank", balance: "€209,000,000", status: "Concentrated", type: "Real Estate" },
-  { id: 2, name: "Hartmann Idle Reserve", institution: "Credit Suisse", balance: "€42,000,000", status: "Low Yield", type: "Cash" },
-  { id: 3, name: "Singapore Sustainable Fund", institution: "DBS Singapore", balance: "€34,200,000", status: "Synced", type: "ESG Equity" },
 ];
 
 export default function BridgeHub() {
