@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useUser, useDoc, useFirestore, useCollection } from "@/firebase";
-import { collection, doc, setDoc, query, orderBy, deleteDoc } from "firebase/firestore";
+import { collection, doc, setDoc, query, orderBy, deleteDoc, addDoc } from "firebase/firestore";
 import { wealthScenarioSimulation, type WealthScenarioSimulationOutput } from "@/ai/flows/wealth-scenario-simulation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -29,7 +29,9 @@ import {
   Sparkles,
   MessageSquare,
   Bot,
-  X
+  X,
+  History,
+  Share2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -37,6 +39,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const TIME_HORIZONS = ["Current", "5 Years", "10 Years", "25 Years"];
 const FAMILY_MEMBERS = [
@@ -53,6 +56,13 @@ type Intention = {
   label: string;
 };
 
+type SimulationLog = {
+  id: string;
+  timestamp: string;
+  context: string;
+  result: WealthScenarioSimulationOutput;
+};
+
 export default function ChartRoomPage() {
   const { user } = useUser();
   const db = useFirestore();
@@ -63,6 +73,7 @@ export default function ChartRoomPage() {
   const [newMove, setNewMove] = useState({ title: "", description: "" });
   const [simLoading, setSimLoading] = useState(false);
   const [simResult, setSimResult] = useState<WealthScenarioSimulationOutput | null>(null);
+  const [simLogs, setSimLogs] = useState<SimulationLog[]>([]);
   const [isAdding, setIsAdding] = useState(false);
   
   // Proactive Captain Logic
@@ -99,10 +110,6 @@ export default function ChartRoomPage() {
         title: "Capital Bridge: Payout Acceleration",
         desc: "Leveraging G1 and G3 current inflows to fund the G3 technology pivot, reducing total interest exposure by €4.2M over a 10-year horizon."
       });
-      // Automatically show the "teaser" if not already expanded
-      if (!isCaptainExpanded) {
-        // Trigger a subtle animation or state change if needed
-      }
     }
   }, [intentions]);
 
@@ -148,7 +155,17 @@ export default function ChartRoomPage() {
         scenarioDescription: combinedContext || "General portfolio stress test across current drafted life moves."
       });
       
+      const newLog: SimulationLog = {
+        id: Math.random().toString(36).substr(2, 9),
+        timestamp: new Date().toISOString(),
+        context: context || "General Stress Test",
+        result: output
+      };
+
       setSimResult(output);
+      setSimLogs(prev => [newLog, ...prev]);
+      setIsCaptainExpanded(true);
+      
       toast({
         title: "Simulation Complete",
         description: "The Captain has synthesized the projected impact of your strategic sandbox.",
@@ -157,6 +174,23 @@ export default function ChartRoomPage() {
       console.error(error);
     } finally {
       setSimLoading(false);
+    }
+  };
+
+  const shareToWardroom = async (log: SimulationLog) => {
+    if (!user || !db) return;
+    try {
+      const msgRef = collection(db, "users", user.uid, "messages");
+      await addDoc(msgRef, {
+        senderId: "aivaz-captain",
+        senderName: "Captain (AI)",
+        text: `NEW SIMULATION PROJECTED: ${log.context}. Wealth Impact: ${log.result.projectedWealth}. Risk: ${log.result.riskLevel}. This requires council discussion regarding G3 alignment.`,
+        type: "recommendation",
+        timestamp: new Date().toISOString()
+      });
+      toast({ title: "Shared with Wardroom", description: "Simulation results sent to the council for voting." });
+    } catch (e) {
+      console.error(e);
     }
   };
 
@@ -348,8 +382,8 @@ export default function ChartRoomPage() {
           </Card>
         </div>
 
-        {/* Side Column: The Captain's AI Agent Interaction */}
-        <div className="lg:col-span-4 relative">
+        {/* Side Column: The Captain's AI Agent Interaction & Archive */}
+        <div className="lg:col-span-4 relative flex flex-col gap-6">
           <div className="sticky top-8 space-y-6">
             {/* The Captain's Avatar & Pop-up Trigger */}
             <div className="flex flex-col items-end gap-4">
@@ -416,40 +450,60 @@ export default function ChartRoomPage() {
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* Simulation Result Area - Integrated with AI interaction */}
-              {isCaptainExpanded && simResult && !simLoading && (
-                <div className="w-full mt-4 animate-in fade-in duration-700">
-                  <Card className="border-none shadow-xl bg-black/5 backdrop-blur-sm overflow-hidden">
-                    <CardHeader className="p-4 pb-0">
-                      <CardTitle className="text-[10px] uppercase tracking-widest text-muted-foreground">Legacy Projection</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-4 space-y-4">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="p-3 rounded-xl bg-white/50 border border-black/5">
-                          <p className="text-[9px] font-bold uppercase text-muted-foreground mb-1">Total Wealth</p>
-                          <p className="text-sm font-bold text-primary">{simResult.projectedWealth}</p>
+            {/* Simulation Archive */}
+            <Card className="glass-panel border-white/5 bg-white/40 shadow-sm flex flex-col h-[400px]">
+              <CardHeader className="p-4 border-b border-black/5 bg-muted/20">
+                <div className="flex items-center gap-2">
+                  <History className="h-4 w-4 text-primary" />
+                  <CardTitle className="text-[10px] font-bold uppercase tracking-widest">Simulation Archive</CardTitle>
+                </div>
+              </CardHeader>
+              <ScrollArea className="flex-1 p-4">
+                <div className="space-y-4">
+                  {simLogs.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-10 opacity-30">
+                      <Cpu className="h-8 w-8 mb-2" />
+                      <p className="text-[10px] uppercase font-bold tracking-widest">No previous logs</p>
+                    </div>
+                  ) : (
+                    simLogs.map((log) => (
+                      <div key={log.id} className="p-4 rounded-2xl bg-white/80 border border-black/5 hover:border-primary/30 transition-all space-y-3 group">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="text-[9px] font-bold text-primary uppercase tracking-tighter mb-1">{log.context}</p>
+                            <p className="text-[11px] font-medium leading-tight">{log.result.projectedWealth}</p>
+                          </div>
+                          <Badge variant="outline" className={cn("text-[8px] uppercase", log.result.riskLevel === 'Critical' ? 'border-red-500/50 text-red-500' : 'text-amber-500')}>
+                            {log.result.riskLevel}
+                          </Badge>
                         </div>
-                        <div className="p-3 rounded-xl bg-white/50 border border-black/5">
-                          <p className="text-[9px] font-bold uppercase text-muted-foreground mb-1">Risk</p>
-                          <p className={cn("text-sm font-bold", simResult.riskLevel === 'Critical' ? 'text-red-500' : 'text-amber-500')}>{simResult.riskLevel}</p>
+                        <div className="flex items-center justify-between pt-2 border-t border-black/5">
+                          <span className="text-[8px] text-muted-foreground font-mono">
+                            {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-6 text-[8px] font-bold uppercase tracking-widest hover:text-primary p-0"
+                            onClick={() => shareToWardroom(log)}
+                          >
+                            <Share2 className="mr-1 h-3 w-3" /> Share with Council
+                          </Button>
                         </div>
                       </div>
-                      <Button className="w-full h-9 shadow-lg bg-primary text-white uppercase text-[9px] font-bold rounded-xl" onClick={shareToWardroom}>
-                        <Send className="mr-2 h-3.5 w-3.5" /> Share with Council
-                      </Button>
-                    </CardContent>
-                  </Card>
+                    ))
+                  )}
                 </div>
-              )}
-
+              </ScrollArea>
               {simLoading && (
-                <div className="w-full flex flex-col items-center justify-center py-6 space-y-2 opacity-60">
-                  <Loader2 className="h-6 w-6 text-primary animate-spin" />
-                  <p className="text-[8px] uppercase font-bold tracking-widest text-primary animate-pulse">Processing Hartmann Matrix...</p>
+                <div className="p-4 border-t border-black/5 bg-primary/5 flex items-center justify-center gap-2">
+                  <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                  <span className="text-[8px] font-bold uppercase tracking-widest text-primary animate-pulse">Matrix Sync...</span>
                 </div>
               )}
-            </div>
+            </Card>
 
             {/* Quick Context Card */}
             <Card className="glass-panel border-white/5 bg-white/40 p-6 space-y-4">
@@ -458,7 +512,7 @@ export default function ChartRoomPage() {
                  <h3 className="text-[10px] font-bold uppercase tracking-widest">Captain's Brief</h3>
                </div>
                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                 I'm currently analyzing {Object.keys(intentions).length} family intentions. High-alignment path detected through G3 technology rebalancing.
+                 I'm currently analyzing {Object.keys(intentions).length} family intentions. {simLogs.length > 0 ? `${simLogs.length} projections archived.` : 'Ready for matrix deployment.'}
                </p>
             </Card>
           </div>
