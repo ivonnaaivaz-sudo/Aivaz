@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -19,15 +20,12 @@ import {
   Link as LinkIcon, 
   Loader2,
   Home,
-  Briefcase,
-  ChevronDown,
   ShieldCheck,
   User,
   Users,
   Eye,
   EyeOff,
   TrendingUp,
-  MapPin,
   ArrowUpRight,
   AlertTriangle
 } from "lucide-react";
@@ -106,7 +104,6 @@ export default function BridgeHub() {
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-24">
-      {/* Privacy Toggle & Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-white/5 pb-8">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
@@ -145,7 +142,6 @@ export default function BridgeHub() {
         </div>
       </div>
 
-      {/* Demo Alert */}
       <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-1000">
         <div className="p-2 bg-amber-500/20 rounded-full">
           <AlertTriangle className="h-5 w-5 text-amber-500" />

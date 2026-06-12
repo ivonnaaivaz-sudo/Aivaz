@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -42,7 +43,7 @@ import {
   XAxis, 
   YAxis, 
   CartesianGrid, 
-  Tooltip, 
+  Tooltip as RechartsTooltip, 
   ResponsiveContainer
 } from "recharts";
 import { useToast } from "@/hooks/use-toast";
@@ -108,11 +109,9 @@ export default function ChartRoomPage() {
     if (!scenarioToRun) return;
     
     setSimLoading(true);
-    // Hardcoded logic for the demo story if it matches the Bear scenario
     const isBear = activeScenario === 'bear' || scenarioToRun.toLowerCase().includes('market crash') || scenarioToRun.toLowerCase().includes('bear');
 
     try {
-      // Small timeout to simulate AI processing
       await new Promise(r => setTimeout(r, 1500));
       
       const output: WealthScenarioSimulationOutput = {
@@ -286,7 +285,7 @@ export default function ChartRoomPage() {
                     <CartesianGrid strokeDasharray="3 3" stroke="hsla(var(--foreground), 0.05)" vertical={false} />
                     <XAxis dataKey="time" stroke="hsla(var(--foreground), 0.4)" fontSize={10} hide />
                     <YAxis domain={[0, 100]} hide />
-                    <Tooltip contentStyle={{ backgroundColor: 'rgba(0,0,0,0.9)', border: '1px solid hsla(var(--primary), 0.3)', borderRadius: '12px' }} />
+                    <RechartsTooltip contentStyle={{ backgroundColor: 'rgba(0,0,0,0.9)', border: '1px solid hsla(var(--primary), 0.3)', borderRadius: '12px' }} />
                     <Area type="monotone" dataKey="actual" name="Actual Alignment" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorActual)" strokeWidth={2} />
                     {simResult && <Area type="monotone" dataKey="simulated" name="Simulated" stroke="hsl(var(--accent))" fillOpacity={1} fill="url(#colorSim)" strokeWidth={2} strokeDasharray="5 5" />}
                   </AreaChart>
