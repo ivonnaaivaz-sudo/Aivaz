@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useUser, useDoc, useFirestore, useCollection } from "@/firebase";
 import { collection, doc, setDoc, query, orderBy, deleteDoc } from "firebase/firestore";
 import { wealthScenarioSimulation, type WealthScenarioSimulationOutput } from "@/ai/flows/wealth-scenario-simulation";
@@ -11,34 +10,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger,
-  DialogFooter
-} from "@/components/ui/dialog";
-import { 
   Cpu, 
   Loader2, 
-  LineChart as LineChartIcon, 
-  TrendingUp, 
-  Sparkles, 
+  Activity, 
+  PlusCircle, 
+  Trash2, 
+  MapPin, 
+  Zap, 
   Send, 
-  Terminal, 
-  Plus,
-  Trash2,
-  FileText,
-  MessageSquare,
+  Sticker, 
+  Target, 
+  Clock, 
   ChevronRight,
-  Activity,
-  Zap,
-  ArrowUpRight,
-  MapPin,
-  Globe,
-  PlusCircle,
-  Sticker
+  TrendingDown,
+  Info
 } from "lucide-react";
 import { 
   AreaChart, 
@@ -52,7 +37,6 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
-// Demo data for alignment stream
 const alignmentData = [
   { time: '09:00', actual: 82, simulated: 82 },
   { time: '10:00', actual: 84, simulated: 82 },
@@ -62,6 +46,15 @@ const alignmentData = [
   { time: '14:00', actual: 84.2, simulated: 62 },
   { time: '15:00', actual: 84.2, simulated: 62 },
   { time: '16:00', actual: 84.2, simulated: 62 },
+];
+
+const TIME_HORIZONS = ["Current", "5 Years", "10 Years", "25 Years"];
+const FAMILY_MEMBERS = [
+  { name: "Dr. Markus", role: "Principal" },
+  { name: "Elena", role: "Legacy Chair" },
+  { name: "Sophie", role: "ESG / SG" },
+  { name: "Alexander", role: "Tech / UK" },
+  { name: "Lina", role: "Next Gen" },
 ];
 
 export default function ChartRoomPage() {
@@ -74,6 +67,16 @@ export default function ChartRoomPage() {
   const [simLoading, setSimLoading] = useState(false);
   const [simResult, setSimResult] = useState<WealthScenarioSimulationOutput | null>(null);
   const [isAdding, setIsAdding] = useState(false);
+
+  // Intentions Heat Map Data (Mocked but interactive)
+  const [intentions, setIntentions] = useState<Record<string, number>>({
+    "Dr. Markus-Current": 80,
+    "Dr. Markus-5 Years": 60,
+    "Elena-Current": 40,
+    "Sophie-5 Years": 90,
+    "Alexander-10 Years": 85,
+    "Lina-25 Years": 30,
+  });
 
   const scenariosQuery = useMemo(() => {
     if (!user || !db) return null;
@@ -144,6 +147,20 @@ export default function ChartRoomPage() {
     } catch (e) { console.error(e); }
   };
 
+  const toggleIntention = (member: string, horizon: string) => {
+    const key = `${member}-${horizon}`;
+    setIntentions(prev => ({
+      ...prev,
+      [key]: prev[key] ? 0 : 75 // Mocking a toggle or intensity shift
+    }));
+  };
+
+  // Inheritance Projection based on intentions (Mocked calculation)
+  const inheritanceHealth = useMemo(() => {
+    const totalIntensity = Object.values(intentions).reduce((a, b) => a + b, 0);
+    return Math.max(10, 100 - (totalIntensity / 10));
+  }, [intentions]);
+
   return (
     <div className="space-y-8 max-w-[1600px] mx-auto pb-32">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-white/5 pb-8">
@@ -165,9 +182,75 @@ export default function ChartRoomPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Main Column: Strategic Sandbox (Notion-like) */}
+        {/* Main Column */}
         <div className="lg:col-span-8 space-y-8">
-          <Card className="glass-panel border-white/5 bg-white shadow-sm overflow-hidden min-h-[600px]">
+          {/* 1. Family Intentions Matrix (Heat Map) */}
+          <Card className="glass-panel border-white/5 bg-white shadow-sm overflow-hidden">
+            <CardHeader className="border-b border-black/5 bg-muted/30 p-8 flex flex-row items-center justify-between">
+              <div className="space-y-1">
+                <CardTitle className="text-2xl font-headline font-bold">Legacy Intentions Matrix</CardTitle>
+                <CardDescription>Map long-term family objectives across generations. Visualizing "Strategic Pressure" on inheritance.</CardDescription>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] font-bold uppercase text-muted-foreground">Inheritance Health</p>
+                <p className={cn("text-2xl font-headline font-bold", inheritanceHealth < 40 ? 'text-red-500' : inheritanceHealth < 70 ? 'text-amber-500' : 'text-emerald-500')}>
+                  {inheritanceHealth}%
+                </p>
+              </div>
+            </CardHeader>
+            <CardContent className="p-8 overflow-x-auto">
+              <div className="min-w-[600px]">
+                {/* Header row */}
+                <div className="grid grid-cols-[150px_repeat(4,1fr)] gap-2 mb-4">
+                  <div />
+                  {TIME_HORIZONS.map(h => (
+                    <div key={h} className="text-center">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{h}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Body rows */}
+                {FAMILY_MEMBERS.map(member => (
+                  <div key={member.name} className="grid grid-cols-[150px_repeat(4,1fr)] gap-2 mb-2">
+                    <div className="flex flex-col justify-center">
+                      <p className="text-sm font-bold">{member.name}</p>
+                      <p className="text-[9px] uppercase tracking-widest text-muted-foreground">{member.role}</p>
+                    </div>
+                    {TIME_HORIZONS.map(horizon => {
+                      const key = `${member.name}-${horizon}`;
+                      const intensity = intentions[key] || 0;
+                      return (
+                        <div 
+                          key={horizon}
+                          onClick={() => toggleIntention(member.name, horizon)}
+                          className={cn(
+                            "h-16 rounded-lg cursor-pointer transition-all border border-transparent hover:border-primary/50 flex flex-col items-center justify-center group",
+                            intensity === 0 ? 'bg-muted/30 opacity-40 hover:opacity-100' : 
+                            intensity > 80 ? 'bg-red-500/20 text-red-600 shadow-[inset_0_0_10px_rgba(239,68,68,0.1)]' :
+                            intensity > 50 ? 'bg-amber-500/20 text-amber-600' :
+                            'bg-primary/20 text-primary'
+                          )}
+                        >
+                          <Target className={cn("h-4 w-4 mb-1 transition-transform group-hover:scale-110", intensity === 0 ? 'opacity-20' : 'opacity-100')} />
+                          {intensity > 0 && <span className="text-[8px] font-bold uppercase">{intensity}% Pressure</span>}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+              <div className="mt-8 flex items-center gap-4 p-4 bg-muted/30 rounded-xl border border-black/5">
+                <Info className="h-4 w-4 text-muted-foreground" />
+                <p className="text-[10px] text-muted-foreground font-medium">
+                  Click on a matrix cell to add a generational objective. High-intensity "Pressure" (Red) indicates significant inheritance depletion or capital lock-up.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* 2. Strategic Sandbox (Notion-like) */}
+          <Card className="glass-panel border-white/5 bg-white shadow-sm overflow-hidden min-h-[400px]">
             <CardHeader className="border-b border-black/5 bg-muted/30 p-8">
               <div className="flex items-center justify-between">
                 <div>
@@ -202,19 +285,17 @@ export default function ChartRoomPage() {
                   </div>
                 )}
 
-                {scenarios.length === 0 && !isAdding && (
-                  <div className="py-32 flex flex-col items-center justify-center text-center space-y-4 text-muted-foreground">
-                    <div className="p-4 rounded-full bg-muted/50">
-                      <FileText className="h-10 w-10 opacity-20" />
-                    </div>
+                {(scenarios?.length || 0) === 0 && !isAdding && (
+                  <div className="py-20 flex flex-col items-center justify-center text-center space-y-4 text-muted-foreground">
+                    <Sticker className="h-10 w-10 opacity-20" />
                     <div>
-                      <p className="font-bold">The Sandbox is Empty</p>
-                      <p className="text-xs">Start by adding a potential life move or family milestone.</p>
+                      <p className="font-bold">Sandbox Ready</p>
+                      <p className="text-xs">Add moves from the Matrix or start drafting here.</p>
                     </div>
                   </div>
                 )}
 
-                {scenarios.map((s) => (
+                {scenarios?.map((s) => (
                   <div key={s.id} className="p-8 hover:bg-muted/30 transition-all group relative">
                     <div className="absolute top-8 right-8 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => handleDeleteMove(s.id)}>
@@ -233,10 +314,10 @@ export default function ChartRoomPage() {
                         <p className="text-muted-foreground leading-relaxed">{s.description}</p>
                         <div className="pt-4 flex items-center gap-4">
                           <Button variant="outline" size="sm" className="h-8 text-[10px] font-bold uppercase tracking-widest" onClick={() => runSimulation(s.title)}>
-                            <Cpu className="mr-2 h-3.5 w-3.5" /> Simulate This Move
+                            <Cpu className="mr-2 h-3.5 w-3.5" /> Simulate Move
                           </Button>
-                          <Button variant="ghost" size="sm" className="h-8 text-[10px] font-bold uppercase tracking-widest">
-                            <MessageSquare className="mr-2 h-3.5 w-3.5" /> Discuss
+                          <Button variant="ghost" size="sm" className="h-8 text-[10px] font-bold uppercase tracking-widest" asChild>
+                             <Link href="/wardroom">Discuss</Link>
                           </Button>
                         </div>
                       </div>
@@ -276,7 +357,7 @@ export default function ChartRoomPage() {
                 {!simResult && !simLoading && (
                   <div className="text-center py-10 space-y-4">
                     <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold">Ready for Synthesis</p>
-                    <Button className="w-full h-12" onClick={() => runSimulation()} disabled={scenarios.length === 0}>
+                    <Button className="w-full h-12" onClick={() => runSimulation()} disabled={(scenarios?.length || 0) === 0}>
                       <Cpu className="mr-2 h-4 w-4" /> Execute Aggregate Simulation
                     </Button>
                   </div>
@@ -285,7 +366,7 @@ export default function ChartRoomPage() {
                 {simLoading && (
                   <div className="flex flex-col items-center justify-center py-10 space-y-4">
                     <Loader2 className="h-10 w-10 text-primary animate-spin" />
-                    <p className="text-xs text-muted-foreground uppercase font-bold tracking-widest">Processing Hartmann Matrix...</p>
+                    <p className="text-xs text-muted-foreground uppercase font-bold tracking-widest text-primary animate-pulse">Processing Hartmann Matrix...</p>
                   </div>
                 )}
 
@@ -322,9 +403,9 @@ export default function ChartRoomPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               {[
-                { label: "Tax Liability Gap", value: "€12M Risk", icon: TrendingUp },
-                { label: "G3 Capital Liquidity", value: "Tight", icon: ArrowUpRight },
-                { label: "Succession Score", value: "42/100", icon: Globe }
+                { label: "Matrix Complexity", value: "High", icon: Activity },
+                { label: "G3 Capital Lockup", value: "€55M Risk", icon: Clock },
+                { label: "Inheritance Stability", value: `${inheritanceHealth}%`, icon: Target }
               ].map((stat, i) => (
                 <div key={i} className="flex justify-between items-center text-xs">
                   <span className="flex items-center gap-2 text-muted-foreground">
@@ -340,3 +421,5 @@ export default function ChartRoomPage() {
     </div>
   );
 }
+
+import Link from "next/link";
