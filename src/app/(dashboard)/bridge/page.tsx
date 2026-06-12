@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo } from "react";
@@ -42,18 +41,24 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
-const assetAllocation = [
+const AGGREGATED_ALLOCATION = [
   { name: 'Commercial Real Estate', value: 55, color: 'hsl(var(--primary))' },
-  { name: 'Private Equity (Ind.)', value: 25, color: 'hsl(var(--secondary))' },
+  { name: 'Traditional Manufacturing', value: 25, color: 'hsl(var(--secondary))' },
   { name: 'Cash (Idle)', value: 11, color: 'hsl(var(--accent))' },
-  { name: 'ESG/Tech Equity', value: 9, color: 'hsl(var(--muted-foreground))' },
+  { name: 'Tech/Growth Equity', value: 9, color: 'hsl(var(--muted-foreground))' },
+];
+
+const INDIVIDUAL_ALLOCATION = [
+  { name: 'Commercial Real Estate', value: 80, color: 'hsl(var(--primary))' },
+  { name: 'Traditional Manufacturing', value: 15, color: 'hsl(var(--secondary))' },
+  { name: 'Cash (Idle)', value: 5, color: 'hsl(var(--accent))' },
 ];
 
 const memberExposure = [
-  { name: "Dr. Markus (G1)", percent: 60, color: "bg-primary" },
-  { name: "Elena (G1)", percent: 15, color: "bg-primary/60" },
-  { name: "Sophie (G3)", percent: 12.5, color: "bg-primary/40" },
-  { name: "Alexander (G3)", percent: 12.5, color: "bg-primary/20" }
+  { name: "Dr. Markus (G1)", percent: 65, color: "bg-primary" },
+  { name: "Elena (G2)", percent: 15, color: "bg-primary/60" },
+  { name: "Sophie (G3)", percent: 10, color: "bg-primary/40" },
+  { name: "Alexander (G3)", percent: 10, color: "bg-primary/20" }
 ];
 
 export default function BridgeHub() {
@@ -96,6 +101,9 @@ export default function BridgeHub() {
     finally { setIsSubmitting(false); }
   };
 
+  const currentAllocation = viewMode === 'aggregated' ? AGGREGATED_ALLOCATION : INDIVIDUAL_ALLOCATION;
+  const netWorth = viewMode === 'aggregated' ? "€380,000,000" : "€247,000,000";
+
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-24">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-white/5 pb-8">
@@ -110,8 +118,12 @@ export default function BridgeHub() {
 
         <Tabs value={viewMode} onValueChange={(val) => setViewMode(val as any)} className="bg-white/5 p-1 rounded-xl">
           <TabsList className="bg-transparent border-none">
-            <TabsTrigger value="individual" className="text-[10px] font-bold uppercase px-4"><User className="mr-2 h-3.5 w-3.5" /> My View</TabsTrigger>
-            <TabsTrigger value="aggregated" className="text-[10px] font-bold uppercase px-4"><Users className="mr-2 h-3.5 w-3.5" /> Hartmann Aggregated</TabsTrigger>
+            <TabsTrigger value="individual" className="text-[10px] font-bold uppercase px-4">
+              <User className="mr-2 h-3.5 w-3.5" /> My View
+            </TabsTrigger>
+            <TabsTrigger value="aggregated" className="text-[10px] font-bold uppercase px-4">
+              <Users className="mr-2 h-3.5 w-3.5" /> Hartmann Aggregated
+            </TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
@@ -130,8 +142,10 @@ export default function BridgeHub() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="glass-panel border-white/5 bg-primary/5">
           <CardContent className="p-6">
-            <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1">Aggregate Hartmann Net Worth</p>
-            <h3 className="text-3xl font-headline font-bold text-primary">€380,000,000</h3>
+            <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1">
+              {viewMode === 'aggregated' ? 'Aggregate Hartmann Net Worth' : 'My Estimated Stake'}
+            </p>
+            <h3 className="text-3xl font-headline font-bold text-primary">{netWorth}</h3>
             <div className="mt-4 flex items-center gap-2 text-xs font-bold text-emerald-500">
               <TrendingUp className="h-3.5 w-3.5" /> <span>Stable Preservation</span>
             </div>
@@ -140,7 +154,7 @@ export default function BridgeHub() {
         <Card className="glass-panel border-white/5">
           <CardContent className="p-6">
             <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1">Real Estate Concentration</p>
-            <h3 className="text-3xl font-headline font-bold text-amber-500">55%</h3>
+            <h3 className="text-3xl font-headline font-bold text-amber-500">{viewMode === 'aggregated' ? '55%' : '80%'}</h3>
             <div className="mt-4 flex items-center gap-2 text-[10px] text-muted-foreground uppercase font-bold">
               <AlertTriangle className="h-3.5 w-3.5" /> <span>High Regional Exposure</span>
             </div>
@@ -161,7 +175,7 @@ export default function BridgeHub() {
         <Card className="lg:col-span-7 glass-panel border-white/5">
           <CardHeader className="border-b border-white/5 mb-6">
             <CardTitle className="text-lg font-headline font-bold flex items-center gap-2">
-              <PieChartIcon className="h-4 w-4 text-primary" /> Hartmann Asset Allocation
+              <PieChartIcon className="h-4 w-4 text-primary" /> Asset Allocation
             </CardTitle>
           </CardHeader>
           <CardContent className="h-[400px] flex flex-col md:flex-row items-center justify-around p-8">
@@ -169,14 +183,14 @@ export default function BridgeHub() {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={assetAllocation}
+                    data={currentAllocation}
                     innerRadius={80}
                     outerRadius={110}
                     paddingAngle={8}
                     dataKey="value"
                     stroke="none"
                   >
-                    {assetAllocation.map((entry, index) => (
+                    {currentAllocation.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
@@ -184,11 +198,11 @@ export default function BridgeHub() {
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
                 <p className="text-[10px] font-bold uppercase text-muted-foreground">Assets</p>
-                <p className="text-3xl font-headline font-bold">€380M</p>
+                <p className="text-3xl font-headline font-bold">{netWorth}</p>
               </div>
             </div>
             <div className="space-y-4 min-w-[200px]">
-              {assetAllocation.map((item, i) => (
+              {currentAllocation.map((item, i) => (
                 <div key={i} className="space-y-1">
                   <div className="flex justify-between text-[10px] font-bold uppercase">
                     <span className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: item.color }} /> {item.name}</span>
@@ -231,6 +245,86 @@ export default function BridgeHub() {
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      <div className="flex justify-end pt-4">
+        <Dialog open={isAddAssetOpen} onOpenChange={setIsAddAssetOpen}>
+          <DialogTrigger asChild>
+            <Button size="lg" className="shadow-[0_0_20px_rgba(75,163,199,0.3)]">
+              <Plus className="mr-2 h-4 w-4" /> Add Asset
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="glass-panel border-white/10 sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Register Manual Asset</DialogTitle>
+              <DialogDescription>
+                Manually track assets like real estate, art, or private holdings that aren't linked via banking APIs.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="name">Asset Name</Label>
+                <Input 
+                  id="name" 
+                  placeholder="e.g. Aspen Ski Lodge" 
+                  value={newAsset.name}
+                  onChange={(e) => setNewAsset({...newAsset, name: e.target.value})}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label>Asset Type</Label>
+                  <Select value={newAsset.type} onValueChange={(val) => setNewAsset({...newAsset, type: val})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Real Estate">Real Estate</SelectItem>
+                      <SelectItem value="Art">Fine Art</SelectItem>
+                      <SelectItem value="Collectibles">Collectibles</SelectItem>
+                      <SelectItem value="Jewelry">Jewelry</SelectItem>
+                      <SelectItem value="Private Equity">Private Equity</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="value">Appraisal Value (€)</Label>
+                  <Input 
+                    id="value" 
+                    type="number" 
+                    placeholder="5000000" 
+                    value={newAsset.appraisalValue}
+                    onChange={(e) => setNewAsset({...newAsset, appraisalValue: e.target.value})}
+                  />
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="location">Location / Jurisdiction</Label>
+                <Input 
+                  id="location" 
+                  placeholder="e.g. Munich, Germany" 
+                  value={newAsset.location}
+                  onChange={(e) => setNewAsset({...newAsset, location: e.target.value})}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="date">Last Appraisal Date</Label>
+                <Input 
+                  id="date" 
+                  type="date" 
+                  value={newAsset.appraisalDate}
+                  onChange={(e) => setNewAsset({...newAsset, appraisalDate: e.target.value})}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button onClick={handleAddAsset} disabled={isSubmitting || !newAsset.name || !newAsset.appraisalValue}>
+                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Register Asset"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
