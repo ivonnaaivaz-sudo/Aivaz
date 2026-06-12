@@ -3,26 +3,19 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useUser, useDoc, useFirestore, useCollection } from "@/firebase";
-import { collection, doc, setDoc, query, orderBy, deleteDoc, addDoc, where } from "firebase/firestore";
+import { collection, doc, setDoc, query, orderBy, addDoc, where } from "firebase/firestore";
 import { wealthScenarioSimulation, type WealthScenarioSimulationOutput } from "@/ai/flows/wealth-scenario-simulation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { 
   Cpu, 
   Loader2, 
   Activity, 
   PlusCircle, 
-  Trash2, 
   MapPin, 
-  Target, 
   ArrowDownToLine,
-  ArrowUpRight,
-  ArrowDownRight,
   Sparkles,
-  MessageSquare,
   Bot,
   X,
   History,
@@ -30,7 +23,15 @@ import {
   FolderOpen,
   ChevronRight,
   LayoutGrid,
-  Search
+  Zap,
+  ArrowRight,
+  ShieldAlert,
+  Wallet,
+  Home,
+  TrendingUp,
+  AlertTriangle,
+  RefreshCw,
+  Scaling
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -38,22 +39,42 @@ import Link from "next/link";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 
-const TIME_HORIZONS = ["Current", "5 Years", "10 Years", "25 Years"];
-const FAMILY_MEMBERS = [
-  { name: "Dr. Markus", role: "Principal" },
-  { name: "Elena", role: "Legacy Chair" },
-  { name: "Sophie", role: "ESG / SG" },
-  { name: "Alexander", role: "Tech / UK" },
-  { name: "Lina", role: "Next Gen" },
-];
-
-type Intention = {
+type HeritageCard = {
+  id: string;
+  title: string;
+  type: 'source' | 'expenditure' | 'strategy';
   value: number; // in Millions
-  type: 'inflow' | 'outflow';
-  label: string;
+  description: string;
+  impactLabel: string;
 };
+
+const INITIAL_CARDS: HeritageCard[] = [
+  { 
+    id: 'source-1', 
+    title: "Dr. Markus's Inheritance", 
+    type: 'source', 
+    value: 15, 
+    description: "The primary source of funds for the current legacy cycle.",
+    impactLabel: "Liquidity Source"
+  },
+  { 
+    id: 'exp-1', 
+    title: "Mom's Proposal: Buy Flat", 
+    type: 'expenditure', 
+    value: 6, 
+    description: "Lump-sum capital expenditure for G3 property in London.",
+    impactLabel: "40% Liquidity Drain"
+  },
+  { 
+    id: 'strat-1', 
+    title: "Daughter's Hedge: Mortgage", 
+    type: 'strategy', 
+    value: 1.5, 
+    description: "15-year mortgage + Dividend reinvestment strategy.",
+    impactLabel: "Liquidity Retention"
+  }
+];
 
 type SimulationLog = {
   id: string;
@@ -62,242 +83,140 @@ type SimulationLog = {
   result: WealthScenarioSimulationOutput;
 };
 
-export default function ChartRoomPage() {
+export default function TableOfTruthPage() {
   const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
   const { data: dna } = useDoc(user ? `users/${user.uid}/dna/current` : null);
   const captainImg = PlaceHolderImages.find(img => img.id === 'captain-avatar');
 
+  // Project Logic
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
-  const [newProjectTitle, setNewProjectTitle] = useState("");
-  const [isCreatingProject, setIsCreatingProject] = useState(false);
-  
-  const [newMove, setNewMove] = useState({ title: "", description: "" });
-  const [simLoading, setSimLoading] = useState(false);
-  const [simResult, setSimResult] = useState<WealthScenarioSimulationOutput | null>(null);
-  const [simLogs, setSimLogs] = useState<SimulationLog[]>([]);
-  const [isAddingMove, setIsAddingMove] = useState(false);
-  
-  // Proactive Captain Logic
-  const [isCaptainExpanded, setIsCaptainExpanded] = useState(false);
-  const [captainMessage, setCaptainMessage] = useState<string>("Analyzing the Hartmann matrix for hidden synergies...");
-  const [captainProposal, setCaptainProposal] = useState<{title: string, desc: string} | null>(null);
-
-  // Intentions Matrix Data
-  const [intentions, setIntentions] = useState<Record<string, Intention>>({
-    "Dr. Markus-Current": { value: 15, type: 'inflow', label: "Inheritance Payout" },
-    "Dr. Markus-5 Years": { value: 25, type: 'outflow', label: "Estate Diversification" },
-    "Elena-Current": { value: 5, type: 'outflow', label: "Philanthropy Grant" },
-    "Sophie-Current": { value: 12, type: 'inflow', label: "Trust Distribution" },
-    "Alexander-10 Years": { value: 40, type: 'outflow', label: "VC Fund Buy-in" },
-    "Lina-25 Years": { value: 10, type: 'inflow', label: "Legacy Dividend" },
-  });
-
-  // Projects Query
   const projectsQuery = useMemo(() => {
     if (!user || !db) return null;
     return query(collection(db, "users", user.uid, "projects"), orderBy("createdAt", "desc"));
   }, [user, db]);
   const { data: projects } = useCollection(projectsQuery);
 
-  // Scenarios (Moves) Query - filtered by active project
-  const scenariosQuery = useMemo(() => {
-    if (!user || !db || !activeProjectId) return null;
-    return query(
-      collection(db, "users", user.uid, "scenarios"), 
-      where("projectId", "==", activeProjectId),
-      orderBy("createdAt", "desc")
+  // Table of Truth State
+  const [activeCardIds, setActiveCardIds] = useState<string[]>(['source-1']);
+  const [viewMode, setViewMode] = useState<'current' | 'alternate'>('current');
+  const [isCaptainExpanded, setIsCaptainExpanded] = useState(false);
+  const [simLoading, setSimLoading] = useState(false);
+  const [simLogs, setSimLogs] = useState<SimulationLog[]>([]);
+
+  // Simulation Logic based on active cards
+  const metrics = useMemo(() => {
+    const active = INITIAL_CARDS.filter(c => activeCardIds.includes(c.id));
+    const hasSource = active.some(c => c.type === 'source');
+    const hasExp = active.some(c => c.id === 'exp-1');
+    const hasStrat = active.some(c => c.id === 'strat-1');
+
+    let liquidity = 100;
+    let debt = 0;
+    let tension = false;
+    let story = "Establishing the Hartmann Heritage Canvas...";
+
+    if (hasSource && hasExp && !hasStrat) {
+      liquidity = 60;
+      tension = true;
+      story = "Choosing Mom's path results in a 40% immediate liquidity drain with no debt offset.";
+    } else if (hasSource && hasExp && hasStrat) {
+      liquidity = 90;
+      debt = 15;
+      tension = false;
+      story = "By choosing the mortgage strategy, you keep €13.5M in liquidity at the cost of a managed 15-year obligation.";
+    } else if (hasSource && hasStrat && !hasExp) {
+      liquidity = 100;
+      debt = 5;
+      story = "Optimizing for future inflows through leveraged reinvestment.";
+    }
+
+    return { liquidity, debt, tension, story };
+  }, [activeCardIds]);
+
+  const toggleCard = (id: string) => {
+    setActiveCardIds(prev => 
+      prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]
     );
-  }, [user, db, activeProjectId]);
-  const { data: scenarios } = useCollection(scenariosQuery);
-
-  // Set initial project
-  useEffect(() => {
-    if (projects && projects.length > 0 && !activeProjectId) {
-      setActiveProjectId(projects[0].id);
-    }
-  }, [projects, activeProjectId]);
-
-  // Update Captain's Proposal when intentions change
-  useEffect(() => {
-    const markusPayout = intentions["Dr. Markus-Current"];
-    const sophiePayout = intentions["Sophie-Current"];
-    const alexBuyin = intentions["Alexander-10 Years"];
-
-    if (markusPayout && sophiePayout && alexBuyin) {
-      setCaptainMessage(`Hey Markus, I've noticed a synergy. Have you considered leveraging your €15M and Sophie's €12M current payouts to accelerate Alexander's VC Buy-in move?`);
-      setCaptainProposal({
-        title: "Capital Bridge: Payout Acceleration",
-        desc: "Leveraging G1 and G3 current inflows to fund the G3 technology pivot, reducing total interest exposure by €4.2M over a 10-year horizon."
-      });
-    }
-  }, [intentions]);
-
-  const handleCreateProject = async () => {
-    if (!user || !db || !newProjectTitle) return;
-    try {
-      const projectRef = doc(collection(db, "users", user.uid, "projects"));
-      const newProject = {
-        id: projectRef.id,
-        title: newProjectTitle,
-        description: "New strategic initiative.",
-        status: "active",
-        createdAt: new Date().toISOString()
-      };
-      await setDoc(projectRef, newProject);
-      setNewProjectTitle("");
-      setIsCreatingProject(false);
-      setActiveProjectId(projectRef.id);
-      toast({ title: "Project Created", description: `"${newProject.title}" is now ready for sandbox simulation.` });
-    } catch (e) { console.error(e); }
   };
 
-  const handleAddMove = async (manualTitle?: string, manualDesc?: string) => {
-    if (!user || !db || !activeProjectId) {
-      toast({ variant: "destructive", title: "Select a Project", description: "You must select or create a project first." });
-      return;
-    }
-    const title = manualTitle || newMove.title;
-    const description = manualDesc || newMove.description;
-    
-    if (!title) return;
-
-    try {
-      const scenarioRef = doc(collection(db, "users", user.uid, "scenarios"));
-      await setDoc(scenarioRef, {
-        projectId: activeProjectId,
-        title,
-        description: description || "Auto-generated from Hartmann Matrix.",
-        author: user.displayName || "Family Member",
-        status: "draft",
-        createdAt: new Date().toISOString()
-      });
-      setNewMove({ title: "", description: "" });
-      setIsAddingMove(false);
-      setIsCaptainExpanded(false);
-      toast({ title: "Move Promoted", description: "This intention has been moved to the active project sandbox." });
-    } catch (e) { console.error(e); }
-  };
-
-  const runSimulation = async (context?: string) => {
+  const handleRunSimulation = async () => {
+    if (!user || !db) return;
     setSimLoading(true);
-    const combinedContext = (scenarios || []).map(s => `${s.title}: ${s.description}`).join("\n") + (context ? `\n\nActive Trigger: ${context}` : "");
-
     try {
       const output = await wealthScenarioSimulation({
-        currentFinancialOverview: "€380M AUM. 55% Real Estate Concentration. €42M Idle Cash.",
-        familyDNADynamics: dna ? JSON.stringify(dna.familyProfile.relationalDynamics) : "Succession tension between G1 (industrial) and G3 (tech/ESG).",
-        scenarioDescription: combinedContext || "General portfolio stress test across current drafted life moves."
+        currentFinancialOverview: `Table of Truth Session. Liquidity: ${metrics.liquidity}%. Debt Exposure: ${metrics.debt}%.`,
+        familyDNADynamics: dna ? JSON.stringify(dna.familyProfile.relationalDynamics) : "Tension between G1 preservation and G3 growth.",
+        scenarioDescription: metrics.story
       });
       
       const newLog: SimulationLog = {
         id: Math.random().toString(36).substr(2, 9),
         timestamp: new Date().toISOString(),
-        context: context || (projects?.find(p => p.id === activeProjectId)?.title || "General Stress Test"),
+        context: "Table of Truth: " + (activeCardIds.length > 1 ? "Multi-Card Strategy" : "Baseline"),
         result: output
       };
 
-      setSimResult(output);
       setSimLogs(prev => [newLog, ...prev]);
       setIsCaptainExpanded(true);
-      
-      toast({
-        title: "Simulation Complete",
-        description: "The Captain has synthesized the projected impact of your strategic sandbox.",
-      });
-    } catch (error) {
-      console.error(error);
+      toast({ title: "Simulation Captured", description: "The council can now review the delta in the Wardroom." });
+    } catch (e) {
+      console.error(e);
     } finally {
       setSimLoading(false);
     }
   };
 
-  const toggleIntention = (member: string, horizon: string) => {
-    const key = `${member}-${horizon}`;
-    setIntentions(prev => {
-      const existing = prev[key];
-      if (!existing) {
-        return {
-          ...prev,
-          [key]: { value: 10, type: 'outflow', label: "New Outflow Move" }
-        };
-      }
-      if (existing.type === 'outflow') {
-        return { ...prev, [key]: { ...existing, type: 'inflow', label: "New Inflow Move" } };
-      }
-      const newIntentions = { ...prev };
-      delete newIntentions[key];
-      return newIntentions;
-    });
+  const handleShareLog = async (log: SimulationLog) => {
+    if (!user || !db) return;
+    try {
+      const msgRef = collection(db, "users", user.uid, "messages");
+      await addDoc(msgRef, {
+        senderId: "aivaz-captain",
+        senderName: "Captain (AI)",
+        text: `SANDBOX ALERT: ${log.context}. Result: ${log.result.scenarioSummary}. Risk: ${log.result.riskLevel}. This path is ready for Hartmann Council validation.`,
+        type: "recommendation",
+        timestamp: new Date().toISOString()
+      });
+      toast({ title: "Transmitted", description: "Results sent to the Wardroom." });
+    } catch (e) { console.error(e); }
   };
 
-  const activeProject = projects?.find(p => p.id === activeProjectId);
-
-  const inheritanceHealth = useMemo(() => {
-    let totalInflow = 0;
-    let totalOutflow = 0;
-    Object.values(intentions).forEach(i => {
-      if (i.type === 'inflow') totalInflow += i.value;
-      else totalOutflow += i.value;
-    });
-    const net = totalInflow - totalOutflow;
-    const score = 75 + (net / 2);
-    return Math.min(100, Math.max(0, score));
-  }, [intentions]);
-
   return (
-    <div className="space-y-8 max-w-[1600px] mx-auto pb-32 relative">
+    <div className="space-y-8 max-w-[1600px] mx-auto pb-32">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-white/5 pb-8">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <LayoutGrid className="h-4 w-4 text-primary" />
-            <Badge className="bg-primary/20 text-primary border-primary/30 uppercase tracking-[0.2em] text-[9px] font-bold">Project-Driven Sandbox v5.0</Badge>
+            <Scaling className="h-4 w-4 text-primary" />
+            <Badge className="bg-primary/20 text-primary border-primary/30 uppercase tracking-[0.2em] text-[9px] font-bold">Table of Truth v1.0</Badge>
           </div>
           <h1 className="font-headline text-4xl font-bold tracking-tight text-foreground">Chart Room</h1>
-          <p className="text-muted-foreground font-mono text-xs uppercase tracking-widest opacity-60">Architectural planning & project-level synthesis</p>
+          <p className="text-muted-foreground font-mono text-xs uppercase tracking-widest opacity-60">Visual Strategic Orchestration</p>
         </div>
-        <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/10 shadow-sm">
-          <Activity className="h-5 w-5 text-primary animate-pulse" />
+        <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/10">
+          <Activity className={cn("h-5 w-5", metrics.tension ? "text-red-500 animate-pulse" : "text-emerald-500")} />
           <div>
-            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Aggregate Stability</p>
-            <p className="text-xl font-headline font-bold text-primary">{inheritanceHealth.toFixed(1)}%</p>
+            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Inheritance Stability</p>
+            <p className={cn("text-xl font-headline font-bold", metrics.tension ? "text-red-500" : "text-primary")}>
+              {metrics.liquidity}%
+            </p>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left Project Navigator */}
+        {/* Left: Project Navigator */}
         <div className="lg:col-span-3 space-y-6">
-          <Card className="glass-panel border-white/5 bg-white/40 shadow-sm overflow-hidden">
+          <Card className="glass-panel border-white/5 bg-white/40 shadow-sm overflow-hidden h-[600px] flex flex-col">
             <CardHeader className="p-4 border-b border-black/5 bg-muted/20">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <FolderOpen className="h-4 w-4 text-primary" />
-                  <CardTitle className="text-[10px] font-bold uppercase tracking-widest">Heritage Projects</CardTitle>
-                </div>
-                <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full" onClick={() => setIsCreatingProject(!isCreatingProject)}>
-                  <PlusCircle className="h-4 w-4" />
-                </Button>
+              <div className="flex items-center gap-2">
+                <FolderOpen className="h-4 w-4 text-primary" />
+                <CardTitle className="text-[10px] font-bold uppercase tracking-widest">Heritage Projects</CardTitle>
               </div>
             </CardHeader>
-            <ScrollArea className="h-[500px]">
-              <div className="p-2 space-y-1">
-                {isCreatingProject && (
-                  <div className="p-2 space-y-2 bg-primary/5 rounded-lg border border-primary/20 animate-in slide-in-from-top-2">
-                    <Input 
-                      placeholder="Project Name..." 
-                      className="h-8 text-xs font-bold" 
-                      value={newProjectTitle}
-                      onChange={(e) => setNewProjectTitle(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleCreateProject()}
-                    />
-                    <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="sm" className="h-6 text-[8px] uppercase font-bold" onClick={() => setIsCreatingProject(false)}>Cancel</Button>
-                      <Button size="sm" className="h-6 text-[8px] uppercase font-bold" onClick={handleCreateProject}>Create</Button>
-                    </div>
-                  </div>
-                )}
+            <ScrollArea className="flex-1 p-2">
+              <div className="space-y-1">
                 {projects?.map((project) => (
                   <div 
                     key={project.id}
@@ -309,243 +228,197 @@ export default function ChartRoomPage() {
                   >
                     <div className="flex items-center gap-3">
                       <div className={cn("w-2 h-2 rounded-full", activeProjectId === project.id ? "bg-primary shadow-[0_0_8px_rgba(75,163,199,0.5)]" : "bg-muted-foreground/30")} />
-                      <p className={cn("text-xs font-bold", activeProjectId === project.id ? "text-primary" : "text-muted-foreground")}>{project.title}</p>
+                      <p className={cn("text-xs font-bold", activeProjectId === project.id ? "text-primary" : "text-slate-700")}>{project.title}</p>
                     </div>
-                    <ChevronRight className={cn("h-3 w-3 transition-all", activeProjectId === project.id ? "text-primary translate-x-0" : "opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0")} />
+                    <ChevronRight className={cn("h-3 w-3 transition-all", activeProjectId === project.id ? "text-primary translate-x-0" : "opacity-0 -translate-x-2")} />
                   </div>
                 ))}
               </div>
             </ScrollArea>
           </Card>
-
-          <Card className="glass-panel border-white/5 bg-white/40 p-6 space-y-4">
-               <div className="flex items-center gap-2">
-                 <Bot className="h-4 w-4 text-primary" />
-                 <h3 className="text-[10px] font-bold uppercase tracking-widest">Captain's Brief</h3>
-               </div>
-               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                 I'm currently analyzing {Object.keys(intentions).length} intentions across {projects?.length || 0} projects. {simLogs.length > 0 ? `${simLogs.length} projections archived.` : 'Ready for matrix deployment.'}
-               </p>
+          
+          <Card className="glass-panel border-white/5 bg-white/40 p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Bot className="h-4 w-4 text-primary" />
+              <h3 className="text-[10px] font-bold uppercase tracking-widest">Captain's Brief</h3>
+            </div>
+            <p className="text-[11px] text-slate-600 leading-relaxed">
+              Drag cards to the center of the Portfolio Floor. I'll highlight the "Tension Lines" and project the Hartmann story.
+            </p>
           </Card>
         </div>
 
-        {/* Center Sandbox & Workspace */}
-        <div className="lg:col-span-6 space-y-8">
-          <Card className="glass-panel border-white/5 bg-white shadow-sm overflow-hidden min-h-[500px]">
-            <CardHeader className="border-b border-black/5 bg-muted/30 p-8">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Badge variant="outline" className="mb-2 border-primary/30 text-primary text-[8px] font-bold uppercase tracking-widest">Active Working Session</Badge>
-                  <CardTitle className="text-3xl font-headline font-bold">{activeProject?.title || "Select a Project"}</CardTitle>
-                  <CardDescription className="mt-1">{activeProject?.description || "Draft your life moves and promote intentions below to simulate legacy impact."}</CardDescription>
+        {/* Center: The Table of Truth Canvas */}
+        <div className="lg:col-span-6 space-y-6">
+          <div className="relative h-[650px] w-full bg-gradient-to-br from-slate-900 to-slate-800 rounded-[2.5rem] shadow-2xl overflow-hidden border-8 border-slate-700">
+            {/* The Portfolio Floor */}
+            <div className={cn(
+              "absolute inset-0 transition-all duration-1000 opacity-20",
+              metrics.tension ? "bg-red-500 animate-pulse" : "bg-emerald-500"
+            )} style={{ backgroundImage: 'radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, transparent 70%)' }} />
+            
+            <div className="absolute inset-0 p-8 flex flex-col">
+              {/* Top: Card Pool */}
+              <div className="flex justify-center gap-4 z-20">
+                {INITIAL_CARDS.map(card => {
+                  const isActive = activeCardIds.includes(card.id);
+                  return (
+                    <div 
+                      key={card.id}
+                      onClick={() => toggleCard(card.id)}
+                      className={cn(
+                        "w-44 p-4 rounded-2xl border cursor-pointer transition-all duration-500 transform",
+                        isActive 
+                          ? "bg-white border-primary shadow-2xl -translate-y-2 scale-105" 
+                          : "bg-white/5 border-white/10 text-white hover:bg-white/10"
+                      )}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        {card.type === 'source' ? <Wallet className={cn("h-4 w-4", isActive ? "text-primary" : "text-white/40")} /> : 
+                         card.type === 'expenditure' ? <Home className={cn("h-4 w-4", isActive ? "text-red-500" : "text-white/40")} /> : 
+                         <TrendingUp className={cn("h-4 w-4", isActive ? "text-emerald-500" : "text-white/40")} />}
+                        <Badge variant="outline" className={cn("text-[7px] uppercase", isActive ? "border-primary text-primary" : "border-white/20 text-white/40")}>
+                          {card.type}
+                        </Badge>
+                      </div>
+                      <p className={cn("text-[10px] font-bold leading-tight", isActive ? "text-slate-900" : "text-white/60")}>{card.title}</p>
+                      <p className={cn("text-[8px] mt-1 opacity-60", isActive ? "text-slate-600" : "text-white/40")}>{card.impactLabel}</p>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Center: The Active Sandbox */}
+              <div className="flex-1 relative flex items-center justify-center">
+                {/* Tension Lines (SVG) */}
+                {metrics.tension && (
+                  <svg className="absolute inset-0 w-full h-full pointer-events-none z-10">
+                    <line 
+                      x1="50%" y1="20%" x2="50%" y2="80%" 
+                      stroke="url(#tension-grad)" 
+                      strokeWidth="4" 
+                      strokeDasharray="8 8" 
+                      className="animate-[dash_2s_linear_infinite]" 
+                    />
+                    <defs>
+                      <linearGradient id="tension-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stopColor="#ef4444" />
+                        <stop offset="100%" stopColor="transparent" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                )}
+                
+                <div className="relative group">
+                  <div className={cn(
+                    "w-64 h-64 rounded-full border-4 flex flex-col items-center justify-center text-center p-8 transition-all duration-1000",
+                    metrics.tension ? "border-red-500/50 bg-red-500/10" : "border-primary/50 bg-primary/10"
+                  )}>
+                    <div className="relative">
+                      <div className={cn("absolute -inset-4 rounded-full blur-xl opacity-20", metrics.tension ? "bg-red-500" : "bg-primary")} />
+                      {metrics.tension ? <AlertTriangle className="h-12 w-12 text-red-500 mb-2" /> : <ShieldAlert className="h-12 w-12 text-primary mb-2" />}
+                    </div>
+                    <p className="text-white text-xs font-bold uppercase tracking-widest">Hartmann Portfolio</p>
+                    <p className="text-white/60 text-[9px] mt-1">€380M AUM STABILITY</p>
+                    
+                    {/* Floating Indicators */}
+                    <div className="absolute -right-8 top-1/2 -translate-y-1/2 bg-white/10 backdrop-blur-md p-2 rounded-lg border border-white/20 animate-in slide-in-from-right duration-700">
+                      <p className="text-[8px] text-white/60 uppercase font-bold">Liquidity</p>
+                      <p className="text-sm font-bold text-white">{metrics.liquidity}%</p>
+                    </div>
+                    <div className="absolute -left-8 top-1/2 -translate-y-1/2 bg-white/10 backdrop-blur-md p-2 rounded-lg border border-white/20 animate-in slide-in-from-left duration-700">
+                      <p className="text-[8px] text-white/60 uppercase font-bold">Debt</p>
+                      <p className="text-sm font-bold text-white">€{metrics.debt}M</p>
+                    </div>
+                  </div>
                 </div>
-                {activeProjectId && (
-                  <Button onClick={() => setIsAddingMove(true)} className="rounded-full h-10 px-6 shadow-lg">
-                    <PlusCircle className="mr-2 h-4 w-4" /> Add Life Move
+              </div>
+
+              {/* Bottom: The Story Bar */}
+              <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/10 flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Sparkles className="h-3.5 w-3.5 text-primary" />
+                    <span className="text-[9px] font-bold text-primary uppercase tracking-widest">Heritage Path Story</span>
+                  </div>
+                  <p className="text-white text-sm font-headline italic leading-relaxed">
+                    "{metrics.story}"
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" className="bg-white/5 border-white/20 text-white text-[10px] h-9" onClick={handleRunSimulation}>
+                    <Cpu className="mr-2 h-4 w-4" /> Run Matrix
                   </Button>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="divide-y divide-black/5">
-                {!activeProjectId ? (
-                  <div className="p-20 flex flex-col items-center justify-center opacity-30 text-center">
-                    <FolderOpen className="h-12 w-12 mb-4" />
-                    <p className="text-sm font-bold">Select a project to begin the sandbox session</p>
-                  </div>
-                ) : (
-                  <>
-                    {isAddingMove && (
-                      <div className="p-8 bg-primary/5 space-y-4 animate-in slide-in-from-top duration-300">
-                        <Input placeholder="Title of Move" className="text-lg font-bold border-none bg-transparent px-0" value={newMove.title} onChange={(e) => setNewMove({...newMove, title: e.target.value})} />
-                        <Textarea placeholder="Details and goals..." className="min-h-[100px] border-none bg-transparent px-0 resize-none" value={newMove.description} onChange={(e) => setNewMove({...newMove, description: e.target.value})} />
-                        <div className="flex justify-end gap-3 pt-4 border-t border-black/5">
-                          <Button variant="ghost" onClick={() => setIsAddingMove(false)}>Cancel</Button>
-                          <Button onClick={() => handleAddMove()}>Save Move</Button>
-                        </div>
-                      </div>
-                    )}
-                    {scenarios?.length === 0 && !isAddingMove && (
-                      <div className="p-20 flex flex-col items-center justify-center opacity-20 text-center">
-                        <MapPin className="h-10 w-10 mb-2" />
-                        <p className="text-xs font-bold uppercase tracking-widest">Sandbox Empty</p>
-                        <p className="text-[10px] mt-1">Add a move manually or promote one from the matrix below.</p>
-                      </div>
-                    )}
-                    {scenarios?.map((s) => (
-                      <div key={s.id} className="p-8 hover:bg-muted/30 transition-all group relative border-l-4 border-transparent hover:border-primary">
-                        <div className="absolute top-8 right-8 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteDoc(doc(db, "users", user.uid, "scenarios", s.id))}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        <div className="flex items-start gap-6">
-                          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                            <MapPin className="h-6 w-6 text-primary" />
-                          </div>
-                          <div className="space-y-2 flex-1">
-                            <h3 className="text-xl font-bold">{s.title}</h3>
-                            <p className="text-muted-foreground text-sm">{s.description}</p>
-                            <div className="pt-4 flex items-center gap-4">
-                              <Button variant="outline" size="sm" className="h-8 text-[10px] font-bold uppercase" onClick={() => runSimulation(s.title)}>
-                                <Cpu className="mr-2 h-3.5 w-3.5" /> Simulate Project
-                              </Button>
-                              <Button variant="ghost" size="sm" className="h-8 text-[10px] font-bold uppercase" asChild>
-                                 <Link href="/wardroom">Discuss</Link>
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Matrix - Global but promotes to current project */}
-          <Card className="glass-panel border-white/5 bg-white shadow-sm overflow-hidden">
-            <CardHeader className="border-b border-black/5 bg-muted/30 p-8 flex flex-row items-center justify-between">
-              <div className="space-y-1">
-                <CardTitle className="text-2xl font-headline font-bold">Legacy Intentions Matrix</CardTitle>
-                <CardDescription>Plan family milestones. Green: Cash Inflows, Red: Outflows.</CardDescription>
-              </div>
-            </CardHeader>
-            <CardContent className="p-8 overflow-x-auto">
-              <div className="min-w-[700px]">
-                <div className="grid grid-cols-[180px_repeat(4,1fr)] gap-3 mb-6">
-                  <div />
-                  {TIME_HORIZONS.map(h => (
-                    <div key={h} className="text-center">
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{h}</p>
-                    </div>
-                  ))}
+                  <Button size="sm" className="bg-primary text-white text-[10px] h-9">
+                    Promote to Wardroom
+                  </Button>
                 </div>
-                {FAMILY_MEMBERS.map(member => (
-                  <div key={member.name} className="grid grid-cols-[180px_repeat(4,1fr)] gap-3 mb-3">
-                    <div className="flex flex-col justify-center">
-                      <p className="text-sm font-bold">{member.name}</p>
-                      <p className="text-[9px] uppercase tracking-widest text-muted-foreground">{member.role}</p>
-                    </div>
-                    {TIME_HORIZONS.map(horizon => {
-                      const key = `${member.name}-${horizon}`;
-                      const intent = intentions[key];
-                      const isActive = !!intent;
-                      return (
-                        <div 
-                          key={horizon}
-                          className={cn(
-                            "h-24 rounded-xl cursor-pointer transition-all border border-transparent flex flex-col items-center justify-center group relative overflow-hidden text-center p-2",
-                            !isActive ? 'bg-muted/30 opacity-40 hover:opacity-100 hover:bg-muted/50' : 
-                            intent.type === 'inflow' ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20 shadow-[inset_0_0_20px_rgba(16,185,129,0.05)]' :
-                            'bg-red-500/10 text-red-700 border-red-500/20 shadow-[inset_0_0_20px_rgba(239,68,68,0.05)]'
-                          )}
-                          onClick={() => toggleIntention(member.name, horizon)}
-                        >
-                          {isActive ? (
-                            <>
-                              {intent.type === 'inflow' ? <ArrowUpRight className="h-4 w-4 mb-1" /> : <ArrowDownRight className="h-4 w-4 mb-1" />}
-                              <span className="text-[10px] font-bold uppercase tracking-tighter leading-tight">{intent.label}</span>
-                              <span className="text-[10px] font-mono mt-1">€{intent.value}M</span>
-                            </>
-                          ) : <Target className="h-4 w-4 opacity-20" />}
-                          {isActive && (
-                            <div 
-                              className="absolute inset-0 bg-primary flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity translate-y-full group-hover:translate-y-0 text-white"
-                              onClick={(e) => { 
-                                e.stopPropagation(); 
-                                handleAddMove(`${member.name}: ${intent.label} (${horizon})`, `Targeting €${intent.value}M ${intent.type} for the active Hartmann project.`);
-                              }}
-                            >
-                              <div className="flex flex-col items-center gap-1">
-                                <ArrowDownToLine className="h-5 w-5 animate-bounce" />
-                                <span className="text-[8px] font-bold uppercase">To Sandbox</span>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                ))}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
+          
+          {/* Comparison Toggle Section */}
+          <div className="flex items-center justify-center gap-4">
+            <Button 
+              variant="ghost" 
+              className={cn("text-[10px] uppercase font-bold tracking-widest h-10 px-8 rounded-full", viewMode === 'current' ? "bg-primary/10 text-primary border border-primary/20" : "text-muted-foreground")}
+              onClick={() => { setViewMode('current'); setActiveCardIds(['source-1', 'exp-1']); }}
+            >
+              Mom's Path
+            </Button>
+            <div className="h-px w-12 bg-muted" />
+            <Button 
+              variant="ghost" 
+              className={cn("text-[10px] uppercase font-bold tracking-widest h-10 px-8 rounded-full", viewMode === 'alternate' ? "bg-primary/10 text-primary border border-primary/20" : "text-muted-foreground")}
+              onClick={() => { setViewMode('alternate'); setActiveCardIds(['source-1', 'exp-1', 'strat-1']); }}
+            >
+              Daughter's Path
+            </Button>
+          </div>
         </div>
 
-        {/* Right Archive & Captain */}
+        {/* Right: The Captain & Archive */}
         <div className="lg:col-span-3 space-y-6">
           <div className="sticky top-8 space-y-6">
-            {/* The Captain's Avatar & Pop-up Trigger */}
             <div className="flex flex-col items-end gap-4">
               <div className="relative group cursor-pointer" onClick={() => setIsCaptainExpanded(!isCaptainExpanded)}>
-                <div className="absolute -inset-1 bg-gradient-to-r from-primary to-accent rounded-full blur opacity-40 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse"></div>
-                <Avatar className="h-20 w-20 border-4 border-white shadow-2xl relative">
+                <div className="absolute -inset-2 bg-gradient-to-r from-primary to-accent rounded-full blur opacity-30 group-hover:opacity-100 transition duration-1000 animate-pulse"></div>
+                <Avatar className="h-20 w-20 border-4 border-white shadow-2xl relative transition-transform group-hover:scale-110">
                   <AvatarImage src={captainImg?.imageUrl} className="object-cover" />
                   <AvatarFallback className="bg-primary text-white"><Bot className="h-10 w-10" /></AvatarFallback>
                 </Avatar>
-                {/* Notification Badge */}
-                {!isCaptainExpanded && captainProposal && (
-                  <div className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 rounded-full border-2 border-white flex items-center justify-center animate-bounce">
-                    <span className="text-[8px] font-bold text-white">1</span>
-                  </div>
-                )}
               </div>
 
-              {/* Speech Bubble / Pop-up */}
               <div className={cn(
                 "w-full transition-all duration-500 transform origin-top-right",
                 isCaptainExpanded ? "scale-100 opacity-100" : "scale-90 opacity-0 pointer-events-none"
               )}>
-                <div className="bg-white rounded-3xl border-2 border-primary/20 shadow-2xl overflow-hidden">
+                <Card className="glass-panel border-2 border-primary/20 shadow-2xl overflow-hidden rounded-[2rem]">
                   <div className="p-4 bg-primary/5 border-b border-primary/10 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Sparkles className="h-4 w-4 text-primary" />
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Strategic Insight</span>
+                      <Zap className="h-4 w-4 text-primary" />
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Captain's Proposal</span>
                     </div>
                     <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setIsCaptainExpanded(false)}>
                       <X className="h-3 w-3" />
                     </Button>
                   </div>
-                  
-                  <div className="p-6 space-y-6">
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium leading-relaxed text-slate-800">
-                        {captainMessage}
-                      </p>
-                    </div>
-
-                    {captainProposal && (
-                      <div className="space-y-4 animate-in slide-in-from-bottom-2">
-                        <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 space-y-1.5">
-                          <p className="text-xs font-bold text-primary uppercase">{captainProposal.title}</p>
-                          <p className="text-[11px] text-slate-600 leading-tight">{captainProposal.desc}</p>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button 
-                            className="flex-1 h-10 text-[10px] font-bold uppercase shadow-lg rounded-xl"
-                            onClick={() => handleAddMove(captainProposal.title, captainProposal.desc)}
-                          >
-                            Add to Project
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            className="h-10 w-12 p-0 bg-slate-50 border-slate-200 hover:bg-primary/10 rounded-xl"
-                            asChild
-                          >
-                            <Link href="/wardroom"><MessageSquare className="h-4 w-4 text-primary" /></Link>
-                          </Button>
-                        </div>
-                      </div>
-                    )}
+                  <div className="p-6 space-y-4">
+                    <p className="text-sm font-medium leading-relaxed text-slate-800">
+                      "Markus, I've noticed a synergy. If you combine the Daughter's mortgage strategy with your inheritance, you preserve the Hartmann liquidity floor for future G3 tech shifts."
+                    </p>
+                    <Button 
+                      className="w-full text-[10px] font-bold uppercase h-10 rounded-xl shadow-lg"
+                      onClick={() => { setActiveCardIds(['source-1', 'exp-1', 'strat-1']); setIsCaptainExpanded(false); }}
+                    >
+                      Apply Synergetic View
+                    </Button>
                   </div>
-                </div>
+                </Card>
               </div>
             </div>
 
-            {/* Simulation Archive */}
-            <Card className="glass-panel border-white/5 bg-white/40 shadow-sm flex flex-col h-[400px]">
+            <Card className="glass-panel border-white/5 bg-white/40 shadow-sm flex flex-col h-[350px]">
               <CardHeader className="p-4 border-b border-black/5 bg-muted/20">
                 <div className="flex items-center gap-2">
                   <History className="h-4 w-4 text-primary" />
@@ -553,24 +426,20 @@ export default function ChartRoomPage() {
                 </div>
               </CardHeader>
               <ScrollArea className="flex-1 p-4">
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {simLogs.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-10 opacity-30 text-center">
-                      <Cpu className="h-8 w-8 mb-2" />
-                      <p className="text-[10px] uppercase font-bold tracking-widest">No project logs yet</p>
+                      <RefreshCw className="h-8 w-8 mb-2" />
+                      <p className="text-[10px] uppercase font-bold tracking-widest">No matrix logs yet</p>
                     </div>
                   ) : (
                     simLogs.map((log) => (
-                      <div key={log.id} className="p-4 rounded-2xl bg-white/80 border border-black/5 hover:border-primary/30 transition-all space-y-3 group">
+                      <div key={log.id} className="p-4 rounded-2xl bg-white border border-black/5 hover:border-primary/30 transition-all space-y-2 group">
                         <div className="flex justify-between items-start">
-                          <div>
-                            <p className="text-[9px] font-bold text-primary uppercase tracking-tighter mb-1 truncate max-w-[120px]">{log.context}</p>
-                            <p className="text-[11px] font-medium leading-tight">{log.result.projectedWealth}</p>
-                          </div>
-                          <Badge variant="outline" className={cn("text-[8px] uppercase", log.result.riskLevel === 'Critical' ? 'border-red-500/50 text-red-500' : 'text-amber-500')}>
-                            {log.result.riskLevel}
-                          </Badge>
+                          <p className="text-[9px] font-bold text-primary uppercase tracking-tighter truncate max-w-[120px]">{log.context}</p>
+                          <Badge variant="outline" className="text-[7px] uppercase">{log.result.riskLevel}</Badge>
                         </div>
+                        <p className="text-[10px] text-slate-600 line-clamp-2 leading-tight">{log.result.scenarioSummary}</p>
                         <div className="flex items-center justify-between pt-2 border-t border-black/5">
                           <span className="text-[8px] text-muted-foreground font-mono">
                             {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -578,19 +447,8 @@ export default function ChartRoomPage() {
                           <Button 
                             variant="ghost" 
                             size="sm" 
-                            className="h-6 text-[8px] font-bold uppercase tracking-widest hover:text-primary p-0"
-                            onClick={async () => {
-                               if (!user || !db) return;
-                               const msgRef = collection(db, "users", user.uid, "messages");
-                               await addDoc(msgRef, {
-                                 senderId: "aivaz-captain",
-                                 senderName: "Captain (AI)",
-                                 text: `SIMULATION REPORT: ${log.context}. Projected Wealth: ${log.result.projectedWealth}. Risk Level: ${log.result.riskLevel}. This project is ready for council validation.`,
-                                 type: "recommendation",
-                                 timestamp: new Date().toISOString()
-                               });
-                               toast({ title: "Shared with Wardroom", description: "Project simulation results transmitted." });
-                            }}
+                            className="h-6 text-[8px] font-bold uppercase p-0 hover:text-primary"
+                            onClick={() => handleShareLog(log)}
                           >
                             <Share2 className="mr-1 h-3 w-3" /> Share
                           </Button>
@@ -603,13 +461,21 @@ export default function ChartRoomPage() {
               {simLoading && (
                 <div className="p-4 border-t border-black/5 bg-primary/5 flex items-center justify-center gap-2">
                   <Loader2 className="h-3 w-3 animate-spin text-primary" />
-                  <span className="text-[8px] font-bold uppercase tracking-widest text-primary animate-pulse">Synthesizing...</span>
+                  <span className="text-[8px] font-bold uppercase tracking-widest text-primary animate-pulse">Orchestrating Matrix...</span>
                 </div>
               )}
             </Card>
           </div>
         </div>
       </div>
+      
+      <style jsx global>{`
+        @keyframes dash {
+          to {
+            stroke-dashoffset: -16;
+          }
+        }
+      `}</style>
     </div>
   );
 }
