@@ -39,6 +39,18 @@
         "status": { "type": "string", "enum": ["completed", "in-progress", "upcoming", "target"] }
       }
     },
+    "FamilyScenario": {
+      "title": "Family Scenario",
+      "description": "A draft 'Life Move' or potential event being planned in the sandbox.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "author": { "type": "string" },
+        "status": { "type": "string", "enum": ["draft", "active", "simulated", "archived"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
     "PhysicalAsset": {
       "title": "Physical Asset",
       "description": "Manually added asset such as real estate, art, or private holdings.",
@@ -98,6 +110,10 @@
     "/users/{userId}/timeline/{eventId}": {
       "schema": "TimelineEvent",
       "description": "Generational timeline milestones"
+    },
+    "/users/{userId}/scenarios/{scenarioId}": {
+      "schema": "FamilyScenario",
+      "description": "Draft life moves and planning notes"
     },
     "/users/{userId}/assets/{assetId}": {
       "schema": "PhysicalAsset",

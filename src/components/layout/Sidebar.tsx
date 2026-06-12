@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -59,7 +60,7 @@ export function Sidebar() {
       <Link href="/dashboard" className="p-10 flex flex-col items-center">
         <div className="flex flex-col items-center text-center cursor-pointer group w-full">
           <div className="w-20 h-20 rounded-2xl bg-primary/5 border border-primary/10 flex items-center justify-center mb-4 shadow-[0_0_30px_rgba(75,163,199,0.1)] group-hover:border-primary/30 transition-all duration-500 overflow-hidden relative">
-            {brandLogo ? (
+            {brandLogo && brandLogo.imageUrl ? (
               <Image 
                 src={brandLogo.imageUrl} 
                 alt={brandLogo.description} 
