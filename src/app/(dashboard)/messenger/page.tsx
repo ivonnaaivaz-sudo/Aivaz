@@ -8,47 +8,46 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Shield, User, MoreVertical, Search, Paperclip, Send, Sparkles, ExternalLink, MessageSquare } from "lucide-react";
+import { Shield, User, MoreVertical, Search, Paperclip, Send, Sparkles, ExternalLink } from "lucide-react";
 
-// Stable mock dates to prevent hydration mismatch
 const MOCK_MESSAGES = [
   {
     id: "m1",
     senderId: "advisor-1",
     senderName: "Robert Chen (Advisor)",
-    text: "Julian, I've updated the roadmap with the EU Golden Visa eligibility targets for 2025. We should coordinate the side-letter renewal for the PE fund soon.",
+    text: "Markus, I've updated the roadmap with the Singapore expansion targets for 2026. We should coordinate the charter review for the legacy trust soon.",
     type: "text",
     timestamp: "2024-11-06T08:00:00.000Z",
   },
   {
     id: "m2",
-    senderId: "julian-1",
-    senderName: "Julian Aivaz",
-    text: "Thanks Robert. Marcus, have you had a chance to look at the Aivaz Foundation bylaws? We want to ensure G3 is properly integrated into the philanthropic mission.",
+    senderId: "markus-1",
+    senderName: "Dr. Markus Hartmann",
+    text: "Thanks Robert. Elena, have you had a chance to look at the Heritage Foundation bylaws? We want to ensure G3 is properly integrated into the philanthropic mission.",
     type: "text",
     timestamp: "2024-11-06T09:00:00.000Z",
   },
   {
     id: "m3",
     senderId: "marcus-1",
-    senderName: "Marcus Aivaz",
+    senderName: "Sophie Hartmann",
     text: "I'm reviewing them now. I agree with the focus on intellectual capital growth. I'm also curious about the Liquidity Bridge recommendation Aivaz flagged today.",
     type: "text",
     timestamp: "2024-11-06T10:00:00.000Z",
   },
   {
     id: "m4",
-    senderId: "aivaz-ai",
-    senderName: "Aivaz AI",
-    text: "Shared a recommendation: Generational Liquidity Bridge. Target: @Marcus & Next Gen. Impact: Strategic Stability",
+    senderId: "hartmann-ai",
+    senderName: "Hartmann Intelligence",
+    text: "Shared a recommendation: Generational Liquidity Bridge. Target: @Sophie & Next Gen. Impact: Strategic Stability",
     type: "recommendation",
     recommendationId: "rec-1",
     timestamp: "2024-11-06T11:00:00.000Z",
   },
   {
     id: "m5",
-    senderId: "julian-1",
-    senderName: "Julian Aivaz",
+    senderId: "markus-1",
+    senderName: "Dr. Markus Hartmann",
     text: "The bridge makes sense. Let's move 5% of the tech holdings as suggested. It buffers the education trust against the volatility we're seeing in the supply chain sector.",
     type: "text",
     timestamp: "2024-11-06T12:00:00.000Z",
@@ -94,7 +93,7 @@ export default function MessengerPage() {
       const msgRef = doc(collection(db, "users", user.uid, "messages"));
       await setDoc(msgRef, {
         senderId: user.uid,
-        senderName: user.displayName || "Julian Aivaz",
+        senderName: user.displayName || "Dr. Markus Hartmann",
         text: inputText,
         type: "text",
         timestamp: new Date().toISOString()
@@ -116,7 +115,6 @@ export default function MessengerPage() {
 
   return (
     <div className="h-[calc(100vh-100px)] flex gap-6 max-w-7xl mx-auto">
-      {/* Contacts Sidebar */}
       <Card className="w-80 glass-panel flex flex-col border-white/5">
         <CardHeader className="border-b border-white/5 pb-4">
           <div className="flex items-center justify-between mb-4">
@@ -158,7 +156,7 @@ export default function MessengerPage() {
                 <User className="h-5 w-5 text-accent" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold truncate">Marcus Aivaz</p>
+                <p className="text-sm font-semibold truncate">Sophie Hartmann</p>
                 <p className="text-xs text-muted-foreground truncate">Reviewing bylaws...</p>
               </div>
             </div>
@@ -166,7 +164,6 @@ export default function MessengerPage() {
         </ScrollArea>
       </Card>
 
-      {/* Main Chat Area */}
       <Card className="flex-1 glass-panel flex flex-col border-white/5 overflow-hidden">
         <CardHeader className="border-b border-white/5 flex flex-row items-center justify-between py-4 shrink-0">
           <div className="flex items-center gap-4">
@@ -194,17 +191,17 @@ export default function MessengerPage() {
             </div>
             
             {messages.map((msg) => {
-              const isCurrentUser = msg.senderId === user?.uid || msg.senderName === "Julian Aivaz";
+              const isCurrentUser = msg.senderId === user?.uid || msg.senderName === "Dr. Markus Hartmann";
               return (
                 <div 
                   key={msg.id} 
                   className={`flex gap-4 max-w-[85%] ${isCurrentUser ? 'ml-auto flex-row-reverse' : ''}`}
                 >
                   <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center border ${
-                    msg.senderName.includes('AI') ? 'bg-primary/20 border-primary/40' : 
+                    msg.senderName.includes('Intelligence') ? 'bg-primary/20 border-primary/40' : 
                     isCurrentUser ? 'bg-primary/20 border-primary/20' : 'bg-muted border-white/10'
                   }`}>
-                    {msg.senderName.includes('AI') ? <Sparkles className="h-4 w-4 text-primary" /> : <User className={`h-4 w-4 ${isCurrentUser ? 'text-primary' : 'text-muted-foreground'}`} />}
+                    {msg.senderName.includes('Intelligence') ? <Sparkles className="h-4 w-4 text-primary" /> : <User className={`h-4 w-4 ${isCurrentUser ? 'text-primary' : 'text-muted-foreground'}`} />}
                   </div>
                   
                   <div className={`space-y-1 flex flex-col ${isCurrentUser ? 'items-end' : 'items-start'}`}>
@@ -246,9 +243,6 @@ export default function MessengerPage() {
 
         <div className="p-4 border-t border-white/5 bg-background/30 shrink-0">
           <div className="flex items-center gap-2 bg-background/50 border border-white/5 rounded-2xl px-4 py-2">
-            <Button variant="ghost" size="icon" className="text-muted-foreground">
-              <Paperclip className="h-5 w-5" />
-            </Button>
             <Input 
               placeholder="Type a secure message..." 
               className="border-none bg-transparent shadow-none focus-visible:ring-0 text-sm" 

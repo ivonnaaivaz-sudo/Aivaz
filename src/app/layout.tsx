@@ -4,7 +4,7 @@ import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'Aivaz Heritage | Family Wealth Infrastructure',
+  title: 'Hartmann Heritage | Family Wealth Infrastructure',
   description: 'Premium wealth management and legacy strategy platform for multi-generational families.',
 };
 

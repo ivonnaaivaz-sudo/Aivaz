@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useUser, useDoc } from "@/firebase";
@@ -25,7 +24,7 @@ const MOCK_DNA = {
   personalProfile: {
     roleInFamily: "Principal Founder",
     generationalStage: "1st Generation",
-    primaryLocation: "Palm Beach, Florida",
+    primaryLocation: "Munich, Germany",
     riskAppetite: "Low / Preservation Focused",
     psychologicalProfile: {
       biggestHeadache: "Ensuring succession readiness while maintaining operational speed.",
@@ -34,23 +33,23 @@ const MOCK_DNA = {
       advisorBlindSpots: ["Traditional banks focus on tax but ignore the emotional sibling dynamics."]
     },
     financialSnapshot: {
-      estimatedNetWorth: "$142M",
-      primaryAssetClasses: ["Tech Equity", "European Real Estate"]
+      estimatedNetWorth: "€380M",
+      primaryAssetClasses: ["Specialty Chemicals", "European Real Estate"]
     },
-    aiSummary: "Julian is a high-conviction founder who built his wealth in semiconductor logistics. Currently, he is focused on institutionalizing his legacy for the next generation."
+    aiSummary: "Dr. Markus Hartmann is a high-conviction founder who built his wealth in industrial chemicals. Currently, he is focused on institutionalizing his legacy for the next generation while maintaining the stability that built the Hartmann name."
   },
   familyProfile: {
-    familyName: "Aivaz Heritage",
-    wealthSource: "Semiconductor Infrastructure & Global Logistics",
-    estimatedTotalNetWorth: "$850M (Aggregated)",
+    familyName: "Hartmann Heritage",
+    wealthSource: "Specialty Chemicals & Industrial Infrastructure",
+    estimatedTotalNetWorth: "€380M (Aggregated)",
     history: {
-      summary: "Founded in the late 1980s as a specialized logistics firm, the Aivaz wealth was significantly expanded through early strategic investments in semiconductor supply chains. The family has since transitioned into a multi-jurisdictional investment office.",
-      keyHoldings: ["Aivaz Logistics Global", "Alpine Strategic Real Estate"],
-      notableTransitions: ["1998 Global Expansion", "2015 Liquidity Event"]
+      summary: "Founded in the late 1980s as a specialized industrial chemical firm in Munich, the Hartmann wealth was significantly expanded through strategic dominance in European infrastructure supply chains. The family has since transitioned into a multi-jurisdictional investment office with a strong presence in Singapore.",
+      keyHoldings: ["Hartmann Chemicals Global", "Alpine Strategic Real Estate"],
+      notableTransitions: ["1992 Foundation", "2008 Singapore Expansion"]
     },
     relationalDynamics: {
       alignmentLevel: "Medium",
-      successionReadinessScore: 68
+      successionReadinessScore: 42
     }
   }
 };
@@ -77,7 +76,6 @@ export default function HousePage() {
 
   return (
     <div className="space-y-12 max-w-6xl mx-auto pb-20">
-      {/* Wikipedia Style Header */}
       <div className="border-b border-white/10 pb-8 flex flex-col md:flex-row items-end justify-between gap-6">
         <div className="space-y-4">
           <div className="flex items-center gap-3">
@@ -89,11 +87,10 @@ export default function HousePage() {
             Family DNA
           </h1>
         </div>
-        <Badge className="bg-white/5 border-white/10 text-muted-foreground px-4 py-1">Profile: Julian Aivaz</Badge>
+        <Badge className="bg-white/5 border-white/10 text-muted-foreground px-4 py-1">Profile: Dr. Markus Hartmann</Badge>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-        {/* Left Column: Wikipedia Sidebar Info Box */}
         <div className="lg:col-span-4 space-y-6">
           <Card className="glass-panel border-white/10 overflow-hidden sticky top-8">
             <div className="aspect-square relative bg-gradient-to-br from-primary/10 via-background to-secondary/10 flex items-center justify-center border-b border-white/5 overflow-hidden">
@@ -105,7 +102,7 @@ export default function HousePage() {
                 <h3 className="text-[10px] font-bold uppercase tracking-widest text-primary mb-4 border-b border-primary/20 pb-1">Core Identity Info</h3>
                 <div className="space-y-3">
                   {[
-                    { label: "Principal", value: user?.displayName || "Julian Aivaz", icon: User },
+                    { label: "Principal", value: user?.displayName || "Dr. Markus Hartmann", icon: User },
                     { label: "Role", value: p.roleInFamily, icon: Anchor },
                     { label: "Gen Stage", value: p.generationalStage, icon: History },
                     { label: "Base", value: p.primaryLocation, icon: Globe },
@@ -127,9 +124,7 @@ export default function HousePage() {
           </Card>
         </div>
 
-        {/* Right Column: Main Article Content */}
         <div className="lg:col-span-8 space-y-16">
-          {/* AI Generated Personal Summary */}
           <section className="space-y-6">
             <h2 className="text-2xl font-headline font-bold flex items-center gap-2 border-b border-white/5 pb-2">
               <Zap className="h-5 w-5 text-primary" />
@@ -145,7 +140,6 @@ export default function HousePage() {
             </div>
           </section>
 
-          {/* Psychological Profile Section */}
           <section className="space-y-8">
             <h2 className="text-2xl font-headline font-bold flex items-center gap-2 border-b border-white/5 pb-2">
               <Heart className="h-5 w-5 text-primary" />
@@ -170,7 +164,6 @@ export default function HousePage() {
             </div>
           </section>
 
-          {/* Family History Section */}
           <section className="space-y-8">
             <h2 className="text-2xl font-headline font-bold flex items-center gap-2 border-b border-white/5 pb-2">
               <History className="h-5 w-5 text-primary" />
@@ -215,11 +208,11 @@ export default function HousePage() {
               <BookOpen className="h-12 w-12" />
             </div>
             <p className="text-lg text-foreground/80 leading-relaxed font-body italic max-w-2xl mx-auto">
-              "The Aivaz legacy is defined by a globalist perspective and a deep commitment to innovation as a means of wealth preservation."
+              "The Hartmann legacy is defined by industrial excellence and a deep commitment to precision as a means of wealth preservation."
             </p>
             <div className="mt-12 flex items-center justify-center gap-6 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/30">
               <Link2 className="h-4 w-4" />
-              <span>SECURE ARCHIVE: AIVAZ-HERITAGE-STABLE</span>
+              <span>SECURE ARCHIVE: HARTMANN-HERITAGE-STABLE</span>
               <Link2 className="h-4 w-4" />
             </div>
           </div>

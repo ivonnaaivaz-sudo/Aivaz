@@ -1,17 +1,12 @@
 "use client";
 
-import { useUser } from "@/firebase";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
   PieChart as PieChartIcon, 
   TrendingUp, 
   Layers, 
-  Globe,
-  Briefcase,
-  Users,
-  Percent,
-  AlertTriangle
+  Users, 
 } from "lucide-react";
 import { 
   PieChart, 
@@ -28,50 +23,51 @@ import {
 } from "recharts";
 
 const assetAllocation = [
-  { name: 'Private Tech Equity', value: 55, color: 'hsl(var(--primary))' },
-  { name: 'Real Estate (Asia)', value: 30, color: 'hsl(var(--secondary))' },
-  { name: 'Fixed Income', value: 10, color: 'hsl(var(--accent))' },
-  { name: 'Cash/Liquid', value: 5, color: 'hsl(var(--muted-foreground))' },
+  { name: 'German Real Estate', value: 45, color: 'hsl(var(--primary))' },
+  { name: 'Industrial Chemicals', value: 25, color: 'hsl(var(--secondary))' },
+  { name: 'Singapore Growth', value: 20, color: 'hsl(var(--accent))' },
+  { name: 'Fixed Income', value: 10, color: 'hsl(var(--muted-foreground))' },
 ];
 
 const performanceData = [
-  { year: '2020', return: 12.4 },
-  { year: '2021', return: 28.2 },
-  { year: '2022', return: -4.5 },
-  { year: '2023', return: 18.8 },
-  { year: '2024 YTD', return: 12.4 },
+  { year: '2020', return: 8.4 },
+  { year: '2021', return: 14.2 },
+  { year: '2022', return: -2.5 },
+  { year: '2023', return: 12.8 },
+  { year: '2024 YTD', return: 7.4 },
 ];
 
 const generationalBreakdown = [
   {
-    bucket: "Tech Equity",
-    total: "$27.5M",
+    bucket: "Real Estate (DE/SG)",
+    total: "€171.0M",
     members: [
-      { name: "Julian (G1)", percent: 70, color: "bg-primary" },
-      { name: "Marcus (G2)", percent: 30, color: "bg-primary/60" }
+      { name: "Markus (G1)", percent: 80, color: "bg-primary" },
+      { name: "Sophie (G3)", percent: 20, color: "bg-primary/60" }
     ]
   },
   {
-    bucket: "Real Estate",
-    total: "$15.0M",
+    bucket: "Industrial Holdings",
+    total: "€95.0M",
     members: [
-      { name: "Julian (G1)", percent: 60, color: "bg-primary" },
-      { name: "Elena (G2)", percent: 40, color: "bg-primary/30" }
+      { name: "Markus (G1)", percent: 90, color: "bg-primary" },
+      { name: "Alexander (G3)", percent: 10, color: "bg-primary/30" }
     ]
   },
   {
-    bucket: "Fixed Income",
-    total: "$5.0M",
+    bucket: "Singapore Growth",
+    total: "€76.0M",
     members: [
-      { name: "Julian (G1)", percent: 100, color: "bg-primary" }
+      { name: "Sophie (G3)", percent: 60, color: "bg-primary" },
+      { name: "Alexander (G3)", percent: 40, color: "bg-primary/40" }
     ]
   },
   {
-    bucket: "Cash/Liquid",
-    total: "$2.5M",
+    bucket: "Fixed Income/Cash",
+    total: "€38.0M",
     members: [
-      { name: "Marcus (G2)", percent: 50, color: "bg-primary/60" },
-      { name: "Elena (G2)", percent: 50, color: "bg-primary/30" }
+      { name: "Markus (G1)", percent: 50, color: "bg-primary" },
+      { name: "Elena (G1)", percent: 50, color: "bg-primary/30" }
     ]
   }
 ];
@@ -81,7 +77,7 @@ export default function PortfolioPage() {
     <div className="space-y-8 max-w-7xl mx-auto">
       <div className="flex flex-col gap-2">
         <h1 className="font-headline text-4xl font-bold tracking-tight">Portfolio Analytics</h1>
-        <p className="text-muted-foreground">Comprehensive oversight of the $50M Aivaz Heritage Portfolio.</p>
+        <p className="text-muted-foreground">Comprehensive oversight of the €380M Hartmann Heritage Portfolio.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -92,7 +88,7 @@ export default function PortfolioPage() {
                 <Layers className="h-5 w-5 text-primary" />
                 Asset Allocation
               </CardTitle>
-              <Badge variant="outline" className="bg-amber-500/10 text-amber-500 border-amber-500/20">55% Concentration Alert</Badge>
+              <Badge variant="outline" className="bg-amber-500/10 text-amber-500 border-amber-500/20">55% Real Estate Concentration</Badge>
             </div>
           </CardHeader>
           <CardContent className="h-[300px]">
@@ -139,7 +135,7 @@ export default function PortfolioPage() {
                 <Users className="h-5 w-5 text-primary" />
                 Generational Ownership Breakdown
               </CardTitle>
-              <CardDescription>Relative exposure per principal across the $50M AUM.</CardDescription>
+              <CardDescription>Relative exposure per principal across the €380M AUM.</CardDescription>
             </div>
             <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">Aggregated Family View</Badge>
           </div>

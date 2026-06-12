@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -27,38 +26,37 @@ import {
 } from "lucide-react";
 
 const documents = [
-  { name: "Aivaz_Irrevocable_Trust_2021.pdf", type: "Legal", date: "Oct 12, 2024", size: "2.4 MB", security: "High" },
-  { name: "Global_Strategy_Q3_Review.pdf", type: "Investment", date: "Nov 02, 2024", size: "1.1 MB", security: "Medium" },
-  { name: "Heritage_Foundation_Bylaws.docx", type: "Legal", date: "Aug 21, 2024", size: "840 KB", security: "High" },
-  { name: "Family_Office_Audit_GS_2023.pdf", type: "Finance", date: "Jan 15, 2024", size: "12.8 MB", security: "High" },
-  { name: "Identity_Passports_Principal_Group.zip", type: "Sensitive", date: "Dec 05, 2024", size: "4.2 MB", security: "Military" },
+  { name: "Hartmann_Legacy_Trust_2024.pdf", type: "Legal", date: "Jan 12, 2026", size: "3.4 MB", security: "High" },
+  { name: "Munich_Real_Estate_Q4_Audit.pdf", type: "Investment", date: "Jun 02, 2026", size: "2.1 MB", security: "Medium" },
+  { name: "Heritage_Foundation_Bylaws_Swiss.docx", type: "Legal", date: "Aug 21, 2024", size: "1.2 MB", security: "High" },
+  { name: "Chemical_Logistics_Valuation_2025.pdf", type: "Finance", date: "Dec 15, 2025", size: "15.8 MB", security: "High" },
+  { name: "Identity_Passports_Hartmann_Group.zip", type: "Sensitive", date: "Jun 05, 2026", size: "4.8 MB", security: "Military" },
 ];
 
 const bedrockDocs = [
   {
     title: "Family Mission Statement",
     icon: Anchor,
-    content: "To preserve and grow the Aivaz intellectual and financial capital through principled governance, fostering a legacy of innovation and social responsibility across all successive generations.",
+    content: "To preserve the Hartmann industrial precision while transitioning to a global institutional legacy, fostering unity through generational transparency and Swiss-influenced governance.",
     footer: "Finalized Oct 2024 • Immutable"
   },
   {
     title: "Investment Philosophy",
     icon: Scale,
-    content: "We prioritize risk-adjusted perpetuity over short-term alpha. Our core mandate is global jurisdictional diversification and the maintenance of a 5% liquidity bridge for generational education and transition.",
-    footer: "Revised Nov 2024 • Primary Source"
+    content: "We prioritize industrial stability and multi-jurisdictional resilience. Our core mandate is to rebalance concentrated real estate into liquid global tech infrastructure while maintaining a €42M stability reserve.",
+    footer: "Revised Jun 2026 • Primary Source"
   },
   {
     title: "Core Heritage Values",
     icon: Scroll,
-    content: "Discretion as security. Innovation as survival. Unified decision-making through the Family Council. We view wealth not as an end, but as the infrastructure for human potential.",
-    footer: "Signed by G1 & G2 • Governance Bedrock"
+    content: "Precision as security. Industrial heritage as identity. Unified decision-making through the Hartmann Family Council. We view our €380M AUM as the infrastructure for future generations.",
+    footer: "Signed by G1 & G3 • Governance Bedrock"
   }
 ];
 
 export default function VaultPage() {
   return (
     <div className="space-y-12 max-w-7xl mx-auto pb-32">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
@@ -66,7 +64,7 @@ export default function VaultPage() {
             <span className="text-xs font-bold tracking-widest uppercase text-primary">Strongroom Level 4</span>
           </div>
           <h1 className="font-headline text-4xl font-bold tracking-tight">Strongroom</h1>
-          <p className="text-muted-foreground">The encrypted bedrock of family governance and asset documentation.</p>
+          <p className="text-muted-foreground">The encrypted bedrock of Hartmann governance and industrial documentation.</p>
         </div>
         <div className="flex gap-3">
           <Button variant="outline" size="sm" className="glass-card bg-white/[0.02]">
@@ -78,7 +76,6 @@ export default function VaultPage() {
         </div>
       </div>
 
-      {/* Section 1: Governance Bedrock */}
       <section className="space-y-6">
         <div className="flex items-center gap-3 border-b border-white/5 pb-4">
           <Gavel className="h-5 w-5 text-primary" />
@@ -111,7 +108,6 @@ export default function VaultPage() {
         </div>
       </section>
 
-      {/* Section 2: Digital Vault */}
       <section className="space-y-6">
         <div className="flex items-center gap-3 border-b border-white/5 pb-4">
           <Book className="h-5 w-5 text-primary" />
@@ -119,15 +115,14 @@ export default function VaultPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Categories Sidebar */}
           <div className="md:col-span-1 space-y-2">
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-4 px-4">Categories</p>
             {[
-              { label: "All Documents", count: 42, active: true },
-              { label: "Trusts & Wills", count: 8, active: false },
-              { label: "Identity Docs", count: 12, active: false },
-              { label: "Real Estate", count: 15, active: false },
-              { label: "Advisor Notes", count: 7, active: false },
+              { label: "All Documents", count: 58, active: true },
+              { label: "Industrial Trusts", count: 14, active: false },
+              { label: "Identity Docs", count: 18, active: false },
+              { label: "Munich Property", count: 22, active: false },
+              { label: "Advisor Notes", count: 12, active: false },
             ].map((cat, i) => (
               <Button 
                 key={i} 
@@ -140,7 +135,6 @@ export default function VaultPage() {
             ))}
           </div>
 
-          {/* Document List Area */}
           <Card className="glass-panel md:col-span-3 border-white/5 overflow-hidden flex flex-col bg-black/20">
             <div className="p-4 border-b border-white/5 flex items-center justify-between gap-4 bg-white/[0.02]">
               <div className="relative flex-1">
@@ -200,14 +194,13 @@ export default function VaultPage() {
         </div>
       </section>
 
-      {/* Audit Footnote */}
       <div className="p-6 rounded-2xl border border-primary/20 bg-primary/5 flex items-center gap-6 backdrop-blur-md">
         <div className="p-3 rounded-full bg-primary/20 shadow-[0_0_15px_rgba(75,163,199,0.2)]">
           <Shield className="h-6 w-6 text-primary" />
         </div>
         <div className="flex-1">
           <p className="text-sm font-bold text-foreground">Immutable Charter Protocol Active</p>
-          <p className="text-xs text-muted-foreground mt-1">These documents and files serve as the immutable source of truth for the Aivaz recommendation engine and generational governance audits.</p>
+          <p className="text-xs text-muted-foreground mt-1">These documents and files serve as the immutable source of truth for the Hartmann recommendation engine and generational governance audits.</p>
         </div>
         <Button variant="outline" size="sm" className="bg-white/5 border-white/10 text-[10px] font-bold uppercase tracking-widest hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-all">
           Audit Vault History
