@@ -24,9 +24,12 @@ import {
   Clock, 
   ChevronRight,
   TrendingDown,
+  TrendingUp,
   Info,
   ArrowDownToLine,
-  Sparkles
+  Sparkles,
+  ArrowUpRight,
+  ArrowDownRight
 } from "lucide-react";
 import { 
   AreaChart, 
@@ -61,6 +64,12 @@ const FAMILY_MEMBERS = [
   { name: "Lina", role: "Next Gen" },
 ];
 
+type Intention = {
+  value: number; // in Millions
+  type: 'inflow' | 'outflow';
+  label: string;
+};
+
 export default function ChartRoomPage() {
   const { user } = useUser();
   const db = useFirestore();
@@ -72,14 +81,14 @@ export default function ChartRoomPage() {
   const [simResult, setSimResult] = useState<WealthScenarioSimulationOutput | null>(null);
   const [isAdding, setIsAdding] = useState(false);
 
-  // Intentions Heat Map Data
-  const [intentions, setIntentions] = useState<Record<string, number>>({
-    "Dr. Markus-Current": 80,
-    "Dr. Markus-5 Years": 60,
-    "Elena-Current": 40,
-    "Sophie-5 Years": 90,
-    "Alexander-10 Years": 85,
-    "Lina-25 Years": 30,
+  // Intentions Matrix Data (Cash Inflows vs Outflows)
+  const [intentions, setIntentions] = useState<Record<string, Intention>>({
+    "Dr. Markus-Current": { value: 15, type: 'inflow', label: "Inheritance Payout" },
+    "Dr. Markus-5 Years": { value: 25, type: 'outflow', label: "Estate Diversification" },
+    "Elena-Current": { value: 5, type: 'outflow', label: "Philanthropy Grant" },
+    "Sophie-5 Years": { value: 12, type: 'inflow', label: "Trust Distribution" },
+    "Alexander-10 Years": { value: 40, type: 'outflow', label: "VC Fund Buy-in" },
+    "Lina-25 Years": { value: 10, type: 'inflow', label: "Legacy Dividend" },
   });
 
   const scenariosQuery = useMemo(() => {
@@ -161,21 +170,45 @@ export default function ChartRoomPage() {
 
   const toggleIntention = (member: string, horizon: string) => {
     const key = `${member}-${horizon}`;
-    setIntentions(prev => ({
-      ...prev,
-      [key]: prev[key] ? 0 : 75 
-    }));
+    setIntentions(prev => {
+      const existing = prev[key];
+      if (!existing) {
+        return {
+          ...prev,
+          [key]: { value: 10, type: 'outflow', label: "New Outflow Move" }
+        };
+      }
+      // Cycle: Outflow -> Inflow -> Off
+      if (existing.type === 'outflow') {
+        return { ...prev, [key]: { ...existing, type: 'inflow', label: "New Inflow Move" } };
+      }
+      const newIntentions = { ...prev };
+      delete newIntentions[key];
+      return newIntentions;
+    });
   };
 
   const promoteToSandbox = (member: string, horizon: string) => {
-    const title = `${member}'s ${horizon} Objective`;
-    const description = `This strategic intent involves ${member} executing a major lifecycle move in the ${horizon} window. Impacting total liquidity and generational alignment.`;
+    const intent = intentions[`${member}-${horizon}`];
+    if (!intent) return;
+
+    const title = `${member}: ${intent.label} (${horizon})`;
+    const description = `This strategic event is classified as a ${intent.type} of €${intent.value}M. It represents a major generational milestone impacting ${member}'s stake and overall inheritance health.`;
     handleAddMove(title, description);
   };
 
   const inheritanceHealth = useMemo(() => {
-    const totalIntensity = Object.values(intentions).reduce((a, b) => a + b, 0);
-    return Math.max(10, 100 - (totalIntensity / 10));
+    let totalInflow = 0;
+    let totalOutflow = 0;
+    Object.values(intentions).forEach(i => {
+      if (i.type === 'inflow') totalInflow += i.value;
+      else totalOutflow += i.value;
+    });
+    
+    // Balance score: More inflows improve it, more outflows stress it
+    const net = totalInflow - totalOutflow;
+    const score = 75 + (net / 2);
+    return Math.min(100, Math.max(0, score));
   }, [intentions]);
 
   return (
@@ -186,7 +219,7 @@ export default function ChartRoomPage() {
             <Sticker className="h-4 w-4 text-primary" />
             <Badge className="bg-primary/20 text-primary border-primary/30 uppercase tracking-[0.2em] text-[9px] font-bold">Generational Sandbox v4.2</Badge>
           </div>
-          <h1 className="font-headline text-4xl font-bold tracking-tight">Chart Room</h1>
+          <h1 className="font-headline text-4xl font-bold tracking-tight text-foreground">Chart Room</h1>
           <p className="text-muted-foreground font-mono text-xs uppercase tracking-widest opacity-60">Collaborative planning & predictive synthesis</p>
         </div>
         <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/10 shadow-sm">
@@ -206,12 +239,12 @@ export default function ChartRoomPage() {
             <CardHeader className="border-b border-black/5 bg-muted/30 p-8 flex flex-row items-center justify-between">
               <div className="space-y-1">
                 <CardTitle className="text-2xl font-headline font-bold">Legacy Intentions Matrix</CardTitle>
-                <CardDescription>Click to toggle goals. Hover to "drag" objectives into the Strategic Sandbox.</CardDescription>
+                <CardDescription>Plan family milestones. Green cells represent cash coming in (Inheritance, Payouts), red represents outflows (Purchases, Payouts).</CardDescription>
               </div>
               <div className="text-right">
-                <p className="text-[10px] font-bold uppercase text-muted-foreground">Inheritance Health</p>
+                <p className="text-[10px] font-bold uppercase text-muted-foreground">Inheritance Stability</p>
                 <p className={cn("text-2xl font-headline font-bold", inheritanceHealth < 40 ? 'text-red-500' : inheritanceHealth < 70 ? 'text-amber-500' : 'text-emerald-500')}>
-                  {inheritanceHealth}%
+                  {inheritanceHealth.toFixed(1)}%
                 </p>
               </div>
             </CardHeader>
@@ -236,47 +269,64 @@ export default function ChartRoomPage() {
                     </div>
                     {TIME_HORIZONS.map(horizon => {
                       const key = `${member.name}-${horizon}`;
-                      const intensity = intentions[key] || 0;
+                      const intent = intentions[key];
+                      const isActive = !!intent;
+                      
                       return (
                         <div 
                           key={horizon}
                           className={cn(
-                            "h-20 rounded-xl cursor-pointer transition-all border border-transparent flex flex-col items-center justify-center group relative overflow-hidden",
-                            intensity === 0 ? 'bg-muted/30 opacity-40 hover:opacity-100 hover:bg-muted/50' : 
-                            intensity > 80 ? 'bg-red-500/20 text-red-600 border-red-500/10' :
-                            intensity > 50 ? 'bg-amber-500/20 text-amber-600 border-amber-500/10' :
-                            'bg-primary/20 text-primary border-primary/10'
+                            "h-24 rounded-xl cursor-pointer transition-all border border-transparent flex flex-col items-center justify-center group relative overflow-hidden text-center p-2",
+                            !isActive ? 'bg-muted/30 opacity-40 hover:opacity-100 hover:bg-muted/50' : 
+                            intent.type === 'inflow' ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20' :
+                            'bg-red-500/10 text-red-700 border-red-500/20'
                           )}
                           onClick={() => toggleIntention(member.name, horizon)}
                         >
-                          <Target className={cn("h-4 w-4 mb-1 transition-transform group-hover:scale-110", intensity === 0 ? 'opacity-20' : 'opacity-100')} />
-                          {intensity > 0 ? (
-                            <span className="text-[8px] font-bold uppercase tracking-tighter">{intensity}% Pressure</span>
+                          {isActive ? (
+                            <>
+                              {intent.type === 'inflow' ? <ArrowUpRight className="h-4 w-4 mb-1" /> : <ArrowDownRight className="h-4 w-4 mb-1" />}
+                              <span className="text-[10px] font-bold uppercase tracking-tighter leading-tight">{intent.label}</span>
+                              <span className="text-[10px] font-mono mt-1">€{intent.value}M</span>
+                            </>
                           ) : (
-                            <span className="text-[8px] font-bold uppercase opacity-20">Idle</span>
+                            <Target className="h-4 w-4 opacity-20" />
                           )}
                           
                           {/* Promotion Overlay */}
-                          <div 
-                            className="absolute inset-0 bg-primary flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity translate-y-full group-hover:translate-y-0 text-white"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              promoteToSandbox(member.name, horizon);
-                            }}
-                          >
-                            <ArrowDownToLine className="h-5 w-5 animate-bounce" />
-                          </div>
+                          {isActive && (
+                            <div 
+                              className="absolute inset-0 bg-primary flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity translate-y-full group-hover:translate-y-0 text-white"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                promoteToSandbox(member.name, horizon);
+                              }}
+                            >
+                              <div className="flex flex-col items-center gap-1">
+                                <ArrowDownToLine className="h-5 w-5 animate-bounce" />
+                                <span className="text-[8px] font-bold uppercase">To Sandbox</span>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       );
                     })}
                   </div>
                 ))}
               </div>
-              <div className="mt-8 flex items-center gap-4 p-4 bg-primary/5 rounded-xl border border-primary/10">
-                <Sparkles className="h-4 w-4 text-primary" />
-                <p className="text-[10px] text-muted-foreground font-medium">
-                  <strong>Strategic Tip:</strong> Hover over any active goal cell and click the down arrow to "drag" it into the Sandbox. High pressure goals directly impact inheritance depletion.
-                </p>
+              <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center gap-4 p-4 bg-emerald-500/5 rounded-xl border border-emerald-500/10">
+                  <TrendingUp className="h-4 w-4 text-emerald-500" />
+                  <p className="text-[10px] text-muted-foreground font-medium">
+                    <strong>Green (Inflow):</strong> Funds entering the family ecosystem (Inheritance, Distributions, Revenue). Improves stability score.
+                  </p>
+                </div>
+                <div className="flex items-center gap-4 p-4 bg-red-500/5 rounded-xl border border-red-500/10">
+                  <TrendingDown className="h-4 w-4 text-red-500" />
+                  <p className="text-[10px] text-muted-foreground font-medium">
+                    <strong>Red (Outflow):</strong> Capital leaving or being redeployed (Asset purchases, Buy-outs, Lifestyle). Stresses stability score.
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -287,7 +337,7 @@ export default function ChartRoomPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-2xl font-headline font-bold">Strategic Sandbox</CardTitle>
-                  <CardDescription>Aggregate moves projected for the Hartmann Council. Drag objectives from above to start.</CardDescription>
+                  <CardDescription>Aggregate moves projected for the Hartmann Council. Drag objectives from the Matrix to simulate.</CardDescription>
                 </div>
                 <Button onClick={() => setIsAdding(true)} className="rounded-full h-10 px-6 shadow-lg bg-primary hover:bg-primary/90">
                   <PlusCircle className="mr-2 h-4 w-4" /> Add Life Move
@@ -299,7 +349,7 @@ export default function ChartRoomPage() {
                 {isAdding && (
                   <div className="p-8 bg-primary/5 space-y-4 animate-in slide-in-from-top duration-300">
                     <Input 
-                      placeholder="Title of Move (e.g., 'Alexander's Payout')" 
+                      placeholder="Title of Move (e.g., 'Alexander's House Purchase')" 
                       className="text-lg font-bold border-none bg-transparent focus-visible:ring-0 px-0"
                       value={newMove.title}
                       onChange={(e) => setNewMove({...newMove, title: e.target.value})}
@@ -322,7 +372,7 @@ export default function ChartRoomPage() {
                     <ArrowDownToLine className="h-12 w-12 animate-pulse" />
                     <div>
                       <p className="font-bold">Sandbox Empty</p>
-                      <p className="text-xs">Drag objectives from the Intentions Matrix above to simulate them.</p>
+                      <p className="text-xs">Promote objectives from the Matrix above to start simulating your legacy.</p>
                     </div>
                   </div>
                 )}
@@ -392,7 +442,7 @@ export default function ChartRoomPage() {
                     <Button className="w-full h-12 shadow-xl" onClick={() => runSimulation()} disabled={(scenarios?.length || 0) === 0}>
                       <Cpu className="mr-2 h-4 w-4" /> Execute Aggregate Simulation
                     </Button>
-                    <p className="text-[10px] text-muted-foreground italic">Simulation incorporates all Sandbox items and current Intentions Matrix pressure.</p>
+                    <p className="text-[10px] text-muted-foreground italic">Simulation incorporates all Sandbox items and Matrix inflows/outflows.</p>
                   </div>
                 )}
 
@@ -438,7 +488,7 @@ export default function ChartRoomPage() {
               {[
                 { label: "Matrix Complexity", value: "High", icon: Activity },
                 { label: "G3 Capital Lockup", value: "€55M Risk", icon: Clock },
-                { label: "Inheritance Stability", value: `${inheritanceHealth}%`, icon: Target }
+                { label: "Inheritance Stability", value: `${inheritanceHealth.toFixed(1)}%`, icon: Target }
               ].map((stat, i) => (
                 <div key={i} className="flex justify-between items-center text-xs">
                   <span className="flex items-center gap-2 text-muted-foreground">
@@ -454,4 +504,3 @@ export default function ChartRoomPage() {
     </div>
   );
 }
-
