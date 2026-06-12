@@ -27,6 +27,30 @@
         "initialTimeline": { "type": "array", "items": { "$ref": "#/entities/TimelineEvent" } }
       }
     },
+    "FamilyProject": {
+      "title": "Family Project",
+      "description": "A high-level strategic initiative or planning goal (e.g., Singapore Relocation).",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "draft", "archived"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "FamilyScenario": {
+      "title": "Family Scenario",
+      "description": "A draft 'Life Move' or potential event being planned in the sandbox.",
+      "type": "object",
+      "properties": {
+        "projectId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "author": { "type": "string" },
+        "status": { "type": "string", "enum": ["draft", "active", "simulated", "archived"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
     "TimelineEvent": {
       "title": "Timeline Event",
       "description": "A human-centric milestone in the family legacy timeline.",
@@ -37,18 +61,6 @@
         "type": { "type": "string", "enum": ["financial", "personal", "succession", "philanthropy", "vision"] },
         "description": { "type": "string" },
         "status": { "type": "string", "enum": ["completed", "in-progress", "upcoming", "target"] }
-      }
-    },
-    "FamilyScenario": {
-      "title": "Family Scenario",
-      "description": "A draft 'Life Move' or potential event being planned in the sandbox.",
-      "type": "object",
-      "properties": {
-        "title": { "type": "string" },
-        "description": { "type": "string" },
-        "author": { "type": "string" },
-        "status": { "type": "string", "enum": ["draft", "active", "simulated", "archived"] },
-        "createdAt": { "type": "string", "format": "date-time" }
       }
     },
     "PhysicalAsset": {
@@ -106,6 +118,10 @@
     "/users/{userId}/dna/current": {
       "schema": "FamilyDNA",
       "description": "Extracted family DNA insights"
+    },
+    "/users/{userId}/projects/{projectId}": {
+      "schema": "FamilyProject",
+      "description": "Strategic projects/initiatives"
     },
     "/users/{userId}/timeline/{eventId}": {
       "schema": "TimelineEvent",

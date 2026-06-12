@@ -1,8 +1,9 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
 import { useUser, useDoc, useFirestore, useCollection } from "@/firebase";
-import { collection, doc, setDoc, query, orderBy, deleteDoc, addDoc } from "firebase/firestore";
+import { collection, doc, setDoc, query, orderBy, deleteDoc, addDoc, where } from "firebase/firestore";
 import { wealthScenarioSimulation, type WealthScenarioSimulationOutput } from "@/ai/flows/wealth-scenario-simulation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,13 +17,7 @@ import {
   PlusCircle, 
   Trash2, 
   MapPin, 
-  Zap, 
-  Send, 
-  Sticker, 
   Target, 
-  ChevronRight,
-  TrendingDown,
-  TrendingUp,
   ArrowDownToLine,
   ArrowUpRight,
   ArrowDownRight,
@@ -31,15 +26,19 @@ import {
   Bot,
   X,
   History,
-  Share2
+  Share2,
+  FolderOpen,
+  ChevronRight,
+  LayoutGrid,
+  Search
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import Image from "next/image";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 
 const TIME_HORIZONS = ["Current", "5 Years", "10 Years", "25 Years"];
 const FAMILY_MEMBERS = [
@@ -70,11 +69,15 @@ export default function ChartRoomPage() {
   const { data: dna } = useDoc(user ? `users/${user.uid}/dna/current` : null);
   const captainImg = PlaceHolderImages.find(img => img.id === 'captain-avatar');
 
+  const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
+  const [newProjectTitle, setNewProjectTitle] = useState("");
+  const [isCreatingProject, setIsCreatingProject] = useState(false);
+  
   const [newMove, setNewMove] = useState({ title: "", description: "" });
   const [simLoading, setSimLoading] = useState(false);
   const [simResult, setSimResult] = useState<WealthScenarioSimulationOutput | null>(null);
   const [simLogs, setSimLogs] = useState<SimulationLog[]>([]);
-  const [isAdding, setIsAdding] = useState(false);
+  const [isAddingMove, setIsAddingMove] = useState(false);
   
   // Proactive Captain Logic
   const [isCaptainExpanded, setIsCaptainExpanded] = useState(false);
@@ -91,12 +94,30 @@ export default function ChartRoomPage() {
     "Lina-25 Years": { value: 10, type: 'inflow', label: "Legacy Dividend" },
   });
 
-  const scenariosQuery = useMemo(() => {
+  // Projects Query
+  const projectsQuery = useMemo(() => {
     if (!user || !db) return null;
-    return query(collection(db, "users", user.uid, "scenarios"), orderBy("createdAt", "desc"));
+    return query(collection(db, "users", user.uid, "projects"), orderBy("createdAt", "desc"));
   }, [user, db]);
+  const { data: projects } = useCollection(projectsQuery);
 
+  // Scenarios (Moves) Query - filtered by active project
+  const scenariosQuery = useMemo(() => {
+    if (!user || !db || !activeProjectId) return null;
+    return query(
+      collection(db, "users", user.uid, "scenarios"), 
+      where("projectId", "==", activeProjectId),
+      orderBy("createdAt", "desc")
+    );
+  }, [user, db, activeProjectId]);
   const { data: scenarios } = useCollection(scenariosQuery);
+
+  // Set initial project
+  useEffect(() => {
+    if (projects && projects.length > 0 && !activeProjectId) {
+      setActiveProjectId(projects[0].id);
+    }
+  }, [projects, activeProjectId]);
 
   // Update Captain's Proposal when intentions change
   useEffect(() => {
@@ -113,8 +134,30 @@ export default function ChartRoomPage() {
     }
   }, [intentions]);
 
+  const handleCreateProject = async () => {
+    if (!user || !db || !newProjectTitle) return;
+    try {
+      const projectRef = doc(collection(db, "users", user.uid, "projects"));
+      const newProject = {
+        id: projectRef.id,
+        title: newProjectTitle,
+        description: "New strategic initiative.",
+        status: "active",
+        createdAt: new Date().toISOString()
+      };
+      await setDoc(projectRef, newProject);
+      setNewProjectTitle("");
+      setIsCreatingProject(false);
+      setActiveProjectId(projectRef.id);
+      toast({ title: "Project Created", description: `"${newProject.title}" is now ready for sandbox simulation.` });
+    } catch (e) { console.error(e); }
+  };
+
   const handleAddMove = async (manualTitle?: string, manualDesc?: string) => {
-    if (!user || !db) return;
+    if (!user || !db || !activeProjectId) {
+      toast({ variant: "destructive", title: "Select a Project", description: "You must select or create a project first." });
+      return;
+    }
     const title = manualTitle || newMove.title;
     const description = manualDesc || newMove.description;
     
@@ -123,6 +166,7 @@ export default function ChartRoomPage() {
     try {
       const scenarioRef = doc(collection(db, "users", user.uid, "scenarios"));
       await setDoc(scenarioRef, {
+        projectId: activeProjectId,
         title,
         description: description || "Auto-generated from Hartmann Matrix.",
         author: user.displayName || "Family Member",
@@ -130,17 +174,9 @@ export default function ChartRoomPage() {
         createdAt: new Date().toISOString()
       });
       setNewMove({ title: "", description: "" });
-      setIsAdding(false);
+      setIsAddingMove(false);
       setIsCaptainExpanded(false);
-      toast({ title: "Move Promoted", description: "This intention has been moved to the strategic sandbox." });
-    } catch (e) { console.error(e); }
-  };
-
-  const handleDeleteMove = async (id: string) => {
-    if (!user || !db) return;
-    try {
-      await deleteDoc(doc(db, "users", user.uid, "scenarios", id));
-      toast({ title: "Move Removed", description: "Strategic note deleted." });
+      toast({ title: "Move Promoted", description: "This intention has been moved to the active project sandbox." });
     } catch (e) { console.error(e); }
   };
 
@@ -158,7 +194,7 @@ export default function ChartRoomPage() {
       const newLog: SimulationLog = {
         id: Math.random().toString(36).substr(2, 9),
         timestamp: new Date().toISOString(),
-        context: context || "General Stress Test",
+        context: context || (projects?.find(p => p.id === activeProjectId)?.title || "General Stress Test"),
         result: output
       };
 
@@ -174,23 +210,6 @@ export default function ChartRoomPage() {
       console.error(error);
     } finally {
       setSimLoading(false);
-    }
-  };
-
-  const shareToWardroom = async (log: SimulationLog) => {
-    if (!user || !db) return;
-    try {
-      const msgRef = collection(db, "users", user.uid, "messages");
-      await addDoc(msgRef, {
-        senderId: "aivaz-captain",
-        senderName: "Captain (AI)",
-        text: `NEW SIMULATION PROJECTED: ${log.context}. Wealth Impact: ${log.result.projectedWealth}. Risk: ${log.result.riskLevel}. This requires council discussion regarding G3 alignment.`,
-        type: "recommendation",
-        timestamp: new Date().toISOString()
-      });
-      toast({ title: "Shared with Wardroom", description: "Simulation results sent to the council for voting." });
-    } catch (e) {
-      console.error(e);
     }
   };
 
@@ -213,13 +232,7 @@ export default function ChartRoomPage() {
     });
   };
 
-  const promoteToSandbox = (member: string, horizon: string) => {
-    const intent = intentions[`${member}-${horizon}`];
-    if (!intent) return;
-    const title = `${member}: ${intent.label} (${horizon})`;
-    const description = `This strategic event is classified as a ${intent.type} of €${intent.value}M.`;
-    handleAddMove(title, description);
-  };
+  const activeProject = projects?.find(p => p.id === activeProjectId);
 
   const inheritanceHealth = useMemo(() => {
     let totalInflow = 0;
@@ -238,35 +251,165 @@ export default function ChartRoomPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-white/5 pb-8">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <Sticker className="h-4 w-4 text-primary" />
-            <Badge className="bg-primary/20 text-primary border-primary/30 uppercase tracking-[0.2em] text-[9px] font-bold">Generational Sandbox v4.2</Badge>
+            <LayoutGrid className="h-4 w-4 text-primary" />
+            <Badge className="bg-primary/20 text-primary border-primary/30 uppercase tracking-[0.2em] text-[9px] font-bold">Project-Driven Sandbox v5.0</Badge>
           </div>
           <h1 className="font-headline text-4xl font-bold tracking-tight text-foreground">Chart Room</h1>
-          <p className="text-muted-foreground font-mono text-xs uppercase tracking-widest opacity-60">Collaborative planning & predictive synthesis</p>
+          <p className="text-muted-foreground font-mono text-xs uppercase tracking-widest opacity-60">Architectural planning & project-level synthesis</p>
         </div>
         <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/10 shadow-sm">
           <Activity className="h-5 w-5 text-primary animate-pulse" />
           <div>
-            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Predictive Alignment</p>
-            <p className="text-xl font-headline font-bold text-primary">84.2%</p>
+            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Aggregate Stability</p>
+            <p className="text-xl font-headline font-bold text-primary">{inheritanceHealth.toFixed(1)}%</p>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Main Content Column */}
-        <div className="lg:col-span-8 space-y-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Left Project Navigator */}
+        <div className="lg:col-span-3 space-y-6">
+          <Card className="glass-panel border-white/5 bg-white/40 shadow-sm overflow-hidden">
+            <CardHeader className="p-4 border-b border-black/5 bg-muted/20">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <FolderOpen className="h-4 w-4 text-primary" />
+                  <CardTitle className="text-[10px] font-bold uppercase tracking-widest">Heritage Projects</CardTitle>
+                </div>
+                <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full" onClick={() => setIsCreatingProject(!isCreatingProject)}>
+                  <PlusCircle className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <ScrollArea className="h-[500px]">
+              <div className="p-2 space-y-1">
+                {isCreatingProject && (
+                  <div className="p-2 space-y-2 bg-primary/5 rounded-lg border border-primary/20 animate-in slide-in-from-top-2">
+                    <Input 
+                      placeholder="Project Name..." 
+                      className="h-8 text-xs font-bold" 
+                      value={newProjectTitle}
+                      onChange={(e) => setNewProjectTitle(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleCreateProject()}
+                    />
+                    <div className="flex justify-end gap-1">
+                      <Button variant="ghost" size="sm" className="h-6 text-[8px] uppercase font-bold" onClick={() => setIsCreatingProject(false)}>Cancel</Button>
+                      <Button size="sm" className="h-6 text-[8px] uppercase font-bold" onClick={handleCreateProject}>Create</Button>
+                    </div>
+                  </div>
+                )}
+                {projects?.map((project) => (
+                  <div 
+                    key={project.id}
+                    className={cn(
+                      "p-3 rounded-xl cursor-pointer transition-all flex items-center justify-between group",
+                      activeProjectId === project.id ? "bg-white shadow-sm border border-primary/20" : "hover:bg-white/40"
+                    )}
+                    onClick={() => setActiveProjectId(project.id)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={cn("w-2 h-2 rounded-full", activeProjectId === project.id ? "bg-primary shadow-[0_0_8px_rgba(75,163,199,0.5)]" : "bg-muted-foreground/30")} />
+                      <p className={cn("text-xs font-bold", activeProjectId === project.id ? "text-primary" : "text-muted-foreground")}>{project.title}</p>
+                    </div>
+                    <ChevronRight className={cn("h-3 w-3 transition-all", activeProjectId === project.id ? "text-primary translate-x-0" : "opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0")} />
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          </Card>
+
+          <Card className="glass-panel border-white/5 bg-white/40 p-6 space-y-4">
+               <div className="flex items-center gap-2">
+                 <Bot className="h-4 w-4 text-primary" />
+                 <h3 className="text-[10px] font-bold uppercase tracking-widest">Captain's Brief</h3>
+               </div>
+               <p className="text-[11px] text-muted-foreground leading-relaxed">
+                 I'm currently analyzing {Object.keys(intentions).length} intentions across {projects?.length || 0} projects. {simLogs.length > 0 ? `${simLogs.length} projections archived.` : 'Ready for matrix deployment.'}
+               </p>
+          </Card>
+        </div>
+
+        {/* Center Sandbox & Workspace */}
+        <div className="lg:col-span-6 space-y-8">
+          <Card className="glass-panel border-white/5 bg-white shadow-sm overflow-hidden min-h-[500px]">
+            <CardHeader className="border-b border-black/5 bg-muted/30 p-8">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Badge variant="outline" className="mb-2 border-primary/30 text-primary text-[8px] font-bold uppercase tracking-widest">Active Working Session</Badge>
+                  <CardTitle className="text-3xl font-headline font-bold">{activeProject?.title || "Select a Project"}</CardTitle>
+                  <CardDescription className="mt-1">{activeProject?.description || "Draft your life moves and promote intentions below to simulate legacy impact."}</CardDescription>
+                </div>
+                {activeProjectId && (
+                  <Button onClick={() => setIsAddingMove(true)} className="rounded-full h-10 px-6 shadow-lg">
+                    <PlusCircle className="mr-2 h-4 w-4" /> Add Life Move
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="divide-y divide-black/5">
+                {!activeProjectId ? (
+                  <div className="p-20 flex flex-col items-center justify-center opacity-30 text-center">
+                    <FolderOpen className="h-12 w-12 mb-4" />
+                    <p className="text-sm font-bold">Select a project to begin the sandbox session</p>
+                  </div>
+                ) : (
+                  <>
+                    {isAddingMove && (
+                      <div className="p-8 bg-primary/5 space-y-4 animate-in slide-in-from-top duration-300">
+                        <Input placeholder="Title of Move" className="text-lg font-bold border-none bg-transparent px-0" value={newMove.title} onChange={(e) => setNewMove({...newMove, title: e.target.value})} />
+                        <Textarea placeholder="Details and goals..." className="min-h-[100px] border-none bg-transparent px-0 resize-none" value={newMove.description} onChange={(e) => setNewMove({...newMove, description: e.target.value})} />
+                        <div className="flex justify-end gap-3 pt-4 border-t border-black/5">
+                          <Button variant="ghost" onClick={() => setIsAddingMove(false)}>Cancel</Button>
+                          <Button onClick={() => handleAddMove()}>Save Move</Button>
+                        </div>
+                      </div>
+                    )}
+                    {scenarios?.length === 0 && !isAddingMove && (
+                      <div className="p-20 flex flex-col items-center justify-center opacity-20 text-center">
+                        <MapPin className="h-10 w-10 mb-2" />
+                        <p className="text-xs font-bold uppercase tracking-widest">Sandbox Empty</p>
+                        <p className="text-[10px] mt-1">Add a move manually or promote one from the matrix below.</p>
+                      </div>
+                    )}
+                    {scenarios?.map((s) => (
+                      <div key={s.id} className="p-8 hover:bg-muted/30 transition-all group relative border-l-4 border-transparent hover:border-primary">
+                        <div className="absolute top-8 right-8 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteDoc(doc(db, "users", user.uid, "scenarios", s.id))}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <div className="flex items-start gap-6">
+                          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                            <MapPin className="h-6 w-6 text-primary" />
+                          </div>
+                          <div className="space-y-2 flex-1">
+                            <h3 className="text-xl font-bold">{s.title}</h3>
+                            <p className="text-muted-foreground text-sm">{s.description}</p>
+                            <div className="pt-4 flex items-center gap-4">
+                              <Button variant="outline" size="sm" className="h-8 text-[10px] font-bold uppercase" onClick={() => runSimulation(s.title)}>
+                                <Cpu className="mr-2 h-3.5 w-3.5" /> Simulate Project
+                              </Button>
+                              <Button variant="ghost" size="sm" className="h-8 text-[10px] font-bold uppercase" asChild>
+                                 <Link href="/wardroom">Discuss</Link>
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Matrix - Global but promotes to current project */}
           <Card className="glass-panel border-white/5 bg-white shadow-sm overflow-hidden">
             <CardHeader className="border-b border-black/5 bg-muted/30 p-8 flex flex-row items-center justify-between">
               <div className="space-y-1">
                 <CardTitle className="text-2xl font-headline font-bold">Legacy Intentions Matrix</CardTitle>
                 <CardDescription>Plan family milestones. Green: Cash Inflows, Red: Outflows.</CardDescription>
-              </div>
-              <div className="text-right">
-                <p className="text-[10px] font-bold uppercase text-muted-foreground">Inheritance Stability</p>
-                <p className={cn("text-2xl font-headline font-bold", inheritanceHealth < 40 ? 'text-red-500' : inheritanceHealth < 70 ? 'text-amber-500' : 'text-emerald-500')}>
-                  {inheritanceHealth.toFixed(1)}%
-                </p>
               </div>
             </CardHeader>
             <CardContent className="p-8 overflow-x-auto">
@@ -310,7 +453,10 @@ export default function ChartRoomPage() {
                           {isActive && (
                             <div 
                               className="absolute inset-0 bg-primary flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity translate-y-full group-hover:translate-y-0 text-white"
-                              onClick={(e) => { e.stopPropagation(); promoteToSandbox(member.name, horizon); }}
+                              onClick={(e) => { 
+                                e.stopPropagation(); 
+                                handleAddMove(`${member.name}: ${intent.label} (${horizon})`, `Targeting €${intent.value}M ${intent.type} for the active Hartmann project.`);
+                              }}
                             >
                               <div className="flex flex-col items-center gap-1">
                                 <ArrowDownToLine className="h-5 w-5 animate-bounce" />
@@ -326,64 +472,10 @@ export default function ChartRoomPage() {
               </div>
             </CardContent>
           </Card>
-
-          <Card className="glass-panel border-white/5 bg-white shadow-sm overflow-hidden min-h-[400px]">
-            <CardHeader className="border-b border-black/5 bg-muted/30 p-8">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-2xl font-headline font-bold">Strategic Sandbox</CardTitle>
-                  <CardDescription>Collaborative life moves. Drag intentions here to simulate legacy impact.</CardDescription>
-                </div>
-                <Button onClick={() => setIsAdding(true)} className="rounded-full h-10 px-6 shadow-lg">
-                  <PlusCircle className="mr-2 h-4 w-4" /> Add Life Move
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="divide-y divide-black/5">
-                {isAdding && (
-                  <div className="p-8 bg-primary/5 space-y-4 animate-in slide-in-from-top duration-300">
-                    <Input placeholder="Title of Move" className="text-lg font-bold border-none bg-transparent px-0" value={newMove.title} onChange={(e) => setNewMove({...newMove, title: e.target.value})} />
-                    <Textarea placeholder="Details and goals..." className="min-h-[100px] border-none bg-transparent px-0 resize-none" value={newMove.description} onChange={(e) => setNewMove({...newMove, description: e.target.value})} />
-                    <div className="flex justify-end gap-3 pt-4 border-t border-black/5">
-                      <Button variant="ghost" onClick={() => setIsAdding(false)}>Cancel</Button>
-                      <Button onClick={() => handleAddMove()}>Save Move</Button>
-                    </div>
-                  </div>
-                )}
-                {scenarios?.map((s) => (
-                  <div key={s.id} className="p-8 hover:bg-muted/30 transition-all group relative border-l-4 border-transparent hover:border-primary">
-                    <div className="absolute top-8 right-8 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDeleteMove(s.id)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <div className="flex items-start gap-6">
-                      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                        <MapPin className="h-6 w-6 text-primary" />
-                      </div>
-                      <div className="space-y-2 flex-1">
-                        <h3 className="text-xl font-bold">{s.title}</h3>
-                        <p className="text-muted-foreground text-sm">{s.description}</p>
-                        <div className="pt-4 flex items-center gap-4">
-                          <Button variant="outline" size="sm" className="h-8 text-[10px] font-bold uppercase" onClick={() => runSimulation(s.title)}>
-                            <Cpu className="mr-2 h-3.5 w-3.5" /> Simulate
-                          </Button>
-                          <Button variant="ghost" size="sm" className="h-8 text-[10px] font-bold uppercase" asChild>
-                             <Link href="/wardroom">Discuss</Link>
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
-        {/* Side Column: The Captain's AI Agent Interaction & Archive */}
-        <div className="lg:col-span-4 relative flex flex-col gap-6">
+        {/* Right Archive & Captain */}
+        <div className="lg:col-span-3 space-y-6">
           <div className="sticky top-8 space-y-6">
             {/* The Captain's Avatar & Pop-up Trigger */}
             <div className="flex flex-col items-end gap-4">
@@ -435,7 +527,7 @@ export default function ChartRoomPage() {
                             className="flex-1 h-10 text-[10px] font-bold uppercase shadow-lg rounded-xl"
                             onClick={() => handleAddMove(captainProposal.title, captainProposal.desc)}
                           >
-                            Add to Sandbox
+                            Add to Project
                           </Button>
                           <Button 
                             variant="outline" 
@@ -463,16 +555,16 @@ export default function ChartRoomPage() {
               <ScrollArea className="flex-1 p-4">
                 <div className="space-y-4">
                   {simLogs.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-10 opacity-30">
+                    <div className="flex flex-col items-center justify-center py-10 opacity-30 text-center">
                       <Cpu className="h-8 w-8 mb-2" />
-                      <p className="text-[10px] uppercase font-bold tracking-widest">No previous logs</p>
+                      <p className="text-[10px] uppercase font-bold tracking-widest">No project logs yet</p>
                     </div>
                   ) : (
                     simLogs.map((log) => (
                       <div key={log.id} className="p-4 rounded-2xl bg-white/80 border border-black/5 hover:border-primary/30 transition-all space-y-3 group">
                         <div className="flex justify-between items-start">
                           <div>
-                            <p className="text-[9px] font-bold text-primary uppercase tracking-tighter mb-1">{log.context}</p>
+                            <p className="text-[9px] font-bold text-primary uppercase tracking-tighter mb-1 truncate max-w-[120px]">{log.context}</p>
                             <p className="text-[11px] font-medium leading-tight">{log.result.projectedWealth}</p>
                           </div>
                           <Badge variant="outline" className={cn("text-[8px] uppercase", log.result.riskLevel === 'Critical' ? 'border-red-500/50 text-red-500' : 'text-amber-500')}>
@@ -487,9 +579,20 @@ export default function ChartRoomPage() {
                             variant="ghost" 
                             size="sm" 
                             className="h-6 text-[8px] font-bold uppercase tracking-widest hover:text-primary p-0"
-                            onClick={() => shareToWardroom(log)}
+                            onClick={async () => {
+                               if (!user || !db) return;
+                               const msgRef = collection(db, "users", user.uid, "messages");
+                               await addDoc(msgRef, {
+                                 senderId: "aivaz-captain",
+                                 senderName: "Captain (AI)",
+                                 text: `SIMULATION REPORT: ${log.context}. Projected Wealth: ${log.result.projectedWealth}. Risk Level: ${log.result.riskLevel}. This project is ready for council validation.`,
+                                 type: "recommendation",
+                                 timestamp: new Date().toISOString()
+                               });
+                               toast({ title: "Shared with Wardroom", description: "Project simulation results transmitted." });
+                            }}
                           >
-                            <Share2 className="mr-1 h-3 w-3" /> Share with Council
+                            <Share2 className="mr-1 h-3 w-3" /> Share
                           </Button>
                         </div>
                       </div>
@@ -500,20 +603,9 @@ export default function ChartRoomPage() {
               {simLoading && (
                 <div className="p-4 border-t border-black/5 bg-primary/5 flex items-center justify-center gap-2">
                   <Loader2 className="h-3 w-3 animate-spin text-primary" />
-                  <span className="text-[8px] font-bold uppercase tracking-widest text-primary animate-pulse">Matrix Sync...</span>
+                  <span className="text-[8px] font-bold uppercase tracking-widest text-primary animate-pulse">Synthesizing...</span>
                 </div>
               )}
-            </Card>
-
-            {/* Quick Context Card */}
-            <Card className="glass-panel border-white/5 bg-white/40 p-6 space-y-4">
-               <div className="flex items-center gap-2">
-                 <Bot className="h-4 w-4 text-primary" />
-                 <h3 className="text-[10px] font-bold uppercase tracking-widest">Captain's Brief</h3>
-               </div>
-               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                 I'm currently analyzing {Object.keys(intentions).length} family intentions. {simLogs.length > 0 ? `${simLogs.length} projections archived.` : 'Ready for matrix deployment.'}
-               </p>
             </Card>
           </div>
         </div>
