@@ -1,35 +1,28 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
-import { useUser, useDoc, useFirestore } from "@/firebase";
+import { useState, useMemo } from "react";
+import { useUser, useFirestore } from "@/firebase";
 import { collection, addDoc } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
   Sparkles, 
-  ShieldCheck, 
-  ArrowRight, 
-  Zap, 
   CheckCircle2, 
-  Info, 
   Plus, 
   LayoutGrid,
+  Zap,
+  ShieldAlert,
+  ArrowRight,
   TrendingUp,
-  AlertTriangle,
-  Lock,
-  FileText,
-  Eye,
-  EyeOff
+  AlertTriangle
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 
-type CardType = 'manual' | 'ai';
+type CardType = 'action' | 'offset';
 
-interface SandboxCard {
+interface DecisionCard {
   id: string;
   type: CardType;
   title: string;
@@ -37,52 +30,58 @@ interface SandboxCard {
   impactMetric: string;
   logic: string;
   category: string;
-  color: string;
+  isCritical?: boolean;
 }
 
-const INITIAL_MANUAL_PROPOSALS: SandboxCard[] = [
+const PROPOSED_ACTIONS: DecisionCard[] = [
   {
-    id: 'm-1',
-    type: 'manual',
+    id: 'a-1',
+    type: 'action',
     title: "G3 London Property",
     description: "Lump-sum capital expenditure for Sophie's primary residence in London.",
     impactMetric: "-€6.0M Liquidity",
     logic: "Sophie's professional relocation mandate.",
-    category: "Real Estate",
-    color: "bg-amber-500"
+    category: "Real Estate"
   },
   {
-    id: 'm-2',
-    type: 'manual',
+    id: 'a-2',
+    type: 'action',
     title: "Industrial Tech R&D",
     description: "Self-funding a new chemical synthesis lab in Munich.",
     impactMetric: "-€12.0M Capex",
     logic: "Core business preservation through innovation.",
-    category: "Business",
-    color: "bg-blue-500"
+    category: "Business"
   }
 ];
 
-const INITIAL_AI_INSIGHTS: SandboxCard[] = [
+const STRATEGIC_OFFSETS: DecisionCard[] = [
   {
-    id: 'ai-1',
-    type: 'ai',
+    id: 'o-1',
+    type: 'offset',
+    title: "Concentration Hedge",
+    description: "Immediate liquidation of €15M in stagnant commercial real estate to rebalance tech exposure.",
+    impactMetric: "+€15.0M Liquidity",
+    logic: "Mitigates the 55% real estate concentration risk detected in Hartmann DNA.",
+    category: "Risk Management",
+    isCritical: true
+  },
+  {
+    id: 'o-2',
+    type: 'offset',
     title: "Dividend-Backed Mortgage",
     description: "Finance the London property via a 15-year interest-only loan backed by Specialty Chem dividends.",
     impactMetric: "+€5.4M Liquidity Retention",
     logic: "Preserves dry powder for market volatility while satisfying the housing need.",
-    category: "Strategy",
-    color: "bg-emerald-500"
+    category: "Strategy"
   },
   {
-    id: 'ai-2',
-    type: 'ai',
+    id: 'o-3',
+    type: 'offset',
     title: "Venture Buy-In Hedge",
     description: "Convert the R&D budget into a venture-style buy-in with tax credits in Singapore.",
     impactMetric: "+22% Tax Efficiency",
     logic: "Offsets capex drain through cross-jurisdictional heritage credits.",
-    category: "Tax",
-    color: "bg-primary"
+    category: "Tax"
   }
 ];
 
@@ -90,246 +89,225 @@ export default function DecisionSandboxPage() {
   const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
-  const [showFinancialImpact, setShowFinancialImpact] = useState(false);
   const [pairedIds, setPairedIds] = useState<Record<string, string>>({});
-  const [sealing, setSealing] = useState(false);
-
-  // Canvas State
-  const [manualCards, setManualCards] = useState<SandboxCard[]>(INITIAL_MANUAL_PROPOSALS);
-  const [aiCards, setAiCards] = useState<SandboxCard[]>(INITIAL_AI_INSIGHTS);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const activeSynergies = useMemo(() => {
-    return Object.entries(pairedIds).map(([mId, aiId]) => {
-      const manual = manualCards.find(c => c.id === mId);
-      const ai = aiCards.find(c => c.id === aiId);
-      return { manual, ai };
+    return Object.entries(pairedIds).map(([actionId, offsetId]) => {
+      const action = PROPOSED_ACTIONS.find(c => c.id === actionId);
+      const offset = STRATEGIC_OFFSETS.find(c => c.id === offsetId);
+      return { action, offset };
     });
-  }, [pairedIds, manualCards, aiCards]);
+  }, [pairedIds]);
 
-  const handlePairing = (manualId: string, aiId: string) => {
+  const handlePairing = (actionId: string, offsetId: string) => {
     setPairedIds(prev => {
-      if (prev[manualId] === aiId) {
+      if (prev[actionId] === offsetId) {
         const next = { ...prev };
-        delete next[manualId];
+        delete next[actionId];
         return next;
       }
-      return { ...prev, [manualId]: aiId };
+      return { ...prev, [actionId]: offsetId };
     });
   };
 
-  const handleSealAgreement = async () => {
+  const handleSendToWardroom = async () => {
     if (!user || !db || activeSynergies.length === 0) return;
-    setSealing(true);
+    setIsSubmitting(true);
     try {
       const msgRef = collection(db, "users", user.uid, "messages");
       for (const synergy of activeSynergies) {
-        if (synergy.manual && synergy.ai) {
+        if (synergy.action && synergy.offset) {
           await addDoc(msgRef, {
             senderId: "aivaz-system",
-            senderName: "Decision Sandbox",
-            text: `SYNERGY SEALED: ${synergy.manual.title} + ${synergy.ai.title}. Logical Resolution: ${synergy.ai.logic}`,
+            senderName: "Strategic Sandbox",
+            text: `DECISION PACKAGE: ${synergy.action.title} + ${synergy.offset.title}. Resolution Logic: ${synergy.offset.logic}`,
             type: "recommendation",
             timestamp: new Date().toISOString(),
             track: "strategy"
           });
         }
       }
-      toast({ title: "Agreement Sealed", description: "Synergy packages transmitted to the Wardroom Council." });
+      toast({ title: "Package Transmitted", description: "Strategic decisions have been sent to the Wardroom for Council validation." });
       setPairedIds({});
     } catch (e) {
       console.error(e);
     } finally {
-      setSealing(false);
+      setIsSubmitting(false);
     }
   };
 
-  // Ambient UI feedback based on state
-  const canvasIntensity = useMemo(() => {
-    const pairings = Object.keys(pairedIds).length;
-    if (pairings === 0) return "bg-slate-50";
-    if (pairings === 1) return "bg-blue-50/30";
-    return "bg-emerald-50/40";
-  }, [pairedIds]);
-
   return (
-    <div className={cn("fixed inset-0 top-0 left-[280px] transition-colors duration-1000 flex flex-col font-body antialiased", canvasIntensity)}>
-      {/* 1. System Synthesis Header (The Captain's Banner) */}
-      <div className="h-20 bg-white border-b border-slate-100 px-12 flex items-center justify-between z-30 shadow-sm">
+    <div className="min-h-screen bg-slate-50/50 flex flex-col font-body antialiased">
+      {/* 1. Decision Hub Header */}
+      <div className="h-20 bg-white border-b border-slate-200 px-12 flex items-center justify-between z-30 sticky top-0 shadow-sm">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary">Aivaz Synthesis</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary">Strategic Decision Hub</span>
           </div>
           <div className="h-4 w-px bg-slate-200" />
-          <p className="text-sm font-medium text-slate-600 italic">
+          <p className="text-sm font-medium text-slate-500 italic">
             {activeSynergies.length > 0 
-              ? `Alignment detected: ${activeSynergies.length} synergy package(s) ready for Wardroom validation.`
-              : "Awaiting decision pairing. Align human intentions with AI strategic insights."}
+              ? `${activeSynergies.length} Strategic Pairings Active.` 
+              : "Analyze Proposed Actions and identify Strategic Offsets to maintain heritage stability."}
           </p>
         </div>
-        <div className="flex items-center gap-6">
-          <div className="flex items-center space-x-2">
-            <Switch 
-              id="impact-mode" 
-              checked={showFinancialImpact} 
-              onCheckedChange={setShowFinancialImpact} 
-            />
-            <Label htmlFor="impact-mode" className="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2 cursor-pointer">
-              {showFinancialImpact ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
-              Financial Impact
-            </Label>
-          </div>
-          <Button 
-            disabled={activeSynergies.length === 0 || sealing}
-            onClick={handleSealAgreement}
-            className="bg-primary text-white h-10 px-8 rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-primary/20"
-          >
-            {sealing ? "Sealing..." : "Seal Agreement"}
-          </Button>
-        </div>
+        <Button 
+          disabled={activeSynergies.length === 0 || isSubmitting}
+          onClick={handleSendToWardroom}
+          className="bg-primary text-white h-10 px-8 rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-primary/20"
+        >
+          {isSubmitting ? "Transmitting..." : "Send to Wardroom"}
+        </Button>
       </div>
 
-      {/* 2. Collaborative Workspace (The Table) */}
-      <div className="flex-1 overflow-hidden flex flex-col items-center justify-center p-12">
-        <div className="max-w-6xl w-full grid grid-cols-2 gap-24 relative">
+      {/* 2. Professional Workspace */}
+      <div className="flex-1 overflow-auto p-12">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16">
           
-          {/* Tension Lines Overlay */}
-          <div className="absolute inset-0 pointer-events-none z-0">
-             {/* Dynamic lines between paired cards would go here */}
-          </div>
-
-          {/* Manual Proposals Column */}
-          <div className="space-y-8 flex flex-col items-center">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-slate-100 border border-slate-200">
+          {/* Column 1: Proposed Actions */}
+          <div className="space-y-6">
+            <div className="flex items-center justify-between mb-4 border-b border-slate-200 pb-4">
+              <div className="flex items-center gap-3">
                 <LayoutGrid className="h-4 w-4 text-slate-400" />
+                <h2 className="text-[11px] font-bold uppercase tracking-[0.3em] text-slate-900">Proposed Actions</h2>
               </div>
-              <h2 className="text-[11px] font-bold uppercase tracking-[0.4em] text-slate-400">Human Intentions</h2>
+              <Badge variant="outline" className="text-[9px] uppercase tracking-widest text-slate-400">Cash Outflow</Badge>
             </div>
-            {manualCards.map((card) => {
-              const isPaired = !!pairedIds[card.id];
-              return (
-                <Card 
-                  key={card.id}
-                  className={cn(
-                    "w-80 border-2 transition-all duration-500 relative z-10 shadow-sm",
-                    isPaired ? "border-emerald-500/30 ring-4 ring-emerald-500/5" : "border-slate-100 hover:border-primary/20"
-                  )}
-                >
-                  <CardHeader className="pb-4">
-                    <div className="flex justify-between items-start mb-2">
-                      <div className={cn("h-1.5 w-1.5 rounded-full", card.color)} />
-                      <Badge variant="outline" className="text-[7px] uppercase tracking-widest border-slate-100">Intention</Badge>
-                    </div>
-                    <CardTitle className="text-sm font-bold tracking-tight text-slate-900">{card.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <p className="text-[11px] text-slate-500 leading-relaxed italic">"{card.description}"</p>
-                    {showFinancialImpact && (
-                      <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 animate-in fade-in zoom-in-95 duration-300">
-                        <div className="flex justify-between items-center text-[9px] font-bold uppercase tracking-widest">
-                          <span className="text-slate-400">Exposure Impact</span>
-                          <span className="text-amber-600">{card.impactMetric}</span>
-                        </div>
-                      </div>
+            
+            <div className="space-y-4">
+              {PROPOSED_ACTIONS.map((action) => {
+                const isPaired = !!pairedIds[action.id];
+                return (
+                  <Card 
+                    key={action.id}
+                    className={cn(
+                      "border transition-all duration-300 relative shadow-sm",
+                      isPaired ? "border-primary ring-1 ring-primary/10" : "border-slate-200 hover:border-slate-300"
                     )}
-                  </CardContent>
-                </Card>
-              );
-            })}
-            <Button variant="ghost" className="w-80 border-2 border-dashed border-slate-200 text-slate-400 h-16 rounded-2xl hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center gap-2 group">
-              <Plus className="h-4 w-4 group-hover:scale-110 transition-transform" />
-              <span className="text-[10px] font-bold uppercase tracking-widest">New Proposal</span>
-            </Button>
+                  >
+                    <CardHeader className="pb-3">
+                      <div className="flex justify-between items-start">
+                        <Badge variant="outline" className="text-[8px] uppercase tracking-widest border-slate-100">{action.category}</Badge>
+                        <span className="text-[10px] font-bold text-red-600">{action.impactMetric}</span>
+                      </div>
+                      <CardTitle className="text-sm font-bold tracking-tight text-slate-900 mt-2">{action.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-[11px] text-slate-500 leading-relaxed italic mb-4">"{action.description}"</p>
+                      <div className="pt-3 border-t border-slate-50 flex items-center justify-between">
+                        <span className="text-[9px] text-slate-400 uppercase font-bold tracking-widest">Awaiting Offset</span>
+                        {isPaired && <CheckCircle2 className="h-4 w-4 text-primary" />}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+              
+              <Button variant="ghost" className="w-full border border-dashed border-slate-300 text-slate-400 h-12 rounded-xl hover:bg-white hover:border-slate-400 transition-all flex items-center justify-center gap-2">
+                <Plus className="h-4 w-4" />
+                <span className="text-[10px] font-bold uppercase tracking-widest">Add New Action</span>
+              </Button>
+            </div>
           </div>
 
-          {/* AI Strategic Insights Column */}
-          <div className="space-y-8 flex flex-col items-center">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-primary/5 border border-primary/10">
-                <Sparkles className="h-4 w-4 text-primary" />
+          {/* Column 2: Strategic Offsets */}
+          <div className="space-y-6">
+            <div className="flex items-center justify-between mb-4 border-b border-slate-200 pb-4">
+              <div className="flex items-center gap-3">
+                <Zap className="h-4 w-4 text-primary/60" />
+                <h2 className="text-[11px] font-bold uppercase tracking-[0.3em] text-slate-900">Strategic Offsets</h2>
               </div>
-              <h2 className="text-[11px] font-bold uppercase tracking-[0.4em] text-primary/60">AI Resolution Tracks</h2>
+              <Badge variant="outline" className="text-[9px] uppercase tracking-widest text-emerald-600 border-emerald-100 bg-emerald-50/50">Stability Track</Badge>
             </div>
-            {aiCards.map((card) => {
-              const pairedManualId = Object.keys(pairedIds).find(key => pairedIds[key] === card.id);
-              const isPaired = !!pairedManualId;
-              
-              return (
-                <Card 
-                  key={card.id}
-                  onClick={() => {
-                    // Simple pairing logic for the demo: pair top with top, bottom with bottom or similar
-                    const targetManualId = card.id === 'ai-1' ? 'm-1' : 'm-2';
-                    handlePairing(targetManualId, card.id);
-                  }}
-                  className={cn(
-                    "w-80 border-2 transition-all duration-700 cursor-pointer relative z-10 shadow-sm",
-                    isPaired ? "border-primary bg-primary/[0.02] ring-4 ring-primary/5 scale-105" : "border-slate-100 hover:border-primary/40 bg-white/60"
-                  )}
-                >
-                  <CardHeader className="pb-4">
-                    <div className="flex justify-between items-start mb-2">
-                      <div className={cn("p-1.5 rounded-lg", isPaired ? "bg-primary text-white" : "bg-primary/10 text-primary")}>
-                        <Zap className="h-3 w-3" />
+
+            {/* Critical Insights Priority Section */}
+            <div className="space-y-4">
+              {STRATEGIC_OFFSETS.map((offset) => {
+                const pairedActionId = Object.keys(pairedIds).find(key => pairedIds[key] === offset.id);
+                const isPaired = !!pairedActionId;
+                
+                return (
+                  <Card 
+                    key={offset.id}
+                    onClick={() => {
+                      // Logic: Pair with first available unpaired action or cycle through
+                      const targetActionId = offset.id === 'o-1' || offset.id === 'o-2' ? 'a-1' : 'a-2';
+                      handlePairing(targetActionId, offset.id);
+                    }}
+                    className={cn(
+                      "border transition-all duration-300 cursor-pointer relative shadow-sm overflow-hidden",
+                      offset.isCritical ? "border-amber-200 bg-amber-50/30" : "border-slate-200 hover:border-primary/20 bg-white",
+                      isPaired && "border-primary bg-primary/[0.02]"
+                    )}
+                  >
+                    {offset.isCritical && (
+                      <div className="absolute top-0 right-0 p-2">
+                        <ShieldAlert className="h-3.5 w-3.5 text-amber-600" />
                       </div>
-                      <Badge variant="outline" className="text-[7px] uppercase tracking-widest border-primary/10 text-primary">Insight</Badge>
-                    </div>
-                    <CardTitle className="text-sm font-bold tracking-tight text-slate-900">{card.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <p className="text-[11px] text-slate-600 leading-relaxed font-medium">"{card.description}"</p>
-                    {showFinancialImpact && (
-                      <div className="p-3 rounded-xl bg-primary/5 border border-primary/10 animate-in fade-in zoom-in-95 duration-300">
-                        <div className="flex justify-between items-center text-[9px] font-bold uppercase tracking-widest">
-                          <span className="text-primary/60">Offset Capability</span>
-                          <span className="text-emerald-600">{card.impactMetric}</span>
+                    )}
+                    <CardHeader className="pb-3">
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className={cn(
+                            "text-[8px] uppercase tracking-widest",
+                            offset.isCritical ? "border-amber-400 text-amber-600" : "border-slate-100"
+                          )}>
+                            {offset.isCritical ? "Critical Insight" : offset.category}
+                          </Badge>
                         </div>
+                        <span className="text-[10px] font-bold text-emerald-600">{offset.impactMetric}</span>
                       </div>
-                    )}
-                    {isPaired && (
-                      <div className="pt-2 border-t border-primary/10 flex items-center justify-between text-[8px] font-bold uppercase tracking-widest text-primary animate-in slide-in-from-bottom-2">
-                        <span>Synergy Package Active</span>
-                        <CheckCircle2 className="h-3 w-3" />
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              );
-            })}
+                      <CardTitle className="text-sm font-bold tracking-tight text-slate-900 mt-2">{offset.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <p className={cn(
+                        "text-[11px] leading-relaxed font-medium",
+                        isPaired ? "text-slate-900" : "text-slate-600"
+                      )}>
+                        "{offset.description}"
+                      </p>
+                      
+                      {isPaired && (
+                        <div className="pt-3 border-t border-primary/10 flex items-center justify-between text-[8px] font-bold uppercase tracking-widest text-primary animate-in slide-in-from-bottom-2">
+                          <span>Decision Package Active</span>
+                          <CheckCircle2 className="h-3 w-3" />
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
           </div>
 
         </div>
       </div>
 
-      {/* 3. Decision Footer (Synthesis Bar) */}
-      <div className="h-28 bg-white border-t border-slate-200 px-12 flex items-center justify-between z-30 shadow-[0_-4px_15px_rgba(0,0,0,0.03)]">
-        <div className="flex-1 max-w-4xl">
-          <div className="flex items-center gap-2 mb-2">
-            <Info className="h-3.5 w-3.5 text-slate-400" />
-            <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-slate-400">Collaborative Synthesis</span>
+      {/* 3. Synthesis Summary Footer */}
+      {activeSynergies.length > 0 && (
+        <div className="h-24 bg-white border-t border-slate-200 px-12 flex items-center justify-between z-30 shadow-[0_-4px_15px_rgba(0,0,0,0.03)] animate-in slide-in-from-bottom-full duration-500">
+          <div className="flex items-center gap-8">
+            <div className="flex flex-col">
+              <p className="text-[9px] font-bold uppercase text-slate-400 tracking-widest mb-1">Active Decisions</p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-headline font-bold text-slate-900">
+                  {activeSynergies[0].action?.title} <ArrowRight className="inline h-3 w-3 mx-1 text-primary" /> {activeSynergies[0].offset?.title}
+                </p>
+              </div>
+            </div>
+            <div className="h-8 w-px bg-slate-100" />
+            <div className="flex flex-col">
+              <p className="text-[9px] font-bold uppercase text-emerald-600 tracking-widest mb-1">Stability Outlook</p>
+              <p className="text-sm font-headline font-bold text-emerald-600 uppercase">Optimized</p>
+            </div>
           </div>
-          <p className="text-sm font-headline font-medium text-slate-700 leading-relaxed max-w-3xl truncate">
-            {activeSynergies.length > 0 
-              ? `Bundling ${activeSynergies.length} package(s). Narrative: ${activeSynergies[0].manual?.title} resolved via ${activeSynergies[0].ai?.title}.`
-              : "Select and pair human intentions with AI strategic insights to form a Decision Package."}
+          <p className="text-[11px] text-slate-500 italic max-w-md text-right">
+            Pairing offsets will mitigate the cash drain by securing long-term yield.
           </p>
         </div>
-        <div className="flex gap-4 shrink-0">
-          <div className="flex flex-col items-end gap-1">
-             <p className="text-[9px] font-bold uppercase text-slate-400 tracking-widest">Heritage Stability</p>
-             <p className={cn("text-lg font-headline font-bold", activeSynergies.length > 0 ? "text-emerald-500" : "text-slate-400")}>
-               {activeSynergies.length > 0 ? "OPTIMIZED" : "NEUTRAL"}
-             </p>
-          </div>
-        </div>
-      </div>
-
-      <style jsx global>{`
-        body {
-          overflow: hidden;
-        }
-      `}</style>
+      )}
     </div>
   );
 }
