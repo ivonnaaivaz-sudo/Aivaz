@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -23,7 +24,9 @@ import {
   Clock, 
   ChevronRight,
   TrendingDown,
-  Info
+  Info,
+  ArrowDownToLine,
+  Sparkles
 } from "lucide-react";
 import { 
   AreaChart, 
@@ -36,6 +39,7 @@ import {
 } from "recharts";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 const alignmentData = [
   { time: '09:00', actual: 82, simulated: 82 },
@@ -68,7 +72,7 @@ export default function ChartRoomPage() {
   const [simResult, setSimResult] = useState<WealthScenarioSimulationOutput | null>(null);
   const [isAdding, setIsAdding] = useState(false);
 
-  // Intentions Heat Map Data (Mocked but interactive)
+  // Intentions Heat Map Data
   const [intentions, setIntentions] = useState<Record<string, number>>({
     "Dr. Markus-Current": 80,
     "Dr. Markus-5 Years": 60,
@@ -85,20 +89,28 @@ export default function ChartRoomPage() {
 
   const { data: scenarios } = useCollection(scenariosQuery);
 
-  const handleAddMove = async () => {
-    if (!user || !db || !newMove.title) return;
+  const handleAddMove = async (manualTitle?: string, manualDesc?: string) => {
+    if (!user || !db) return;
+    const title = manualTitle || newMove.title;
+    const description = manualDesc || newMove.description;
+    
+    if (!title) return;
+
     try {
       const scenarioRef = doc(collection(db, "users", user.uid, "scenarios"));
       await setDoc(scenarioRef, {
-        ...newMove,
+        title,
+        description: description || "Auto-generated from Intentions Matrix.",
         author: user.displayName || "Family Member",
         status: "draft",
         createdAt: new Date().toISOString()
       });
       setNewMove({ title: "", description: "" });
       setIsAdding(false);
-      toast({ title: "Move Added", description: "Your strategic note has been saved to the sandbox." });
-    } catch (e) { console.error(e); }
+      toast({ title: "Move Promoted", description: "This intention has been moved to the strategic sandbox." });
+    } catch (e) { 
+      console.error(e); 
+    }
   };
 
   const handleDeleteMove = async (id: string) => {
@@ -151,11 +163,16 @@ export default function ChartRoomPage() {
     const key = `${member}-${horizon}`;
     setIntentions(prev => ({
       ...prev,
-      [key]: prev[key] ? 0 : 75 // Mocking a toggle or intensity shift
+      [key]: prev[key] ? 0 : 75 
     }));
   };
 
-  // Inheritance Projection based on intentions (Mocked calculation)
+  const promoteToSandbox = (member: string, horizon: string) => {
+    const title = `${member}'s ${horizon} Objective`;
+    const description = `This strategic intent involves ${member} executing a major lifecycle move in the ${horizon} window. Impacting total liquidity and generational alignment.`;
+    handleAddMove(title, description);
+  };
+
   const inheritanceHealth = useMemo(() => {
     const totalIntensity = Object.values(intentions).reduce((a, b) => a + b, 0);
     return Math.max(10, 100 - (totalIntensity / 10));
@@ -172,7 +189,7 @@ export default function ChartRoomPage() {
           <h1 className="font-headline text-4xl font-bold tracking-tight">Chart Room</h1>
           <p className="text-muted-foreground font-mono text-xs uppercase tracking-widest opacity-60">Collaborative planning & predictive synthesis</p>
         </div>
-        <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/10">
+        <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/10 shadow-sm">
           <Activity className="h-5 w-5 text-primary animate-pulse" />
           <div>
             <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Predictive Alignment</p>
@@ -189,7 +206,7 @@ export default function ChartRoomPage() {
             <CardHeader className="border-b border-black/5 bg-muted/30 p-8 flex flex-row items-center justify-between">
               <div className="space-y-1">
                 <CardTitle className="text-2xl font-headline font-bold">Legacy Intentions Matrix</CardTitle>
-                <CardDescription>Map long-term family objectives across generations. Visualizing "Strategic Pressure" on inheritance.</CardDescription>
+                <CardDescription>Click to toggle goals. Hover to "drag" objectives into the Strategic Sandbox.</CardDescription>
               </div>
               <div className="text-right">
                 <p className="text-[10px] font-bold uppercase text-muted-foreground">Inheritance Health</p>
@@ -199,9 +216,9 @@ export default function ChartRoomPage() {
               </div>
             </CardHeader>
             <CardContent className="p-8 overflow-x-auto">
-              <div className="min-w-[600px]">
+              <div className="min-w-[700px]">
                 {/* Header row */}
-                <div className="grid grid-cols-[150px_repeat(4,1fr)] gap-2 mb-4">
+                <div className="grid grid-cols-[180px_repeat(4,1fr)] gap-3 mb-6">
                   <div />
                   {TIME_HORIZONS.map(h => (
                     <div key={h} className="text-center">
@@ -212,7 +229,7 @@ export default function ChartRoomPage() {
 
                 {/* Body rows */}
                 {FAMILY_MEMBERS.map(member => (
-                  <div key={member.name} className="grid grid-cols-[150px_repeat(4,1fr)] gap-2 mb-2">
+                  <div key={member.name} className="grid grid-cols-[180px_repeat(4,1fr)] gap-3 mb-3">
                     <div className="flex flex-col justify-center">
                       <p className="text-sm font-bold">{member.name}</p>
                       <p className="text-[9px] uppercase tracking-widest text-muted-foreground">{member.role}</p>
@@ -223,27 +240,42 @@ export default function ChartRoomPage() {
                       return (
                         <div 
                           key={horizon}
-                          onClick={() => toggleIntention(member.name, horizon)}
                           className={cn(
-                            "h-16 rounded-lg cursor-pointer transition-all border border-transparent hover:border-primary/50 flex flex-col items-center justify-center group",
-                            intensity === 0 ? 'bg-muted/30 opacity-40 hover:opacity-100' : 
-                            intensity > 80 ? 'bg-red-500/20 text-red-600 shadow-[inset_0_0_10px_rgba(239,68,68,0.1)]' :
-                            intensity > 50 ? 'bg-amber-500/20 text-amber-600' :
-                            'bg-primary/20 text-primary'
+                            "h-20 rounded-xl cursor-pointer transition-all border border-transparent flex flex-col items-center justify-center group relative overflow-hidden",
+                            intensity === 0 ? 'bg-muted/30 opacity-40 hover:opacity-100 hover:bg-muted/50' : 
+                            intensity > 80 ? 'bg-red-500/20 text-red-600 border-red-500/10' :
+                            intensity > 50 ? 'bg-amber-500/20 text-amber-600 border-amber-500/10' :
+                            'bg-primary/20 text-primary border-primary/10'
                           )}
+                          onClick={() => toggleIntention(member.name, horizon)}
                         >
                           <Target className={cn("h-4 w-4 mb-1 transition-transform group-hover:scale-110", intensity === 0 ? 'opacity-20' : 'opacity-100')} />
-                          {intensity > 0 && <span className="text-[8px] font-bold uppercase">{intensity}% Pressure</span>}
+                          {intensity > 0 ? (
+                            <span className="text-[8px] font-bold uppercase tracking-tighter">{intensity}% Pressure</span>
+                          ) : (
+                            <span className="text-[8px] font-bold uppercase opacity-20">Idle</span>
+                          )}
+                          
+                          {/* Promotion Overlay */}
+                          <div 
+                            className="absolute inset-0 bg-primary flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity translate-y-full group-hover:translate-y-0 text-white"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              promoteToSandbox(member.name, horizon);
+                            }}
+                          >
+                            <ArrowDownToLine className="h-5 w-5 animate-bounce" />
+                          </div>
                         </div>
                       );
                     })}
                   </div>
                 ))}
               </div>
-              <div className="mt-8 flex items-center gap-4 p-4 bg-muted/30 rounded-xl border border-black/5">
-                <Info className="h-4 w-4 text-muted-foreground" />
+              <div className="mt-8 flex items-center gap-4 p-4 bg-primary/5 rounded-xl border border-primary/10">
+                <Sparkles className="h-4 w-4 text-primary" />
                 <p className="text-[10px] text-muted-foreground font-medium">
-                  Click on a matrix cell to add a generational objective. High-intensity "Pressure" (Red) indicates significant inheritance depletion or capital lock-up.
+                  <strong>Strategic Tip:</strong> Hover over any active goal cell and click the down arrow to "drag" it into the Sandbox. High pressure goals directly impact inheritance depletion.
                 </p>
               </div>
             </CardContent>
@@ -255,7 +287,7 @@ export default function ChartRoomPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-2xl font-headline font-bold">Strategic Sandbox</CardTitle>
-                  <CardDescription>Draft potential life moves and family milestones. Aivaz will simulate the aggregate impact.</CardDescription>
+                  <CardDescription>Aggregate moves projected for the Hartmann Council. Drag objectives from above to start.</CardDescription>
                 </div>
                 <Button onClick={() => setIsAdding(true)} className="rounded-full h-10 px-6 shadow-lg bg-primary hover:bg-primary/90">
                   <PlusCircle className="mr-2 h-4 w-4" /> Add Life Move
@@ -267,36 +299,36 @@ export default function ChartRoomPage() {
                 {isAdding && (
                   <div className="p-8 bg-primary/5 space-y-4 animate-in slide-in-from-top duration-300">
                     <Input 
-                      placeholder="Title of Move (e.g., 'Elena's Relocation to Zurich')" 
+                      placeholder="Title of Move (e.g., 'Alexander's Payout')" 
                       className="text-lg font-bold border-none bg-transparent focus-visible:ring-0 px-0"
                       value={newMove.title}
                       onChange={(e) => setNewMove({...newMove, title: e.target.value})}
                     />
                     <Textarea 
-                      placeholder="Describe the details, goals, and emotional drivers of this move..."
+                      placeholder="Describe the details, goals, and emotional drivers..."
                       className="min-h-[100px] border-none bg-transparent focus-visible:ring-0 px-0 resize-none text-muted-foreground"
                       value={newMove.description}
                       onChange={(e) => setNewMove({...newMove, description: e.target.value})}
                     />
                     <div className="flex justify-end gap-3 pt-4 border-t border-black/5">
                       <Button variant="ghost" onClick={() => setIsAdding(false)}>Cancel</Button>
-                      <Button onClick={handleAddMove}>Save Move</Button>
+                      <Button onClick={() => handleAddMove()}>Save Move</Button>
                     </div>
                   </div>
                 )}
 
                 {(scenarios?.length || 0) === 0 && !isAdding && (
-                  <div className="py-20 flex flex-col items-center justify-center text-center space-y-4 text-muted-foreground">
-                    <Sticker className="h-10 w-10 opacity-20" />
+                  <div className="py-24 flex flex-col items-center justify-center text-center space-y-4 text-muted-foreground opacity-30">
+                    <ArrowDownToLine className="h-12 w-12 animate-pulse" />
                     <div>
-                      <p className="font-bold">Sandbox Ready</p>
-                      <p className="text-xs">Add moves from the Matrix or start drafting here.</p>
+                      <p className="font-bold">Sandbox Empty</p>
+                      <p className="text-xs">Drag objectives from the Intentions Matrix above to simulate them.</p>
                     </div>
                   </div>
                 )}
 
                 {scenarios?.map((s) => (
-                  <div key={s.id} className="p-8 hover:bg-muted/30 transition-all group relative">
+                  <div key={s.id} className="p-8 hover:bg-muted/30 transition-all group relative border-l-4 border-transparent hover:border-primary">
                     <div className="absolute top-8 right-8 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => handleDeleteMove(s.id)}>
                         <Trash2 className="h-4 w-4" />
@@ -311,7 +343,7 @@ export default function ChartRoomPage() {
                           <h3 className="text-xl font-bold">{s.title}</h3>
                           <Badge variant="outline" className="text-[8px] uppercase">{s.author}</Badge>
                         </div>
-                        <p className="text-muted-foreground leading-relaxed">{s.description}</p>
+                        <p className="text-muted-foreground leading-relaxed text-sm">{s.description}</p>
                         <div className="pt-4 flex items-center gap-4">
                           <Button variant="outline" size="sm" className="h-8 text-[10px] font-bold uppercase tracking-widest" onClick={() => runSimulation(s.title)}>
                             <Cpu className="mr-2 h-3.5 w-3.5" /> Simulate Move
@@ -357,9 +389,10 @@ export default function ChartRoomPage() {
                 {!simResult && !simLoading && (
                   <div className="text-center py-10 space-y-4">
                     <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold">Ready for Synthesis</p>
-                    <Button className="w-full h-12" onClick={() => runSimulation()} disabled={(scenarios?.length || 0) === 0}>
+                    <Button className="w-full h-12 shadow-xl" onClick={() => runSimulation()} disabled={(scenarios?.length || 0) === 0}>
                       <Cpu className="mr-2 h-4 w-4" /> Execute Aggregate Simulation
                     </Button>
+                    <p className="text-[10px] text-muted-foreground italic">Simulation incorporates all Sandbox items and current Intentions Matrix pressure.</p>
                   </div>
                 )}
 
@@ -382,11 +415,11 @@ export default function ChartRoomPage() {
                         <p className={cn("text-lg font-bold", simResult.riskLevel === 'Critical' ? 'text-red-500' : 'text-amber-500')}>{simResult.riskLevel}</p>
                       </div>
                     </div>
-                    <div className="p-5 rounded-2xl bg-primary/5 border border-primary/10 italic text-sm leading-relaxed">
+                    <div className="p-5 rounded-2xl bg-primary/5 border border-primary/10 italic text-sm leading-relaxed text-foreground/80">
                       "{simResult.scenarioSummary}"
                     </div>
-                    <Button className="w-full h-12" onClick={shareToWardroom}>
-                      <Send className="mr-2 h-4 w-4" /> Discuss in Wardroom
+                    <Button className="w-full h-12 shadow-lg" onClick={shareToWardroom}>
+                      <Send className="mr-2 h-4 w-4" /> Share with Council
                     </Button>
                     <Button variant="ghost" className="w-full text-[10px] font-bold uppercase tracking-widest" onClick={() => setSimResult(null)}>
                       Clear Projection
@@ -397,7 +430,7 @@ export default function ChartRoomPage() {
             </CardContent>
           </Card>
 
-          <Card className="glass-panel border-white/5 bg-black/40">
+          <Card className="glass-panel border-white/5 bg-black/40 shadow-sm">
             <CardHeader>
               <CardTitle className="text-xs uppercase font-bold tracking-widest text-muted-foreground">Strategic Overlay</CardTitle>
             </CardHeader>
@@ -422,4 +455,3 @@ export default function ChartRoomPage() {
   );
 }
 
-import Link from "next/link";
