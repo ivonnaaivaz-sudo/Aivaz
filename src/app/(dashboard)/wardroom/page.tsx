@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
@@ -123,93 +124,93 @@ export default function WardroomPage() {
   };
 
   return (
-    <div className="h-[calc(100vh-100px)] flex flex-col gap-6 max-w-[1800px] mx-auto animate-in fade-in duration-700">
+    <div className="h-[calc(100vh-100px)] flex flex-col gap-6 max-w-[1800px] mx-auto animate-in fade-in duration-500">
       {/* Ecosystem Presence Bar */}
-      <Card className="border-none shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-white flex items-center justify-between p-5 px-10 shrink-0 rounded-[2rem] border-b border-slate-100/50">
+      <Card className="border border-slate-200 shadow-sm bg-white flex items-center justify-between p-4 px-8 shrink-0 rounded-2xl">
         <div className="flex items-center gap-10">
           <div className="pr-10 border-r border-slate-100">
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400 mb-1.5">Council Status</p>
-            <h3 className="text-sm font-bold flex items-center gap-2.5 text-slate-900">
-              <Users2 className="h-4.5 w-4.5 text-primary" />
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Council Status</p>
+            <h3 className="text-sm font-bold flex items-center gap-2 text-slate-900">
+              <Users2 className="h-4 w-4 text-primary" />
               Ecosystem Active
             </h3>
           </div>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4">
             {FAMILY_PRESENCE.map((member) => (
-              <div key={member.name} className="flex flex-col items-center gap-1.5 group cursor-pointer">
+              <div key={member.name} className="flex flex-col items-center gap-1 group cursor-pointer">
                 <div className="relative">
-                  <Avatar className="h-11 w-11 border-2 border-white shadow-[0_4px_10px_rgba(0,0,0,0.05)] ring-1 ring-slate-100 group-hover:ring-primary/50 group-hover:scale-105 transition-all duration-300">
+                  <Avatar className="h-10 w-10 border-2 border-white shadow-sm ring-1 ring-slate-100 group-hover:ring-primary/40 transition-all">
                     <AvatarImage src={member.avatar} />
-                    <AvatarFallback className="text-[11px] font-bold">{member.name[0]}</AvatarFallback>
+                    <AvatarFallback className="text-[10px] font-bold">{member.name[0]}</AvatarFallback>
                   </Avatar>
                   <div className={cn(
-                    "absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white shadow-sm",
+                    "absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white",
                     member.status === 'online' ? "bg-emerald-500" : member.status === 'away' ? "bg-amber-500" : "bg-slate-300"
                   )} />
                 </div>
-                <span className="text-[10px] font-bold uppercase text-slate-400 group-hover:text-primary transition-colors tracking-tighter">{member.name.split(' ')[0]}</span>
+                <span className="text-[9px] font-bold uppercase text-slate-400 group-hover:text-primary transition-colors tracking-tight">{member.name.split(' ')[0]}</span>
               </div>
             ))}
             <Link href="/dna">
-              <Button variant="ghost" size="icon" className="h-11 w-11 rounded-full border-2 border-dashed border-slate-200 hover:border-primary/50 hover:bg-primary/5 group transition-all duration-300">
-                <UserPlus className="h-5 w-5 text-slate-400 group-hover:text-primary" />
+              <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full border border-dashed border-slate-200 hover:border-primary/40 hover:bg-primary/5 transition-all">
+                <UserPlus className="h-4 w-4 text-slate-400 group-hover:text-primary" />
               </Button>
             </Link>
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <Button variant="outline" size="sm" className="h-11 px-8 text-[12px] font-bold uppercase tracking-widest border-slate-200 hover:bg-slate-50 shadow-[0_4px_12px_rgba(0,0,0,0.02)] hover:shadow-md transition-all duration-300 rounded-xl" onClick={startVideoMeeting}>
-            <Video className="mr-2.5 h-4.5 w-4.5 text-primary" /> Start Secure Meeting
+          <Button variant="outline" size="sm" className="h-9 px-6 text-[11px] font-bold uppercase tracking-widest border-slate-200 hover:bg-slate-50 rounded-xl" onClick={startVideoMeeting}>
+            <Video className="mr-2 h-4 w-4 text-primary" /> Start Secure Meeting
           </Button>
         </div>
       </Card>
 
       <div className="flex-1 flex gap-6 overflow-hidden">
         {/* Sidebar: Threads */}
-        <Card className="w-85 flex flex-col border-none shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-slate-50/80 backdrop-blur-sm shrink-0 rounded-[2.5rem] overflow-hidden border border-slate-100">
-          <CardHeader className="p-8 pb-6 border-b border-slate-100 bg-white/40 space-y-6">
+        <Card className="w-80 flex flex-col border border-slate-200 shadow-sm bg-slate-50/50 shrink-0 rounded-2xl overflow-hidden">
+          <CardHeader className="p-6 pb-4 border-b border-slate-200 bg-white space-y-4">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-2xl font-headline font-bold text-slate-900 tracking-tight">Tracks</CardTitle>
-              <Button variant="ghost" size="icon" className="h-10 w-10 rounded-2xl hover:bg-white shadow-sm border border-transparent hover:border-slate-100 transition-all">
-                <Plus className="h-6 w-6 text-slate-600" />
+              <CardTitle className="text-xl font-headline font-bold text-slate-900">Tracks</CardTitle>
+              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-slate-100">
+                <Plus className="h-5 w-5 text-slate-600" />
               </Button>
             </div>
-            <div className="relative group">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-slate-400 group-focus-within:text-primary transition-colors" />
-              <Input placeholder="Search tracks..." className="pl-11 h-11 bg-white border-slate-200/60 text-sm rounded-2xl focus-visible:ring-primary/20 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] transition-all" />
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Input placeholder="Search tracks..." className="pl-9 h-10 bg-slate-50 border-slate-200 text-sm rounded-xl focus-visible:ring-primary/20" />
             </div>
           </CardHeader>
           <ScrollArea className="flex-1">
-            <div className="p-4 space-y-2">
+            <div className="p-3 space-y-1">
               {HARTMANN_THREADS.map((thread) => (
                 <div 
                   key={thread.id} 
                   onClick={() => setActiveThreadId(thread.id)}
                   className={cn(
-                    "p-5 rounded-[2rem] flex gap-4 cursor-pointer transition-all duration-500 border",
+                    "p-4 rounded-xl flex gap-3 cursor-pointer transition-all border",
                     activeThreadId === thread.id 
-                      ? "bg-white border-primary/20 shadow-[0_10px_25px_rgba(75,163,199,0.12)] scale-[1.02] translate-x-1" 
-                      : "bg-transparent border-transparent hover:bg-white/60 hover:translate-x-1"
+                      ? "bg-white border-primary/20 shadow-sm" 
+                      : "bg-transparent border-transparent hover:bg-white/40"
                   )}
                 >
-                  <div className="relative shrink-0">
+                  <div className="shrink-0">
                     <div className={cn(
-                      "w-12 h-12 rounded-[1.25rem] flex items-center justify-center border transition-all duration-500",
+                      "w-11 h-11 rounded-lg flex items-center justify-center border",
                       thread.type === 'ai' 
-                        ? (activeThreadId === thread.id ? "bg-primary text-white border-primary shadow-lg shadow-primary/20" : "bg-primary/10 border-primary/20 text-primary")
+                        ? (activeThreadId === thread.id ? "bg-primary text-white border-primary" : "bg-primary/10 border-primary/20 text-primary")
                         : "bg-white border-slate-200"
                     )}>
-                      {thread.type === 'ai' ? <Sparkles className="h-6 w-6" /> : <Users2 className={cn("h-6 w-6", activeThreadId === thread.id ? "text-primary" : "text-slate-500")} />}
+                      {thread.type === 'ai' ? <Sparkles className="h-5 w-5" /> : <Users2 className={cn("h-5 w-5", activeThreadId === thread.id ? "text-primary" : "text-slate-500")} />}
                     </div>
-                    {thread.unread && <div className="absolute -top-1 -right-1 h-4 w-4 bg-primary rounded-full border-2 border-white shadow-md animate-pulse" />}
                   </div>
                   <div className="flex-1 min-w-0 flex flex-col justify-center">
-                    <div className="flex justify-between items-start mb-0.5">
-                      <p className={cn("text-[15px] font-bold truncate tracking-tight", activeThreadId === thread.id ? "text-primary" : "text-slate-800")}>
+                    <div className="flex justify-between items-center mb-0.5">
+                      <p className={cn("text-sm font-bold truncate tracking-tight", activeThreadId === thread.id ? "text-primary" : "text-slate-800")}>
                         {thread.name}
                       </p>
+                      {thread.unread && <div className="h-2 w-2 bg-primary rounded-full" />}
                     </div>
-                    <p className={cn("text-[12px] truncate leading-tight opacity-70", activeThreadId === thread.id ? "text-primary/80 font-medium" : "text-slate-500")}>
+                    <p className={cn("text-[11px] truncate leading-tight opacity-70", activeThreadId === thread.id ? "text-primary/80" : "text-slate-500")}>
                       {thread.lastMessage}
                     </p>
                   </div>
@@ -220,43 +221,38 @@ export default function WardroomPage() {
         </Card>
 
         {/* Main Messenger Hub */}
-        <Card className="flex-1 flex flex-col border-none shadow-[0_15px_50px_rgba(0,0,0,0.06)] bg-white overflow-hidden rounded-[3rem] border border-slate-100 relative">
-          <CardHeader className="border-b border-slate-100/60 py-5 px-10 flex flex-row items-center justify-between bg-white/80 backdrop-blur-md shrink-0 z-10 shadow-sm">
-            <div className="flex items-center gap-6">
+        <Card className="flex-1 flex flex-col border border-slate-200 shadow-sm bg-white overflow-hidden rounded-2xl relative">
+          <CardHeader className="border-b border-slate-200 py-4 px-8 flex flex-row items-center justify-between bg-white shrink-0 z-10">
+            <div className="flex items-center gap-4">
               <div className={cn(
-                "w-14 h-14 rounded-[1.5rem] flex items-center justify-center border transition-all duration-500",
-                activeThread.type === 'ai' ? "bg-primary/10 border-primary/20 shadow-[0_0_25px_rgba(75,163,199,0.2)]" : "bg-slate-50 border-slate-100"
+                "w-12 h-12 rounded-xl flex items-center justify-center border",
+                activeThread.type === 'ai' ? "bg-primary/5 border-primary/20" : "bg-slate-50 border-slate-200"
               )}>
-                {activeThread.type === 'ai' ? <Sparkles className="h-7 w-7 text-primary" /> : <Users2 className="h-7 w-7 text-slate-600" />}
+                {activeThread.type === 'ai' ? <Sparkles className="h-6 w-6 text-primary" /> : <Users2 className="h-6 w-6 text-slate-600" />}
               </div>
               <div>
-                <p className="text-lg font-bold text-slate-900 tracking-tight">{activeThread.name}</p>
-                <div className="flex items-center gap-3 mt-1">
-                  <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px] h-5 px-2.5 font-bold uppercase tracking-widest shadow-sm">
-                    Secure Channel
+                <p className="text-base font-bold text-slate-900 tracking-tight">{activeThread.name}</p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <Badge className="bg-primary/5 text-primary border-primary/20 text-[9px] h-4 px-2 font-bold uppercase tracking-widest">
+                    Secure Node
                   </Badge>
-                  <div className="w-1 h-1 rounded-full bg-slate-300" />
-                  <span className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter truncate opacity-70">
-                    {activeThread.members.length} Members Online
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">
+                    {activeThread.members.length} Members
                   </span>
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" className="h-11 w-11 rounded-full hover:bg-slate-100 transition-colors">
-                <MoreVertical className="h-6 w-6 text-slate-400" />
-              </Button>
-            </div>
+            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-slate-50">
+              <MoreVertical className="h-5 w-5 text-slate-400" />
+            </Button>
           </CardHeader>
           
           <ScrollArea className="flex-1 bg-white" ref={scrollRef}>
-            <div className="py-12 px-12 space-y-12">
-              <div className="flex flex-col items-center justify-center space-y-5 opacity-20 py-6 select-none">
-                <div className="p-4 rounded-3xl bg-primary/10 border border-primary/20">
-                  <Shield className="h-8 w-8 text-primary" />
-                </div>
-                <div className="h-px w-80 bg-gradient-to-r from-transparent via-slate-400 to-transparent" />
-                <p className="text-[11px] uppercase font-bold tracking-[0.6em] text-center text-slate-600">Hartmann Heritage Encryption</p>
+            <div className="py-10 px-10 space-y-10">
+              <div className="flex flex-col items-center justify-center space-y-4 opacity-10 py-6 select-none">
+                <Shield className="h-6 w-6 text-slate-600" />
+                <div className="h-px w-64 bg-slate-300" />
+                <p className="text-[9px] uppercase font-bold tracking-[0.4em] text-slate-600">Hartmann Legacy Encryption</p>
               </div>
 
               {messages.map((msg: any) => {
@@ -265,49 +261,43 @@ export default function WardroomPage() {
                 const isRecommendation = msg.type === "recommendation";
 
                 return (
-                  <div key={msg.id} className={cn("flex gap-6 max-w-[85%] animate-in fade-in slide-in-from-bottom-4 duration-700", isCurrentUser ? 'ml-auto flex-row-reverse' : '')}>
+                  <div key={msg.id} className={cn("flex gap-4 max-w-[80%] animate-in fade-in slide-in-from-bottom-2 duration-300", isCurrentUser ? 'ml-auto flex-row-reverse' : '')}>
                     <div className="shrink-0 pt-1">
-                      <Avatar className="h-10 w-10 border-2 border-white shadow-md ring-1 ring-slate-100">
-                        <AvatarFallback className={cn("text-[12px] font-bold", isAI ? "bg-primary text-white shadow-md" : "bg-slate-100 text-slate-500")}>
-                          {isAI ? <Sparkles className="h-5 w-5" /> : msg.senderName[0]}
+                      <Avatar className="h-9 w-9 border border-slate-100 shadow-sm">
+                        <AvatarFallback className={cn("text-[11px] font-bold", isAI ? "bg-primary text-white" : "bg-slate-100 text-slate-500")}>
+                          {isAI ? <Sparkles className="h-4 w-4" /> : msg.senderName[0]}
                         </AvatarFallback>
                       </Avatar>
                     </div>
-                    <div className={cn("space-y-2.5 flex flex-col", isCurrentUser ? 'items-end' : 'items-start')}>
-                      <div className="flex items-center gap-4 px-2">
-                        <span className="text-[12px] font-bold text-slate-500 uppercase tracking-widest leading-none">{msg.senderName}</span>
-                        <span className="text-[11px] text-slate-300 font-bold font-mono tracking-tighter leading-none">{formatTime(msg.timestamp)}</span>
+                    <div className={cn("space-y-1.5 flex flex-col", isCurrentUser ? 'items-end' : 'items-start')}>
+                      <div className="flex items-center gap-3 px-1">
+                        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">{msg.senderName}</span>
+                        <span className="text-[10px] text-slate-300 font-bold font-mono">{formatTime(msg.timestamp)}</span>
                       </div>
 
                       {isRecommendation ? (
-                        <Card className="border-primary/30 bg-gradient-to-br from-primary/[0.04] to-transparent p-7 space-y-6 relative group max-w-xl overflow-hidden shadow-[0_20px_50px_rgba(75,163,199,0.15)] rounded-[2rem] ring-2 ring-primary/10">
-                          <div className="absolute -top-6 -right-6 p-12 opacity-5 group-hover:opacity-10 transition-all duration-700 rotate-12 group-hover:rotate-0 group-hover:scale-110">
-                            <Sparkles className="h-24 w-24 text-primary" />
-                          </div>
-                          <div className="space-y-4 relative">
-                            <div className="flex items-center gap-3">
-                              <Badge className="bg-primary text-white border-transparent text-[10px] font-bold uppercase tracking-[0.2em] h-6 px-3 shadow-lg shadow-primary/20">AI Strategy</Badge>
-                              <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
-                            </div>
-                            <p className="text-[15px] font-bold text-slate-900 leading-relaxed italic border-l-4 border-primary/40 pl-5 py-1">
-                              "{msg.text}"
+                        <Card className="border border-primary/30 bg-primary/5 p-6 space-y-5 rounded-2xl max-w-lg shadow-sm">
+                          <div className="space-y-3">
+                            <Badge className="bg-primary text-white border-transparent text-[9px] font-bold uppercase tracking-widest h-5 px-2">AI Track</Badge>
+                            <p className="text-[14px] font-bold text-slate-900 leading-relaxed border-l-2 border-primary/30 pl-4 py-1">
+                              {msg.text}
                             </p>
                           </div>
-                          <div className="flex gap-4 relative">
-                            <Button variant="outline" size="sm" className="h-10 text-[11px] font-bold bg-white border-slate-200/80 flex-1 hover:border-primary/40 hover:text-primary shadow-sm hover:shadow-md rounded-2xl transition-all duration-300">
-                              <FileText className="mr-2.5 h-4 w-4" /> Open Strategic Track
+                          <div className="flex gap-3">
+                            <Button variant="outline" size="sm" className="h-9 text-[10px] font-bold bg-white border-slate-200 flex-1 hover:border-primary/30 hover:text-primary rounded-xl transition-all">
+                              <FileText className="mr-2 h-3.5 w-3.5" /> Review Proposal
                             </Button>
-                            <Button size="sm" className="h-10 text-[11px] font-bold flex-1 shadow-[0_10px_20px_rgba(75,163,199,0.3)] bg-primary hover:bg-primary/90 text-white rounded-2xl transition-all duration-300 transform active:scale-95">
-                              <CheckCircle2 className="mr-2.5 h-4 w-4" /> Approve & Execute
+                            <Button size="sm" className="h-9 text-[10px] font-bold flex-1 bg-primary hover:bg-primary/90 text-white rounded-xl transition-all shadow-sm">
+                              <CheckCircle2 className="mr-2 h-3.5 w-3.5" /> Execute
                             </Button>
                           </div>
                         </Card>
                       ) : (
                         <div className={cn(
-                          "p-5 px-7 rounded-[2.25rem] text-[15px] leading-relaxed shadow-sm transition-all border font-medium",
+                          "p-4 px-6 rounded-2xl text-[14px] leading-relaxed border shadow-sm transition-all",
                           isCurrentUser 
-                            ? 'bg-primary/10 border-primary/20 text-slate-900 rounded-tr-none shadow-[0_4px_15px_rgba(75,163,199,0.05)]' 
-                            : 'bg-slate-50 border-slate-100 text-slate-700 rounded-tl-none shadow-[0_4px_15px_rgba(0,0,0,0.02)]'
+                            ? 'bg-primary/10 border-primary/20 text-slate-900 rounded-tr-none' 
+                            : 'bg-slate-50 border-slate-100 text-slate-700 rounded-tl-none'
                         )}>
                           {msg.text}
                         </div>
@@ -319,33 +309,32 @@ export default function WardroomPage() {
             </div>
           </ScrollArea>
 
-          <div className="p-8 px-12 border-t border-slate-100/60 bg-white/50 backdrop-blur-md shrink-0">
-            <div className="flex items-center gap-5 bg-white border-2 border-slate-100 rounded-[2.5rem] p-4 px-7 focus-within:border-primary/40 focus-within:ring-[8px] focus-within:ring-primary/5 transition-all duration-500 shadow-[0_10px_40px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_40px_rgba(0,0,0,0.06)]">
-              <Button variant="ghost" size="icon" className="h-11 w-11 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-full transition-all duration-300">
-                <Paperclip className="h-6 w-6" />
+          <div className="p-6 px-10 border-t border-slate-200 bg-white shrink-0">
+            <div className="flex items-center gap-4 bg-white border border-slate-200 rounded-2xl p-2 px-4 focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/5 transition-all shadow-sm">
+              <Button variant="ghost" size="icon" className="h-10 w-10 text-slate-400 hover:text-primary hover:bg-slate-50 rounded-xl">
+                <Paperclip className="h-5 w-5" />
               </Button>
               <Input 
-                placeholder={activeThread.type === 'ai' ? "Command Aivaz to synthesize..." : "Write a secure message..."}
-                className="border-none bg-transparent shadow-none focus-visible:ring-0 text-lg font-medium h-12 placeholder:text-slate-300 placeholder:italic" 
+                placeholder={activeThread.type === 'ai' ? "Instruct the Aivaz Engine..." : "Type a secure message..."}
+                className="border-none bg-transparent shadow-none focus-visible:ring-0 text-sm font-medium h-10 placeholder:text-slate-300 placeholder:italic" 
                 value={inputText} 
                 onChange={(e) => setInputText(e.target.value)} 
                 onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()} 
               />
-              <div className="flex items-center gap-4">
-                <Button variant="ghost" size="icon" className={cn("h-11 w-11 rounded-full transition-all duration-500 hover:scale-110", activeThread.type === 'ai' ? "text-primary bg-primary/10 shadow-sm" : "text-slate-400 hover:text-primary")}>
-                  <Sparkles className="h-6 w-6" />
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" className={cn("h-10 w-10 rounded-xl", activeThread.type === 'ai' ? "text-primary bg-primary/5" : "text-slate-400 hover:text-primary")}>
+                  <Sparkles className="h-5 w-5" />
                 </Button>
-                <div className="h-10 w-0.5 bg-slate-100 rounded-full mx-1" />
-                <Button size="icon" className="rounded-[1.5rem] h-13 w-13 bg-primary hover:bg-primary/90 shadow-[0_12px_30px_rgba(75,163,199,0.4)] text-white transition-all duration-500 transform active:scale-90 hover:scale-105" onClick={handleSendMessage} disabled={!inputText.trim()}>
-                  <Send className="h-6 w-6" />
+                <div className="h-6 w-px bg-slate-200 mx-1" />
+                <Button size="icon" className="rounded-xl h-10 w-10 bg-primary hover:bg-primary/90 text-white transition-all shadow-sm" onClick={handleSendMessage} disabled={!inputText.trim()}>
+                  <Send className="h-5 w-5" />
                 </Button>
               </div>
             </div>
-            <div className="flex justify-center mt-5">
-              <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-slate-50 border border-slate-100/50 shadow-sm">
-                <Shield className="h-3.5 w-3.5 text-emerald-500" />
-                <p className="text-[10px] uppercase font-bold tracking-[0.4em] text-slate-400">Hartmann Heritage Secure Node</p>
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <div className="flex justify-center mt-3">
+              <div className="flex items-center gap-2 text-[9px] uppercase font-bold tracking-widest text-slate-400">
+                <Shield className="h-3 w-3 text-emerald-500" />
+                Solid Channel: Hartmann heritage node active
               </div>
             </div>
           </div>
@@ -354,3 +343,4 @@ export default function WardroomPage() {
     </div>
   );
 }
+
