@@ -16,10 +16,11 @@ import {
   Compass,
   FileText,
   Map,
-  UserCircle2
+  UserCircle2,
+  ChevronRight,
+  Zap
 } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
 import { FamilyCalendar, type FamilyEvent } from "@/components/dashboard/FamilyCalendar";
 import { cn } from "@/lib/utils";
 
@@ -33,15 +34,15 @@ export default function DashboardPage() {
   const { user } = useUser();
   const { data: dna, loading: dnaLoading } = useDoc(user ? `users/${user.uid}/dna/current` : null);
 
-  const firstName = user?.displayName?.split(" ")[0] || "Principal";
-  const role = dna?.personalProfile?.roleInFamily || "Hartmann Stakeholder";
+  const firstName = user?.displayName?.split(" ")[0] || "Markus";
+  const role = dna?.personalProfile?.roleInFamily || "Principal Founder";
 
   if (dnaLoading) {
     return <div className="p-8"><Skeleton className="h-[400px] w-full rounded-2xl" /></div>;
   }
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto pb-32">
+    <div className="space-y-10 max-w-7xl mx-auto pb-32">
       {/* Personalized Welcome */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/5 pb-8">
         <div className="space-y-4">
@@ -51,106 +52,135 @@ export default function DashboardPage() {
             </div>
             <div className="flex flex-col">
               <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Identity Verified</span>
-              <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-widest">Heritage Protocol 4.0</span>
+              <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-widest">Hartmann Heritage Protocol</span>
             </div>
           </div>
           <h1 className="font-headline text-5xl font-bold tracking-tighter">
             Welcome back, <span className="text-primary">{firstName}</span>.
           </h1>
-          <p className="text-muted-foreground font-headline italic">
-            "Based on your Family DNA, we noticed growing tension around geographic relocation vs. industrial stability."
+          <p className="text-xl text-muted-foreground font-headline italic max-w-2xl leading-relaxed">
+            "Based on the latest Hartmann DNA synthesis, we noticed growing tension between G1 industrial stability and G3's push for a Singapore-led tech pivot."
           </p>
         </div>
-        <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/10">
-          <Activity className="h-5 w-5 text-primary animate-pulse" />
+        <div className="flex items-center gap-4 bg-white/5 p-5 rounded-2xl border border-white/10 shadow-2xl">
+          <Activity className="h-6 w-6 text-primary animate-pulse" />
           <div>
             <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Family Alignment</p>
-            <p className="text-xl font-headline font-bold text-primary">84.2%</p>
+            <p className="text-2xl font-headline font-bold text-primary">84.2%</p>
           </div>
         </div>
       </div>
 
-      {/* Guided Journey: Next Actions */}
-      <section className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-primary" />
-          <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Your Guided Journey</h2>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Link href="/chart-room" className="group">
-            <Card className="glass-panel border-white/5 hover:border-primary/30 transition-all h-full bg-primary/5">
-              <CardContent className="p-6 space-y-4">
-                <div className="p-2 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <AlertTriangle className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-lg leading-tight">Review Exposure Blindspots</h3>
-                  <p className="text-xs text-muted-foreground mt-2">Analyze the €380M portfolio's 55% concentration in German Real Estate.</p>
-                </div>
-                <div className="flex items-center text-[10px] font-bold text-primary uppercase tracking-widest gap-2 pt-2">
-                  Execute Analysis <ArrowRight className="h-3 w-3" />
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-          <Link href="/simulator" className="group">
-            <Card className="glass-panel border-white/5 hover:border-secondary/30 transition-all h-full">
-              <CardContent className="p-6 space-y-4">
-                <div className="p-2 w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Map className="h-5 w-5 text-secondary" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-lg leading-tight">Run Relocation Scenario</h3>
-                  <p className="text-xs text-muted-foreground mt-2">Model the financial and social impact of shifting operations to Singapore.</p>
-                </div>
-                <div className="flex items-center text-[10px] font-bold text-secondary uppercase tracking-widest gap-2 pt-2">
-                  Open Matrix <ArrowRight className="h-3 w-3" />
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-          <Link href="/vault" className="group">
-            <Card className="glass-panel border-white/5 hover:border-accent/30 transition-all h-full">
-              <CardContent className="p-6 space-y-4">
-                <div className="p-2 w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <FileText className="h-5 w-5 text-accent" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-lg leading-tight">Draft Family Mission</h3>
-                  <p className="text-xs text-muted-foreground mt-2">Institutionalize the Hartmann values to reduce G1 vs G3 friction.</p>
-                </div>
-                <div className="flex items-center text-[10px] font-bold text-accent uppercase tracking-widest gap-2 pt-2">
-                  Enter Strongroom <ArrowRight className="h-3 w-3" />
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        </div>
-      </section>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Main Content Column */}
+        <div className="lg:col-span-8 space-y-10">
+          {/* Guided Journey: Action Hub */}
+          <section className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Compass className="h-4 w-4 text-primary" />
+                <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">The Guided Journey</h2>
+              </div>
+              <Badge variant="outline" className="text-[8px] font-bold uppercase">3 High Priority Actions</Badge>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Link href="/chart-room" className="group">
+                <Card className="glass-panel border-white/5 hover:border-primary/30 transition-all h-full bg-primary/5">
+                  <CardContent className="p-6 space-y-4">
+                    <div className="p-2 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <AlertTriangle className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-lg leading-tight">Stress-Test Tech Exposure</h3>
+                      <p className="text-xs text-muted-foreground mt-2">The portfolio has a 55% concentration risk. Simulate the €12M downside scenario in the Chart Room.</p>
+                    </div>
+                    <div className="flex items-center text-[10px] font-bold text-primary uppercase tracking-widest gap-2 pt-2">
+                      Launch Simulation <ChevronRight className="h-3 w-3" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+              <Link href="/vault" className="group">
+                <Card className="glass-panel border-white/5 hover:border-secondary/30 transition-all h-full bg-secondary/5">
+                  <CardContent className="p-6 space-y-4">
+                    <div className="p-2 w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <FileText className="h-5 w-5 text-secondary" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-lg leading-tight">Draft Governance Charter</h3>
+                      <p className="text-xs text-muted-foreground mt-2">Institutionalize Hartmann values to resolve authority rifts between G1 and G3.</p>
+                    </div>
+                    <div className="flex items-center text-[10px] font-bold text-secondary uppercase tracking-widest gap-2 pt-2">
+                      Enter Strongroom <ChevronRight className="h-3 w-3" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            </div>
+          </section>
 
-      {/* Aggregate Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-        {[
-          { label: "Total Hartmann AUM", value: "€380M", change: "Aggregated", icon: TrendingUp, color: "text-primary" },
-          { label: "Idle Capital", value: "€42.0M", change: "ALERT", icon: AlertTriangle, color: "text-amber-500" },
-          { label: "RE Exposure", value: "55%", change: "Concentrated", icon: AlertTriangle, color: "text-amber-500" },
-          { label: "Succession Sync", value: "42%", change: "Needs Action", icon: Activity, color: "text-amber-500" },
-          { label: "Compliance Grade", value: "A+", change: "Stable", icon: ShieldCheck, color: "text-emerald-500" }
-        ].map((stat, i) => (
-          <Card key={i} className="glass-panel border-white/5">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground">{stat.label}</CardTitle>
-              <stat.icon className={cn("h-3.5 w-3.5", stat.color)} />
+          <FamilyCalendar events={MOCK_EVENTS} />
+        </div>
+
+        {/* Sidebar Column: For You / Personal Intelligence */}
+        <div className="lg:col-span-4 space-y-8">
+          <Card className="glass-panel border-white/10 bg-black/40">
+            <CardHeader className="border-b border-white/5">
+              <div className="flex items-center gap-2">
+                <Zap className="h-4 w-4 text-primary" />
+                <CardTitle className="text-sm font-bold uppercase tracking-widest">Intelligence For You</CardTitle>
+              </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold font-headline">{stat.value}</div>
-              <div className={cn("text-[9px] font-bold mt-1 uppercase tracking-tighter", stat.color, "opacity-80")}>{stat.change}</div>
+            <CardContent className="p-6 space-y-6">
+              <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-2 group hover:border-primary/30 transition-all cursor-pointer">
+                <p className="text-[10px] font-bold text-primary uppercase tracking-widest">Relational Alert</p>
+                <p className="text-sm font-medium leading-relaxed">Alexander's aggressive growth mindset currently clashes with your preservation mandate.</p>
+                <Link href="/wardroom" className="text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-1 group-hover:text-primary pt-2">
+                  Initiate Alignment Workshop <ArrowRight className="h-3 w-3" />
+                </Link>
+              </div>
+
+              <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-2 group hover:border-primary/30 transition-all cursor-pointer">
+                <p className="text-[10px] font-bold text-amber-500 uppercase tracking-widest">Capital Efficiency</p>
+                <p className="text-sm font-medium leading-relaxed">€42M Cash idle. Aivaz recommends shifting €3M to Fixed Income to secure G2 liquidity.</p>
+                <Link href="/bridge" className="text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-1 group-hover:text-primary pt-2">
+                  Execute Rebalancing <ArrowRight className="h-3 w-3" />
+                </Link>
+              </div>
+
+              <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-2 group hover:border-primary/30 transition-all cursor-pointer">
+                <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Heritage Opportunity</p>
+                <p className="text-sm font-medium leading-relaxed">Elena has requested a review of the Philanthropic mission for G3 inclusion.</p>
+                <Link href="/vault" className="text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-1 group-hover:text-primary pt-2">
+                  Review Heritage Bedrock <ArrowRight className="h-3 w-3" />
+                </Link>
+              </div>
             </CardContent>
           </Card>
-        ))}
-      </div>
 
-      <FamilyCalendar events={MOCK_EVENTS} />
+          <Card className="glass-panel border-white/5 bg-primary/5">
+            <CardHeader>
+              <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Hartmann Aggregate Pulse</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex justify-between items-end border-b border-white/5 pb-2">
+                <div>
+                  <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-widest">Total Hartmann AUM</p>
+                  <p className="text-xl font-headline font-bold">€380.0M</p>
+                </div>
+                <Badge variant="outline" className="text-[8px] bg-white/5">Aggregated</Badge>
+              </div>
+              <div className="flex justify-between items-end">
+                <div>
+                  <p className="text-[9px] text-amber-500 uppercase font-bold tracking-widest">Idle Capital Risk</p>
+                  <p className="text-xl font-headline font-bold text-amber-500">€42.0M</p>
+                </div>
+                <Badge className="bg-amber-500/20 text-amber-500 border-amber-500/30 text-[8px] font-bold uppercase">Action Required</Badge>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
 
       <Link href="/academy" className="block group">
         <Card className="glass-panel border-primary/20 bg-primary/5 p-8 flex items-center justify-between transition-all hover:bg-primary/10">
@@ -160,7 +190,7 @@ export default function DashboardPage() {
               <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Strategic Insight</span>
             </div>
             <h3 className="text-xl font-headline font-bold">The Hartmann Governance Charter</h3>
-            <p className="text-sm text-muted-foreground">Transitioning from Dr. Markus's industrial control to a global, value-based institution.</p>
+            <p className="text-sm text-muted-foreground">Transitioning from industrial era control to a global, value-based institution.</p>
           </div>
           <div className="bg-primary text-primary-foreground rounded-full h-12 w-12 flex items-center justify-center shadow-lg transition-transform group-hover:scale-110 shrink-0">
             <ArrowRight className="h-6 w-6" />
