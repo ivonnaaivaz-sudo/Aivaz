@@ -1,64 +1,27 @@
+
 "use client";
 
-import { useState } from "react";
 import { useUser, useDoc } from "@/firebase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger 
-} from "@/components/ui/dialog";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
-import { 
-  Carousel, 
-  CarouselContent, 
-  CarouselItem, 
-  CarouselNext, 
-  CarouselPrevious 
-} from "@/components/ui/carousel";
 import { 
   TrendingUp, 
   ShieldCheck, 
-  Globe,
-  Calendar as CalendarIcon,
-  HeartPulse,
-  ChevronDown,
-  RefreshCw,
-  Lock,
-  Sparkles,
-  Zap,
-  Users,
-  BookOpen,
-  ArrowRight,
-  Activity,
-  AlertTriangle
+  Sparkles, 
+  ArrowRight, 
+  Activity, 
+  AlertTriangle,
+  Euro
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { FamilyCalendar, type FamilyEvent } from "@/components/dashboard/FamilyCalendar";
 
 const MOCK_EVENTS: FamilyEvent[] = [
-  { id: "1", title: "Quarterly Strategy Call", date: "2024-11-12", eventType: "GOVERNANCE", priority: "URGENT", description: "Reviewing year-end tax positions with Robert Chen.", memberAccess: ["Julian", "Marcus", "Robert"] },
-  { id: "2", title: "Aivaz Logistics Payout", date: "2024-11-18", eventType: "FINANCIAL", priority: "URGENT", description: "$5.2M Q4 liquidity event distribution.", memberAccess: ["Julian", "Elena"] },
-  { id: "june-1", title: "G2 Governance Summit", date: "2026-06-10", eventType: "GOVERNANCE", priority: "URGENT", description: "Finalizing G2 decision thresholds.", memberAccess: ["All Principals"] },
-];
-
-const familyPhotos = [
-  { id: 1, url: "https://picsum.photos/seed/aspen1/1200/400", title: "Heritage Archive", hint: "luxury cabin" }
+  { id: "1", title: "Hartmann Family Council", date: "2026-06-12", eventType: "GOVERNANCE", priority: "URGENT", description: "Reviewing the €42M cash reserve deployment proposal.", memberAccess: ["Dr. Markus", "Elena", "Sophie", "Alexander"] },
+  { id: "2", title: "Specialty Chem Dividend", date: "2026-06-25", eventType: "FINANCIAL", priority: "NORMAL", description: "Q2 Dividend distribution for Hartmann Specialty Chem.", memberAccess: ["All Stakeholders"] },
+  { id: "3", title: "Heritage Gala Munich", date: "2026-07-15", eventType: "SOCIAL", priority: "NORMAL", description: "Annual family philanthropic event in Munich.", memberAccess: ["All Family"] },
 ];
 
 export default function DashboardPage() {
@@ -72,21 +35,21 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-32">
       <div className="relative h-[240px] w-full rounded-3xl overflow-hidden border border-white/5">
-        <Image src={familyPhotos[0].url} alt="Aivaz Heritage" fill className="object-cover" />
+        <Image src="https://picsum.photos/seed/munich/1200/400" alt="Hartmann Heritage" fill className="object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
         <div className="absolute bottom-8 left-8">
-          <Badge className="mb-2 bg-primary/20 text-primary border-primary/30">Aivaz Heritage Repository</Badge>
-          <h2 className="text-3xl font-headline font-bold text-white">G2 Transition Command</h2>
+          <Badge className="mb-2 bg-primary/20 text-primary border-primary/30">Hartmann Heritage Deck</Badge>
+          <h2 className="text-3xl font-headline font-bold text-white">Command Center</h2>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         {[
-          { label: "Total AUM", value: "$50.0M", change: "Threshold Met", icon: TrendingUp, color: "text-primary" },
-          { label: "Tech Exposure", value: "55%", change: "CONCENTRATED", icon: AlertTriangle, color: "text-amber-500" },
-          { label: "Alignment", value: "84.2%", change: "Stable", icon: ShieldCheck, color: "text-emerald-500" },
-          { label: "G2 Readiness", value: "Medium", change: "Training Active", icon: HeartPulse, color: "text-primary" },
-          { label: "Liquidity", value: "5%", change: "Tight", icon: Activity, color: "text-amber-500" }
+          { label: "Total Hartmann AUM", value: "€380M", change: "Aggregated", icon: TrendingUp, color: "text-primary" },
+          { label: "Idle Capital", value: "€42.0M", change: "ALERT", icon: AlertTriangle, color: "text-amber-500" },
+          { label: "RE Exposure", value: "55%", change: "Concentrated", icon: AlertTriangle, color: "text-amber-500" },
+          { label: "Succession Sync", value: "42%", change: "Needs Action", icon: Activity, color: "text-amber-500" },
+          { label: "Compliance Grade", value: "A+", change: "Stable", icon: ShieldCheck, color: "text-emerald-500" }
         ].map((stat, i) => (
           <Card key={i} className="glass-panel border-white/5">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -108,10 +71,10 @@ export default function DashboardPage() {
           <div className="space-y-2">
             <div className="flex items-center gap-2 mb-2">
               <Sparkles className="h-4 w-4 text-primary" />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Succession Intelligence</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Strategic Insight</span>
             </div>
-            <h3 className="text-xl font-headline font-bold">Review G2 Governance Framework</h3>
-            <p className="text-sm text-muted-foreground">Transitioning from Founder-led to Values-based institutional governance.</p>
+            <h3 className="text-xl font-headline font-bold">Review Hartmann Governance Charter</h3>
+            <p className="text-sm text-muted-foreground">Transitioning from patriarchal control to institutional value-based decision making.</p>
           </div>
           <div className="bg-primary text-primary-foreground rounded-full h-12 w-12 flex items-center justify-center shadow-lg transition-transform group-hover:scale-110">
             <ArrowRight className="h-6 w-6" />

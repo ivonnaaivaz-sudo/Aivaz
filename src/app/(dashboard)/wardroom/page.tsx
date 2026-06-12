@@ -1,9 +1,10 @@
+
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
-import { useUser, useFirestore, useDoc, useCollection } from "@/firebase";
-import { collection, doc, setDoc, query, orderBy, limit, addDoc } from "firebase/firestore";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { useUser, useFirestore, useCollection } from "@/firebase";
+import { collection, query, orderBy, limit, addDoc } from "firebase/firestore";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -15,50 +16,36 @@ import {
   User, 
   Send, 
   Sparkles, 
-  TrendingUp, 
-  AlertCircle, 
-  ArrowRight,
-  BrainCircuit,
-  MessageSquare,
-  Search,
-  ExternalLink,
+  MessageSquare, 
   Users2,
   Gavel,
-  Zap,
-  Lock,
-  Video,
-  Phone,
-  Check,
-  X,
-  ChevronRight,
   ShieldCheck,
-  History,
   ChevronDown,
   ChevronUp,
-  Anchor
+  Check
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
 type TrackMode = 'governance' | 'direct';
 
-const STRATEGY_METRICS = [
-  { label: "Portfolio Value", value: "$50.0M", status: "Threshold" },
-  { label: "Tech Exposure", value: "55%", status: "High" },
-  { label: "G2 Alignment", value: "62%", status: "Bear Projection" }
+const HARTMANN_METRICS = [
+  { label: "Cash Idle", value: "€42.0M", status: "Alert" },
+  { label: "RE Exposure", value: "55%", status: "High" },
+  { label: "Succession Sync", value: "42%", status: "At Risk" }
 ];
 
-const MOCK_STRATEGY_DECISIONS = [
+const HARTMANN_DECISIONS = [
   {
-    id: "dec-1",
+    id: "dec-hartmann",
     type: "PROPOSAL",
-    context: "Upcoming Q4 Payout: $5.2M (Aivaz Logistics)",
-    proposal: "Invest $3M into Fixed Income to hedge tech over-concentration and improve Bear-scenario alignment from 62% to 78%.",
-    delegation: "Execute via @Marcus (Successor Portfolio)",
+    context: "Deployment of €42M Idle Cash Reserve",
+    proposal: "Allocate €20M into Alexander's Tech Venture Fund and €12M into Sophie's ESG Global Infrastructure Trust to diversify from German Real Estate. Improve alignment from 42% to 68%.",
+    delegation: "Execute via Hartmann Family Council",
     status: "VOTING",
-    votes: { yes: 2, no: 1 },
-    isAligned: true,
-    alignmentNote: "Perpetual Wealth Preservation Mandate"
+    votes: { yes: 1, no: 1 },
+    isAligned: false,
+    alignmentNote: "Pending G1 Principal Approval"
   }
 ];
 
@@ -72,29 +59,22 @@ export default function WardroomPage() {
   const [mounted, setMounted] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => { setMounted(true); }, []);
 
   const messagesQuery = useMemo(() => {
     if (!user || !db) return null;
-    return query(
-      collection(db, "users", user.uid, "messages"), 
-      orderBy("timestamp", "asc"), 
-      limit(100)
-    );
+    return query(collection(db, "users", user.uid, "messages"), orderBy("timestamp", "asc"), limit(100));
   }, [user, db]);
 
   const { data: realMessages } = useCollection(messagesQuery);
 
   const messages = useMemo(() => {
-    // If no real messages, show the demo conversation
     if (!realMessages || realMessages.length === 0) {
       return [
-        { id: '1', senderName: 'Captain', text: 'Trigger Event: $5.2M payout detected from Aivaz Logistics. Strategy alignment badge active.', timestamp: new Date().toISOString(), track: 'governance' },
-        { id: '2', senderName: 'Marcus Aivaz', text: 'We should double down on tech while valuations are dipping in the bear scenario. More alpha potential.', timestamp: new Date().toISOString(), track: 'governance' },
-        { id: '3', senderName: 'Elena Aivaz', text: 'I disagree. The charter emphasizes preservation. We need to secure the educational trust liquidity now.', timestamp: new Date().toISOString(), track: 'governance' },
-        { id: '4', senderName: 'Robert Chen', text: 'The Captain proposal for $3M in Fixed Income provides $150k/yr yield, covering 100% of G2 needs. It is the rational play.', timestamp: new Date().toISOString(), track: 'governance' },
+        { id: 'h1', senderName: 'Captain', text: 'Alert: €42M idle cash detected. Fragmentation of accounts in Luxembourg and Cayman causing 5% annual yield loss.', track: 'governance', timestamp: new Date().toISOString() },
+        { id: 'h2', senderName: 'Alexander Hartmann', text: 'The Munich real estate market is softening. We need to deploy that cash into my London growth portfolio. Now.', track: 'governance', timestamp: new Date().toISOString() },
+        { id: 'h3', senderName: 'Sophie Hartmann', text: 'Growth isn’t everything, Alex. The Singapore office needs ESG retrofitting and we should shift to impact funds.', track: 'governance', timestamp: new Date().toISOString() },
+        { id: 'h4', senderName: 'Dr. Markus Hartmann', text: 'I built this family on industrial stability. I am not throwing €20M into unproven startups without a formal charter.', track: 'governance', timestamp: new Date().toISOString() },
       ];
     }
     return realMessages;
@@ -113,7 +93,7 @@ export default function WardroomPage() {
       const msgRef = collection(db, "users", user.uid, "messages");
       await addDoc(msgRef, {
         senderId: user.uid,
-        senderName: user.displayName || "Julian Aivaz",
+        senderName: "Dr. Markus Hartmann",
         text: inputText,
         type: "text",
         track: trackMode,
@@ -124,16 +104,7 @@ export default function WardroomPage() {
   };
 
   const executeProposal = (id: string) => {
-    toast({
-      title: "Proposal Executed",
-      description: "Transfer initiated. Moving $3M to Fixed Income Strategic Reserve.",
-    });
-  };
-
-  const formatTime = (timestamp: string) => {
-    if (!mounted) return "";
-    try { return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
-    catch (e) { return ""; }
+    toast({ title: "Proposal Executed", description: "Cash deployment protocol initiated. Rebalancing Hartmann Portfolio." });
   };
 
   return (
@@ -141,10 +112,10 @@ export default function WardroomPage() {
       <div className="w-80 flex flex-col gap-6 shrink-0">
         <Card className="glass-panel border-white/5 bg-primary/5">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Strategic Pulse</CardTitle>
+            <CardTitle className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Hartmann Pulse</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {STRATEGY_METRICS.map((metric) => (
+            {HARTMANN_METRICS.map((metric) => (
               <div key={metric.label} className="flex justify-between items-end border-b border-white/5 pb-2">
                 <div>
                   <p className="text-[10px] text-muted-foreground uppercase font-bold">{metric.label}</p>
@@ -158,30 +129,14 @@ export default function WardroomPage() {
 
         <Card className="glass-panel border-white/5 flex-1 overflow-hidden">
           <CardHeader className="border-b border-white/5">
-            <div className="flex items-center justify-between mb-4">
-              <CardTitle className="text-xs font-bold uppercase tracking-widest text-glow">Stakeholders</CardTitle>
-              <Users2 className="h-3 w-3 text-muted-foreground" />
-            </div>
+            <CardTitle className="text-xs font-bold uppercase tracking-widest">Stakeholders</CardTitle>
           </CardHeader>
           <ScrollArea className="h-full">
             <CardContent className="p-2 space-y-1">
-              {[
-                { name: "Julian Aivaz", role: "Principal", status: "online" },
-                { name: "Marcus Aivaz", role: "G2 Successor", status: "online" },
-                { name: "Elena Aivaz", role: "G2 Successor", status: "online" },
-                { name: "Robert Chen", role: "Advisor", status: "online" }
-              ].map((person, i) => (
-                <div key={i} className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer group">
-                  <div className="relative">
-                    <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
-                      <User className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                    </div>
-                    {person.status === 'online' && <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 border border-background" />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[11px] font-bold truncate">{person.name}</p>
-                    <p className="text-[9px] text-muted-foreground uppercase tracking-widest">{person.role}</p>
-                  </div>
+              {["Dr. Markus", "Elena", "Sophie", "Alexander", "Lina", "Robert Chen (Advisor)"].map((person, i) => (
+                <div key={i} className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer">
+                  <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center"><User className="h-4 w-4" /></div>
+                  <p className="text-[11px] font-bold">{person}</p>
                 </div>
               ))}
             </CardContent>
@@ -189,58 +144,35 @@ export default function WardroomPage() {
         </Card>
       </div>
 
-      <Card className={cn(
-        "flex-1 glass-panel flex flex-col border-white/5 overflow-hidden shadow-3xl transition-all duration-700",
-        trackMode === 'governance' ? "ring-1 ring-primary/20 shadow-[0_0_50px_rgba(75,163,199,0.1)]" : ""
-      )}>
+      <Card className="flex-1 glass-panel flex flex-col border-white/5 overflow-hidden">
         <CardHeader className="border-b border-white/5 py-4 flex flex-row items-center justify-between">
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10 border border-primary/20"><MessageSquare className="h-4 w-4 text-primary" /></div>
-              <div><p className="text-sm font-bold">Strategy Wardroom</p><span className="text-[9px] text-emerald-500 font-bold uppercase tracking-widest">Decision Terminal Active</span></div>
+              <MessageSquare className="h-4 w-4 text-primary" />
+              <div><p className="text-sm font-bold">Hartmann Wardroom</p><span className="text-[9px] text-emerald-500 font-bold uppercase">End-to-End Secure</span></div>
             </div>
             <Tabs value={trackMode} onValueChange={(v) => setTrackMode(v as TrackMode)} className="bg-white/5 p-1 rounded-xl">
               <TabsList className="bg-transparent border-none">
-                <TabsTrigger value="governance" className="text-[9px] font-bold uppercase tracking-widest data-[state=active]:bg-primary/20 data-[state=active]:text-primary"><Gavel className="mr-2 h-3 w-3" /> Governance Track</TabsTrigger>
-                <TabsTrigger value="direct" className="text-[9px] font-bold uppercase tracking-widest data-[state=active]:bg-white/10 data-[state=active]:text-foreground"><ShieldCheck className="mr-2 h-3 w-3" /> Direct Track</TabsTrigger>
+                <TabsTrigger value="governance" className="text-[9px] font-bold uppercase tracking-widest"><Gavel className="mr-2 h-3 w-3" /> Governance</TabsTrigger>
+                <TabsTrigger value="direct" className="text-[9px] font-bold uppercase tracking-widest"><ShieldCheck className="mr-2 h-3 w-3" /> Direct</TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="h-8 bg-white/5 border-white/10 text-[9px] font-bold uppercase tracking-widest"><Video className="mr-2 h-3.5 w-3.5" /> Call</Button>
-            <Badge variant="outline" className="bg-white/5 text-[9px] font-mono border-white/10">AES-256</Badge>
-          </div>
         </CardHeader>
 
-        {trackMode === 'governance' && MOCK_STRATEGY_DECISIONS.map((dec) => (
-          <Collapsible key={dec.id} open={isProposalOpen} onOpenChange={setIsProposalOpen} className="border-b border-white/5 bg-primary/[0.02] shadow-sm relative z-10">
+        {trackMode === 'governance' && HARTMANN_DECISIONS.map((dec) => (
+          <Collapsible key={dec.id} open={isProposalOpen} onOpenChange={setIsProposalOpen} className="border-b border-white/5 bg-primary/[0.02]">
             <div className="flex items-center justify-between px-8 py-3">
-              <div className="flex items-center gap-3">
-                <Badge variant="outline" className="bg-primary/20 text-primary border-primary/30 text-[8px] font-bold uppercase">Proposal v1.0</Badge>
-                {dec.isAligned && <Badge className="bg-emerald-500/20 text-emerald-500 border-emerald-500/30 text-[8px] font-bold uppercase animate-pulse"><ShieldCheck className="mr-1 h-3 w-3" /> Charter Aligned</Badge>}
-                <p className="text-xs font-bold text-muted-foreground">{dec.context}</p>
-              </div>
+              <Badge variant="outline" className="bg-primary/20 text-primary border-primary/30 text-[8px] font-bold uppercase">Proposal: Cash Deployment</Badge>
               <CollapsibleTrigger asChild><Button variant="ghost" size="sm" className="h-7 w-7 p-0">{isProposalOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}</Button></CollapsibleTrigger>
             </div>
             <CollapsibleContent>
               <div className="px-8 pb-6 pt-2">
-                <div className="bg-primary/[0.03] border border-primary/10 rounded-2xl p-6 shadow-lg backdrop-blur-md relative overflow-hidden">
-                   <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-center">
-                    <div className="md:col-span-3 space-y-3">
-                       <div className="flex items-center gap-2">
-                         <h4 className="text-[10px] font-bold uppercase tracking-widest text-primary/70">Strategic Executive Brief</h4>
-                         <span className="text-[9px] font-serif italic text-emerald-500/80">Aligned with Mission: {dec.alignmentNote}</span>
-                       </div>
-                       <p className="text-sm font-headline font-medium leading-relaxed italic text-foreground/90">"{dec.proposal}"</p>
-                       <div className="flex items-center gap-4 text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60">
-                         <span className="flex items-center gap-1.5"><User className="h-3 w-3" /> {dec.delegation}</span>
-                         <span className="flex items-center gap-1.5 text-primary/70"><Users2 className="h-3 w-3" /> Consensus: {dec.votes.yes} Yes / {dec.votes.no} No</span>
-                       </div>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <Button size="sm" className="h-8 text-[9px] font-bold uppercase tracking-widest shadow-xl" onClick={() => executeProposal(dec.id)}><Check className="mr-2 h-3 w-3" /> Execute</Button>
-                      <Button variant="outline" size="sm" className="h-8 text-[9px] font-bold uppercase tracking-widest bg-white/5">Modify Strategy</Button>
-                    </div>
+                <div className="bg-primary/[0.03] border border-primary/10 rounded-2xl p-6">
+                  <p className="text-sm font-headline font-medium leading-relaxed italic">"{dec.proposal}"</p>
+                  <div className="mt-4 flex gap-2">
+                    <Button size="sm" className="h-8 text-[9px] font-bold uppercase" onClick={() => executeProposal(dec.id)}><Check className="mr-2 h-3 w-3" /> Execute Deployment</Button>
+                    <Button variant="outline" size="sm" className="h-8 text-[9px] font-bold uppercase">Request G1 Review</Button>
                   </div>
                 </div>
               </div>
@@ -250,20 +182,18 @@ export default function WardroomPage() {
 
         <ScrollArea className="flex-1 px-8" ref={scrollRef}>
           <div className="py-8 space-y-8">
-            {messages?.map((msg) => {
-              const isCurrentUser = msg.senderName === "Julian Aivaz" || msg.senderId === user?.uid;
+            {messages.map((msg: any) => {
+              const isCurrentUser = msg.senderName.includes("Markus");
               const isAI = msg.senderName === "Captain";
-              if (trackMode === 'direct' && msg.track === 'governance') return null;
               if (trackMode === 'governance' && msg.track === 'direct') return null;
-
               return (
-                <div key={msg.id} className={cn("flex gap-5 max-w-[85%] animate-in fade-in slide-in-from-bottom-2", isCurrentUser ? 'ml-auto flex-row-reverse' : '')}>
-                  <div className={cn("w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center border", isAI ? 'bg-primary/20 border-primary/40' : isCurrentUser ? 'bg-primary/20 border-primary/20' : 'bg-muted border-white/10')}>
-                    {isAI ? <Sparkles className="h-4 w-4 text-primary" /> : <User className={`h-4 w-4 ${isCurrentUser ? 'text-primary' : 'text-muted-foreground'}`} />}
+                <div key={msg.id} className={cn("flex gap-5 max-w-[85%]", isCurrentUser ? 'ml-auto flex-row-reverse' : '')}>
+                  <div className={cn("w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center border", isAI ? 'bg-primary/20 border-primary/40' : 'bg-muted border-white/10')}>
+                    {isAI ? <Sparkles className="h-4 w-4 text-primary" /> : <User className="h-4 w-4" />}
                   </div>
                   <div className={cn("space-y-1.5 flex flex-col", isCurrentUser ? 'items-end' : 'items-start')}>
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50 px-1">{msg.senderName} • {formatTime(msg.timestamp)}</span>
-                    <div className={cn("p-4 rounded-2xl text-[13px] leading-relaxed border shadow-sm", isAI ? 'bg-primary/5 border-primary/30 italic text-primary/90 rounded-tl-none' : isCurrentUser ? 'bg-primary/10 border-primary/10 text-foreground rounded-tr-none' : 'bg-white/5 border-white/5 rounded-tl-none')}>
+                    <span className="text-[9px] font-bold uppercase text-muted-foreground/50">{msg.senderName}</span>
+                    <div className={cn("p-4 rounded-2xl text-[13px] leading-relaxed border shadow-sm", isAI ? 'bg-primary/5 border-primary/30 italic text-primary/90' : isCurrentUser ? 'bg-primary/10 border-primary/10' : 'bg-white/5 border-white/5')}>
                       {msg.text}
                     </div>
                   </div>
@@ -274,9 +204,9 @@ export default function WardroomPage() {
         </ScrollArea>
 
         <div className="p-6 border-t border-white/5 bg-background/40">
-          <div className="flex items-center gap-3 bg-background/50 border border-white/5 rounded-2xl px-5 py-3 shadow-xl focus-within:border-primary/50 transition-colors">
-            <Input placeholder={trackMode === 'governance' ? "Propose a strategic move or vote..." : "Secure message to family..."} className="border-none bg-transparent shadow-none focus-visible:ring-0 text-sm placeholder:opacity-30" value={inputText} onChange={(e) => setInputText(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()} />
-            <Button size="icon" className="rounded-full h-9 w-9 shadow-lg" onClick={handleSendMessage} disabled={!inputText.trim()}><Send className="h-4 w-4" /></Button>
+          <div className="flex items-center gap-3 bg-background/50 border border-white/5 rounded-2xl px-5 py-3 shadow-xl">
+            <Input placeholder="Message the Hartmann Family Council..." className="border-none bg-transparent shadow-none focus-visible:ring-0 text-sm" value={inputText} onChange={(e) => setInputText(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()} />
+            <Button size="icon" className="rounded-full h-9 w-9" onClick={handleSendMessage} disabled={!inputText.trim()}><Send className="h-4 w-4" /></Button>
           </div>
         </div>
       </Card>

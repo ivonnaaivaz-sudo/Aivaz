@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -11,11 +12,10 @@ import {
   Lock,
   Settings,
   ShieldCheck,
-  LayoutDashboard
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-const TurtleIcon = ({ className }: { className?: string }) => (
+const HartmannLogo = ({ className }: { className?: string }) => (
   <svg 
     viewBox="0 0 24 24" 
     fill="none" 
@@ -76,10 +76,10 @@ export function Sidebar() {
       <Link href="/dashboard" className="p-10 flex flex-col items-center">
         <div className="flex flex-col items-center text-center cursor-pointer group">
           <div className="w-14 h-14 rounded-2xl bg-primary/5 border border-primary/10 flex items-center justify-center mb-4 shadow-[0_0_30px_rgba(75,163,199,0.1)] group-hover:border-primary/30 transition-all duration-500">
-            <TurtleIcon className="h-7 w-7 text-primary" />
+            <HartmannLogo className="h-7 w-7 text-primary" />
           </div>
           <span className="font-headline font-bold text-2xl tracking-tighter text-foreground leading-none uppercase">
-            AIVAZ
+            HARTMANN
           </span>
           <span className="text-[9px] font-bold tracking-[0.4em] text-primary uppercase mt-2 opacity-60">
             Heritage
@@ -87,7 +87,7 @@ export function Sidebar() {
         </div>
       </Link>
 
-      <nav className="flex-1 px-6 py-4 overflow-y-auto scrollbar-hide flex flex-col">
+      <nav className="flex-1 px-6 py-4 overflow-y-auto flex flex-col">
         <div className="flex-1">
           {mainNav.map((item) => <NavItem key={item.name} item={item} />)}
         </div>
@@ -106,8 +106,8 @@ export function Sidebar() {
         >
           <div className="relative">
             <Avatar className="h-9 w-9 border border-white/10 group-hover:border-primary/30 transition-all">
-              <AvatarImage src="https://picsum.photos/seed/julian/100/100" />
-              <AvatarFallback>JA</AvatarFallback>
+              <AvatarImage src="https://picsum.photos/seed/markus/100/100" />
+              <AvatarFallback>MH</AvatarFallback>
             </Avatar>
             {pathname === "/house" && (
               <div className="absolute -top-1 -right-1">
@@ -117,10 +117,10 @@ export function Sidebar() {
           </div>
           <div className="flex-1 overflow-hidden">
             <p className="text-xs font-semibold truncate text-foreground group-hover:text-primary transition-colors">
-              {user?.displayName || "Julian Aivaz"}
+              Dr. Markus Hartmann
             </p>
             <p className="text-[9px] text-muted-foreground truncate uppercase font-bold tracking-widest opacity-60">
-              {pathname === "/house" ? "Inside The House" : "Principal"}
+              Principal
             </p>
           </div>
         </Link>
