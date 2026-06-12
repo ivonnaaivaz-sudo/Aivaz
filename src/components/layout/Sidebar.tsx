@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -13,29 +14,13 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-
-const HartmannLogo = ({ className }: { className?: string }) => (
-  <svg 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="1.5" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    className={className}
-  >
-    <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
-    <path d="M12 2v20" />
-    <path d="M2 12h20" />
-    <path d="M19.07 4.93L4.93 19.07" />
-    <path d="M4.93 4.93l14.14 14.14" />
-    <path d="M12 7l5 5-5 5-5-5 5-5z" />
-  </svg>
-);
+import Image from "next/image";
+import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 export function Sidebar() {
   const pathname = usePathname();
   const { user } = useUser();
+  const brandLogo = PlaceHolderImages.find(img => img.id === 'brand-logo');
 
   const mainNav = [
     { name: "Bridge", href: "/bridge", icon: Compass },
@@ -74,8 +59,20 @@ export function Sidebar() {
     <aside className="fixed left-0 top-0 bottom-0 w-[280px] bg-sidebar border-r border-sidebar-border z-40 flex flex-col dark">
       <Link href="/dashboard" className="p-10 flex flex-col items-center">
         <div className="flex flex-col items-center text-center cursor-pointer group">
-          <div className="w-14 h-14 rounded-2xl bg-primary/5 border border-primary/10 flex items-center justify-center mb-4 shadow-[0_0_30px_rgba(75,163,199,0.1)] group-hover:border-primary/30 transition-all duration-500">
-            <HartmannLogo className="h-7 w-7 text-primary" />
+          <div className="w-16 h-16 rounded-2xl bg-primary/5 border border-primary/10 flex items-center justify-center mb-4 shadow-[0_0_30px_rgba(75,163,199,0.1)] group-hover:border-primary/30 transition-all duration-500 overflow-hidden relative">
+            {brandLogo ? (
+              <Image 
+                src={brandLogo.imageUrl} 
+                alt={brandLogo.description} 
+                fill
+                className="object-contain p-2"
+                priority
+              />
+            ) : (
+              <div className="h-full w-full flex items-center justify-center bg-primary/10">
+                <span className="text-primary text-[10px] font-bold">LOGO</span>
+              </div>
+            )}
           </div>
           <span className="font-headline font-bold text-2xl tracking-tighter text-foreground leading-none uppercase">
             HARTMANN
