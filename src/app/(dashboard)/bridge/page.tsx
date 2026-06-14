@@ -12,8 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
 import { 
-  PieChart as PieChartIcon, 
   Landmark, 
   Plus, 
   Link as LinkIcon, 
@@ -36,7 +36,11 @@ import {
   Layers,
   BarChart3,
   Dna,
-  Scale
+  Scale,
+  ShieldAlert,
+  Activity,
+  ChevronRight,
+  Info
 } from "lucide-react";
 import { 
   PieChart, 
@@ -44,6 +48,11 @@ import {
   Cell, 
   ResponsiveContainer, 
   Tooltip as RechartsTooltip,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid
 } from "recharts";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -54,11 +63,17 @@ const STRATEGIC_VS_TACTICAL = [
   { name: 'Tactical Allocation', value: 24, color: '#0ea5e9', description: 'Opportunistic / Short-Term' },
 ];
 
-const DETAILED_ALLOCATION = [
-  { name: 'Commercial Real Estate', value: 55, color: '#3b82f6' },
-  { name: 'Industrial Chemicals', value: 25, color: '#1d4ed8' },
-  { name: 'Cash (Idle)', value: 11, color: '#f59e0b' },
-  { name: 'Tech/Growth Equity', value: 9, color: '#64748b' },
+const LIQUIDITY_BREAKDOWN = [
+  { name: 'Liquid (≤30d)', value: 18, color: '#10b981' },
+  { name: 'Semi-Liquid (30-365d)', value: 31, color: '#3b82f6' },
+  { name: 'Illiquid (>1y)', value: 51, color: '#6366f1' },
+];
+
+const SECTOR_CONCENTRATION = [
+  { name: 'Real Estate', value: 55 },
+  { name: 'Industrials', value: 25 },
+  { name: 'Cash', value: 11 },
+  { name: 'Tech', value: 9 },
 ];
 
 const HARTMANN_ACCOUNTS = [
@@ -70,10 +85,10 @@ const HARTMANN_ACCOUNTS = [
 ];
 
 const TPA_STEPS = [
-  { step: 1, label: "Set Risk Targets", desc: "Identify sustainable market risk appetite via reference portfolio.", active: true },
-  { step: 2, label: "Set Exposure Targets", desc: "Determine factor mix to maximize long-horizon risk-adjusted returns.", active: true },
-  { step: 3, label: "Set Strategy Targets", desc: "Translate factor exposures into actual building blocks (Real Assets, PE).", active: true },
-  { step: 4, label: "Balance & Selection", desc: "Analyze how major new investments affect total portfolio exposures.", active: true }
+  { step: 1, label: "Set Risk Targets", desc: "Identify sustainable market risk appetite via board-level reference portfolio.", active: true },
+  { step: 2, label: "Set Exposure Targets", desc: "Determine factor mix (growth, rates, inflation) to maximize long-horizon returns.", active: true },
+  { step: 3, label: "Set Strategy Targets", desc: "Translate broad factor exposures into actual building blocks (Real Assets, PE).", active: true },
+  { step: 4, label: "Balance & Selection", desc: "Analyze how major new investments affect total portfolio factor exposures.", active: true }
 ];
 
 export default function BridgeHub() {
@@ -126,243 +141,377 @@ export default function BridgeHub() {
   const netWorth = viewMode === 'aggregated' ? "€380,000,000" : "€247,000,000";
 
   return (
-    <div className="space-y-12 max-w-7xl mx-auto pb-32">
+    <div className="space-y-10 max-w-[1600px] mx-auto pb-32">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b pb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-200 pb-8">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="uppercase tracking-widest text-[9px] font-bold">Total Portfolio Approach</Badge>
+            <Badge variant="secondary" className="uppercase tracking-widest text-[9px] font-bold">Total Portfolio Approach (TPA)</Badge>
             <span className="text-[10px] text-muted-foreground font-bold tracking-widest uppercase">Hartmann Heritage Ecosystem</span>
           </div>
           <h1 className="font-headline text-4xl font-bold tracking-tight">The Bridge</h1>
-          <p className="text-muted-foreground italic text-sm">Consolidated operational hub for multi-jurisdictional Hartmann assets.</p>
+          <p className="text-muted-foreground italic text-sm">Consolidated operational hub for multi-jurisdictional heritage assets.</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-4">
-          <Tabs value={viewMode} onValueChange={(val) => setViewMode(val as any)} className="bg-muted p-1 rounded-xl">
+          <Tabs value={viewMode} onValueChange={(val) => setViewMode(val as any)} className="bg-slate-100 p-1 rounded-xl">
             <TabsList className="bg-transparent border-none">
-              <TabsTrigger value="individual" className="text-[10px] font-bold uppercase px-4">
-                <User className="mr-2 h-3.5 w-3.5" /> My View
+              <TabsTrigger value="individual" className="text-[10px] font-bold uppercase px-4 data-[state=active]:bg-white">
+                <User className="mr-2 h-3.5 w-3.5" /> Dr. Markus View
               </TabsTrigger>
-              <TabsTrigger value="aggregated" className="text-[10px] font-bold uppercase px-4">
+              <TabsTrigger value="aggregated" className="text-[10px] font-bold uppercase px-4 data-[state=active]:bg-white">
                 <Users className="mr-2 h-3.5 w-3.5" /> Hartmann Aggregated
               </TabsTrigger>
             </TabsList>
           </Tabs>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm">
-              <LinkIcon className="mr-2 h-4 w-4" /> Link Account
+            <Button variant="outline" size="sm" className="rounded-xl border-slate-200">
+              <LinkIcon className="mr-2 h-4 w-4" /> Link API
             </Button>
-            <Button size="sm" className="shadow-lg" onClick={() => setIsAddAssetOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" /> Add Asset
+            <Button size="sm" className="rounded-xl shadow-lg" onClick={() => setIsAddAssetOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" /> Register Asset
             </Button>
           </div>
         </div>
       </div>
 
-      {/* TPA Methodology Tracker */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {TPA_STEPS.map((s) => (
-          <Card key={s.step} className="bg-white/40 border-slate-200">
-            <CardContent className="p-4 space-y-2">
-              <div className="flex items-center gap-2">
-                <span className="w-6 h-6 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-[10px] font-bold text-primary">
-                  {s.step}
-                </span>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">TPA Step</span>
-              </div>
-              <p className="text-sm font-bold text-slate-900">{s.label}</p>
-              <p className="text-[11px] text-muted-foreground leading-tight">{s.desc}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Split Portfolio View (Dual Ring Donut) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <Card className="lg:col-span-12 border-none shadow-xl bg-white/80 overflow-hidden">
-          <CardHeader className="border-b bg-slate-50/50">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-xl font-headline font-bold flex items-center gap-2">
-                  <Layers className="h-5 w-5 text-primary" />
-                  Strategic vs. Tactical Allocation
-                </CardTitle>
-                <CardDescription>Dual-ring visualization of core legacy holdings versus opportunistic reserves.</CardDescription>
-              </div>
-              <div className="text-right">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Total AUM</p>
-                <p className="text-2xl font-headline font-bold text-primary">{netWorth}</p>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="p-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-              <div className="h-[350px] relative">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    {/* Inner Ring: Strategic/Tactical Split */}
-                    <Pie
-                      data={STRATEGIC_VS_TACTICAL}
-                      innerRadius={80}
-                      outerRadius={110}
-                      paddingAngle={5}
-                      dataKey="value"
-                      stroke="none"
-                    >
-                      {STRATEGIC_VS_TACTICAL.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    {/* Outer Ring: Detailed Allocation */}
-                    <Pie
-                      data={DETAILED_ALLOCATION}
-                      innerRadius={115}
-                      outerRadius={125}
-                      paddingAngle={2}
-                      dataKey="value"
-                      stroke="none"
-                    >
-                      {DETAILED_ALLOCATION.map((entry, index) => (
-                        <Cell key={`cell-detailed-${index}`} fill={entry.color} opacity={0.4} />
-                      ))}
-                    </Pie>
-                    <RechartsTooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                  <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Aggregate</p>
-                  <p className="text-3xl font-headline font-bold">€380M</p>
+      {viewMode === 'aggregated' ? (
+        <>
+          {/* Executive Summary Row */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <Card className="bg-white border-slate-200 shadow-sm">
+              <CardContent className="p-6">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Total Family Net Worth</p>
+                <div className="flex items-end justify-between">
+                  <h3 className="text-2xl font-headline font-bold text-slate-900">{netWorth}</h3>
+                  <Badge className="bg-emerald-100 text-emerald-600 border-transparent text-[10px] font-bold">+4.2% Growth</Badge>
                 </div>
-              </div>
+              </CardContent>
+            </Card>
+            <Card className="bg-white border-slate-200 shadow-sm">
+              <CardContent className="p-6">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Diversification Alpha</p>
+                <div className="flex items-end justify-between">
+                  <h3 className="text-2xl font-headline font-bold text-primary">1.8%</h3>
+                  <p className="text-[10px] text-muted-foreground font-medium">Extra return via TPA</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="bg-white border-slate-200 shadow-sm">
+              <CardContent className="p-6">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Liquidity Score</p>
+                <div className="flex items-end justify-between">
+                  <h3 className="text-2xl font-headline font-bold text-slate-900">49/100</h3>
+                  <Badge variant="outline" className="border-amber-200 text-amber-600 text-[9px] uppercase font-bold">Sub-Optimal</Badge>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="bg-white border-slate-200 shadow-sm">
+              <CardContent className="p-6">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Geopolitical Risk Score</p>
+                <div className="flex items-end justify-between">
+                  <h3 className="text-2xl font-headline font-bold text-slate-900">42/100</h3>
+                  <Globe className="h-4 w-4 text-slate-300" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-              <div className="space-y-8">
-                {STRATEGIC_VS_TACTICAL.map((item, i) => (
-                  <div key={i} className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                        <div>
-                          <p className="font-bold text-lg">{item.name}</p>
-                          <p className="text-xs text-muted-foreground">{item.description}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xl font-headline font-bold">{item.value}%</p>
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase">€{(380 * item.value / 100).toFixed(1)}M</p>
-                      </div>
-                    </div>
-                    <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                      <div className="h-full transition-all duration-1000" style={{ backgroundColor: item.color, width: `${item.value}%` }} />
-                    </div>
-                    <p className="text-xs text-muted-foreground italic">
-                      {item.name === 'Strategic Allocation' 
-                        ? "Designed for multi-generational stability and legacy goals. Changes rarely."
-                        : "Used for near-term opportunities, risk management, and market timing."}
-                    </p>
+          {/* Strategic vs Tactical Dual View */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <Card className="lg:col-span-12 border-slate-200 shadow-md bg-white overflow-hidden">
+              <CardHeader className="border-b bg-slate-50/50">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-xl font-headline font-bold flex items-center gap-2">
+                      <Layers className="h-5 w-5 text-primary" />
+                      Strategic vs. Tactical Allocation
+                    </CardTitle>
+                    <CardDescription>Dual-ring visualization of Hartmann core legacy vs. opportunistic reserves.</CardDescription>
                   </div>
-                ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                  <div className="h-[350px] relative">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={STRATEGIC_VS_TACTICAL}
+                          innerRadius={80}
+                          outerRadius={110}
+                          paddingAngle={5}
+                          dataKey="value"
+                          stroke="none"
+                        >
+                          {STRATEGIC_VS_TACTICAL.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Pie
+                          data={LIQUIDITY_BREAKDOWN}
+                          innerRadius={115}
+                          outerRadius={125}
+                          paddingAngle={2}
+                          dataKey="value"
+                          stroke="none"
+                        >
+                          {LIQUIDITY_BREAKDOWN.map((entry, index) => (
+                            <Cell key={`cell-detailed-${index}`} fill={entry.color} opacity={0.6} />
+                          ))}
+                        </Pie>
+                        <RechartsTooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                      <p className="text-[10px] font-bold uppercase text-slate-400 tracking-[0.2em]">Total AUM</p>
+                      <p className="text-3xl font-headline font-bold text-slate-900">€380M</p>
+                    </div>
+                  </div>
 
-      {/* Side-by-Side Comparison Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Strategic Card */}
-        <Card className="border-l-4 border-l-blue-900 shadow-lg bg-blue-50/30">
-          <CardHeader>
-            <div className="flex items-center gap-2 mb-2">
-              <ShieldCheck className="h-5 w-5 text-blue-900" />
-              <CardTitle className="text-blue-900">Strategic Portfolio</CardTitle>
-            </div>
-            <CardDescription className="text-blue-800/60 font-medium">Core long-term wealth preservation & generational transfer.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-2 gap-y-4 text-sm">
-              <div>
-                <p className="text-[10px] font-bold uppercase text-blue-900/40 tracking-widest">Time Horizon</p>
-                <p className="font-bold text-blue-900">10–50+ Years</p>
-              </div>
-              <div>
-                <p className="text-[10px] font-bold uppercase text-blue-900/40 tracking-widest">Risk Profile</p>
-                <p className="font-bold text-blue-900">Moderate, Diversified</p>
-              </div>
-              <div>
-                <p className="text-[10px] font-bold uppercase text-blue-900/40 tracking-widest">Goal Alignment</p>
-                <p className="font-bold text-blue-900">High</p>
-              </div>
-              <div>
-                <p className="text-[10px] font-bold uppercase text-blue-900/40 tracking-widest">Rebalancing</p>
-                <p className="font-bold text-blue-900">Annual or Less</p>
-              </div>
-            </div>
-            <div className="p-4 rounded-xl bg-blue-900/5 border border-blue-900/10">
-              <p className="text-[10px] font-bold uppercase text-blue-900/40 tracking-widest mb-2">Key Assets</p>
-              <div className="flex flex-wrap gap-2">
-                {['Core Real Estate', 'Blue-Chip Equities', 'Private Equity', 'Dynasty Trusts'].map(tag => (
-                  <Badge key={tag} className="bg-blue-900/10 text-blue-900 border-blue-900/20 text-[9px]">{tag}</Badge>
-                ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+                  <div className="grid grid-cols-1 gap-6">
+                    {STRATEGIC_VS_TACTICAL.map((item, i) => (
+                      <div key={i} className={cn("p-6 rounded-2xl border", i === 0 ? "border-blue-900/10 bg-blue-50/30" : "border-sky-500/10 bg-sky-50/30")}>
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+                            <h4 className="font-bold text-lg text-slate-900">{item.name}</h4>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-2xl font-headline font-bold text-slate-900">{item.value}%</p>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">€{(380 * item.value / 100).toFixed(1)}M</p>
+                          </div>
+                        </div>
+                        <p className="text-xs text-slate-600 leading-relaxed italic border-t pt-3 border-slate-200">
+                          {item.name === 'Strategic Allocation' 
+                            ? "Purpose: Long-term preservation & generational transfer (10-50+ years). Key Assets: Real Estate, Private Equity, Dynasty Trusts."
+                            : "Purpose: Capitalize on short-term opportunities & risk management (6-36 months). Key Assets: Cash, Liquid Equities, Commodities."}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-        {/* Tactical Card */}
-        <Card className="border-l-4 border-l-sky-500 shadow-lg bg-sky-50/30">
-          <CardHeader>
-            <div className="flex items-center gap-2 mb-2">
-              <Zap className="h-5 w-5 text-sky-500" />
-              <CardTitle className="text-sky-600">Tactical Portfolio</CardTitle>
-            </div>
-            <CardDescription className="text-sky-600/60 font-medium">Capitalize on short-term opportunities & manage risks.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-2 gap-y-4 text-sm">
-              <div>
-                <p className="text-[10px] font-bold uppercase text-sky-600/40 tracking-widest">Time Horizon</p>
-                <p className="font-bold text-sky-600">6–36 Months</p>
-              </div>
-              <div>
-                <p className="text-[10px] font-bold uppercase text-sky-600/40 tracking-widest">Risk Profile</p>
-                <p className="font-bold text-sky-600">Higher Volatility</p>
-              </div>
-              <div>
-                <p className="text-[10px] font-bold uppercase text-sky-600/40 tracking-widest">Goal Alignment</p>
-                <p className="font-bold text-sky-600">Medium (Flexible)</p>
-              </div>
-              <div>
-                <p className="text-[10px] font-bold uppercase text-sky-600/40 tracking-widest">Rebalancing</p>
-                <p className="font-bold text-sky-600">Quarterly / Event-driven</p>
-              </div>
-            </div>
-            <div className="p-4 rounded-xl bg-sky-500/5 border border-sky-500/10">
-              <p className="text-[10px] font-bold uppercase text-sky-600/40 tracking-widest mb-2">Key Assets</p>
-              <div className="flex flex-wrap gap-2">
-                {['Cash', 'Liquid Equities', 'Commodities', 'Hedge Funds', 'Opportunistic Plays'].map(tag => (
-                  <Badge key={tag} className="bg-sky-500/10 text-sky-600 border-sky-500/20 text-[9px]">{tag}</Badge>
-                ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          {/* Risk Matrix Row */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Concentration & Sector Breakdown */}
+            <Card className="border-slate-200 shadow-sm bg-white">
+              <CardHeader className="pb-2 border-b">
+                <CardTitle className="text-sm font-bold uppercase tracking-widest text-slate-600 flex items-center justify-between">
+                  Concentration & Sector
+                  <Badge variant="outline" className="text-[8px] border-amber-200 text-amber-600">58% Top 5</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-6 space-y-6">
+                <div className="space-y-4">
+                  {SECTOR_CONCENTRATION.map((s) => (
+                    <div key={s.name} className="space-y-1.5">
+                      <div className="flex justify-between text-[11px] font-bold uppercase text-slate-500">
+                        <span>{s.name}</span>
+                        <span>{s.value}%</span>
+                      </div>
+                      <Progress value={s.value} className="h-1 bg-slate-100" />
+                    </div>
+                  ))}
+                </div>
+                <div className="pt-4 border-t border-slate-50 grid grid-cols-2 gap-4 text-center">
+                  <div>
+                    <p className="text-[9px] font-bold uppercase text-slate-400 tracking-widest mb-1">Asia Exposure</p>
+                    <p className="text-lg font-bold text-slate-900">47%</p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-bold uppercase text-slate-400 tracking-widest mb-1">Diversification</p>
+                    <p className="text-lg font-bold text-emerald-600">68/100</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-      {/* Tactical Alerts & Ledger */}
-      <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-1000">
-        <AlertTriangle className="h-5 w-5 text-amber-500" />
-        <div className="flex-1">
-          <p className="text-sm font-bold text-amber-500 uppercase tracking-widest">Tactical Alert: Excess Cash</p>
-          <p className="text-xs text-muted-foreground">€42M Cash sitting in low-yield accounts. Opportunity cost estimated at €2.1M annually.</p>
+            {/* Liquidity & Currency Risk */}
+            <Card className="border-slate-200 shadow-sm bg-white">
+              <CardHeader className="pb-2 border-b">
+                <CardTitle className="text-sm font-bold uppercase tracking-widest text-slate-600 flex items-center justify-between">
+                  Liquidity & Currency
+                  <Badge variant="outline" className="text-[8px] border-red-200 text-red-600">High Cash Drag</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-6 space-y-6">
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-3">
+                  <div className="flex items-center justify-between text-[11px] font-bold">
+                    <span className="text-slate-500 uppercase tracking-widest">Idle Cash (11%)</span>
+                    <span className="text-slate-900">€42.0M</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-[10px] text-amber-600 font-bold uppercase">
+                    <AlertTriangle className="h-3 w-3" />
+                    <span>Cost: €1.8M/yr opportunity cost</span>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <p className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Currency Risk (Unhedged)</p>
+                  <div className="flex flex-wrap gap-2">
+                    {['EUR: 42%', 'USD: 28%', 'SGD: 19%'].map(c => (
+                      <Badge key={c} variant="outline" className="text-[9px] px-2 py-0 border-slate-200 text-slate-600">{c}</Badge>
+                    ))}
+                  </div>
+                </div>
+                <div className="pt-4 border-t border-slate-50 flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Liquidity ≤30d</span>
+                  <span className="text-lg font-bold text-slate-900">18%</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Generational & Family Risk */}
+            <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-primary">
+              <CardHeader className="pb-2 border-b">
+                <CardTitle className="text-sm font-bold uppercase tracking-widest text-slate-600 flex items-center justify-between">
+                  Generational & Family
+                  <Badge className="bg-primary/10 text-primary border-primary/20 text-[8px] uppercase">Aivaz Synthesis</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-6 space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 text-center">
+                    <p className="text-[9px] font-bold uppercase text-slate-400 tracking-widest mb-1">Alignment Score</p>
+                    <p className="text-2xl font-headline font-bold text-slate-900">78%</p>
+                  </div>
+                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 text-center">
+                    <p className="text-[9px] font-bold uppercase text-slate-400 tracking-widest mb-1">Succession Risk</p>
+                    <p className="text-lg font-bold text-red-600">High</p>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <p className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Blockholder Dynamics</p>
+                  <div className="p-3 rounded-lg border border-primary/10 bg-primary/[0.02] text-[11px] italic text-slate-600 leading-snug">
+                    "Control remains highly concentrated in G1. Diverging risk appetites between G1 (Preservation) and G3 (Growth) detected."
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Advanced Hedging Row */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="border-slate-200 shadow-sm bg-white">
+              <CardHeader className="pb-4 border-b">
+                <CardTitle className="text-sm font-bold uppercase tracking-widest text-slate-600">Hedging Effectiveness & Beta</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="grid grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-end">
+                      <span className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Portfolio Volatility</span>
+                      <span className="text-sm font-bold text-slate-900">12.4% (vs 14.1% BM)</span>
+                    </div>
+                    <div className="flex justify-between items-end">
+                      <span className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Hedging Coverage</span>
+                      <span className="text-sm font-bold text-amber-600">34.0%</span>
+                    </div>
+                    <Progress value={34} className="h-1.5" />
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-end">
+                      <span className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Beta to China Slowdown</span>
+                      <span className="text-sm font-bold text-slate-900">1.8</span>
+                    </div>
+                    <div className="p-3 rounded-xl bg-amber-500/5 border border-amber-500/10 text-[10px] text-amber-600 font-bold uppercase flex items-center gap-2">
+                      <ShieldAlert className="h-4 w-4" />
+                      <span>Non-Linear Risk Flag: Real Estate Concentration Blindspot</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* TPA steps row (re-styled) */}
+            <div className="grid grid-cols-2 gap-4">
+              {TPA_STEPS.map((s) => (
+                <Card key={s.step} className="bg-slate-50/50 border-slate-200">
+                  <CardContent className="p-4 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="w-5 h-5 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-[9px] font-bold text-primary">
+                        {s.step}
+                      </span>
+                      <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">TPA Step</span>
+                    </div>
+                    <p className="text-[13px] font-bold text-slate-900">{s.label}</p>
+                    <p className="text-[10px] text-slate-500 leading-tight line-clamp-2">{s.desc}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </>
+      ) : (
+        /* Individual View for Markus */
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in duration-500">
+          <div className="lg:col-span-1 space-y-6">
+            <Card className="border-slate-200 shadow-md">
+              <CardHeader className="bg-slate-50/50 border-b">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <User className="h-5 w-5 text-primary" />
+                  Principal Snapshot
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-6 space-y-6">
+                <div className="text-center pb-6 border-b">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 mb-2">My Total Assets</p>
+                  <p className="text-4xl font-headline font-bold text-slate-900">{netWorth}</p>
+                </div>
+                <div className="space-y-4 pt-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Linked Accounts</span>
+                    <span className="font-bold">€85.7M</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Manual Assets</span>
+                    <span className="font-bold">€161.3M</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="lg:col-span-2 space-y-6">
+            <Card className="border-slate-200 shadow-sm">
+              <CardHeader className="border-b">
+                <CardTitle className="text-lg">My Managed Accounts</CardTitle>
+                <CardDescription>Accounts where Dr. Markus Hartmann is the primary principal.</CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead className="text-[10px] font-bold uppercase tracking-widest text-slate-400 pl-6">Account</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Institution</TableHead>
+                      <TableHead className="text-right text-[10px] font-bold uppercase tracking-widest text-slate-400 pr-6">Balance</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredAccounts.map((acc) => (
+                      <TableRow key={acc.id} className="hover:bg-slate-50 transition-colors">
+                        <TableCell className="pl-6 font-medium">
+                          <p>{acc.name}</p>
+                          <p className="text-[10px] text-muted-foreground uppercase">{acc.type}</p>
+                        </TableCell>
+                        <TableCell className="text-sm text-slate-600">{acc.institution}</TableCell>
+                        <TableCell className="text-right font-headline font-bold text-primary pr-6">{acc.balance}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </div>
         </div>
-        <Button variant="outline" size="sm" className="bg-amber-500/10 border-amber-500/30 text-amber-500" asChild>
-          <Link href="/chart-room">Manage Tactical Shift</Link>
-        </Button>
-      </div>
+      )}
 
+      {/* Shared Ledger & Tabs Area */}
       <Tabs defaultValue="linked" className="space-y-6">
-        <TabsList className="bg-muted p-1">
+        <TabsList className="bg-slate-100 p-1">
           <TabsTrigger value="linked" className="data-[state=active]:bg-white data-[state=active]:shadow-sm text-[10px] font-bold uppercase px-6">
             Financial Ledger
           </TabsTrigger>
@@ -372,31 +521,39 @@ export default function BridgeHub() {
         </TabsList>
 
         <TabsContent value="linked">
-          <Card className="border-none shadow-lg bg-white/80">
-            <CardHeader>
-              <CardTitle className="text-lg">Connected Accounts</CardTitle>
-              <CardDescription>Real-time banking feeds and private trust holdings.</CardDescription>
+          <Card className="border-slate-200 shadow-lg bg-white overflow-hidden">
+            <CardHeader className="bg-slate-50/50 border-b">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg">Ledger Integration</CardTitle>
+                  <CardDescription>Real-time banking feeds and private trust holdings.</CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <RefreshCw className="h-4 w-4 text-slate-400 animate-spin-slow" />
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Synced 2m ago</span>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-0">
               <Table>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
-                    <TableHead className="text-muted-foreground font-bold uppercase text-[10px] tracking-widest">Account</TableHead>
-                    <TableHead className="text-muted-foreground font-bold uppercase text-[10px] tracking-widest">Institution</TableHead>
-                    <TableHead className="text-muted-foreground font-bold uppercase text-[10px] tracking-widest">Status</TableHead>
-                    <TableHead className="text-right text-muted-foreground font-bold uppercase text-[10px] tracking-widest">Balance</TableHead>
+                    <TableHead className="text-slate-400 font-bold uppercase text-[10px] tracking-widest pl-8">Account</TableHead>
+                    <TableHead className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">Institution</TableHead>
+                    <TableHead className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">Status</TableHead>
+                    <TableHead className="text-right text-slate-400 font-bold uppercase text-[10px] tracking-widest pr-8">Balance</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredAccounts.map((acc) => (
-                    <TableRow key={acc.id} className="hover:bg-muted/50 transition-colors group">
-                      <TableCell className="font-medium py-4">
+                    <TableRow key={acc.id} className="hover:bg-slate-50 transition-colors group">
+                      <TableCell className="font-medium py-5 pl-8">
                         <div>
-                          <p>{acc.name}</p>
-                          <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest opacity-60">{acc.type}</p>
+                          <p className="text-slate-900">{acc.name}</p>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest opacity-60">{acc.type}</p>
                         </div>
                       </TableCell>
-                      <TableCell className="text-muted-foreground text-sm">{acc.institution}</TableCell>
+                      <TableCell className="text-slate-600 text-sm">{acc.institution}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className={cn(
                           "text-[8px] font-bold px-2 py-0",
@@ -405,7 +562,7 @@ export default function BridgeHub() {
                           {acc.status}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-right font-headline font-bold text-primary">{acc.balance}</TableCell>
+                      <TableCell className="text-right font-headline font-bold text-primary pr-8">{acc.balance}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -417,34 +574,34 @@ export default function BridgeHub() {
         <TabsContent value="physical">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {manualAssets.map((asset) => (
-              <Card key={asset.id} className="border-none shadow-lg bg-white/80 hover:ring-2 hover:ring-primary/20 transition-all group">
+              <Card key={asset.id} className="border-slate-200 shadow-md bg-white hover:ring-2 hover:ring-primary/20 transition-all group">
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between mb-2">
                     <Badge variant="outline" className="bg-primary/5 border-primary/20 text-primary text-[9px] font-bold uppercase">
                       {asset.type}
                     </Badge>
-                    <div className="p-2 rounded-lg bg-muted group-hover:bg-primary/5 transition-colors">
+                    <div className="p-2 rounded-lg bg-slate-50 group-hover:bg-primary/5 transition-colors">
                       {asset.type === 'Real Estate' ? <Home className="h-4 w-4" /> : 
                        asset.type === 'Art' ? <Palmtree className="h-4 w-4" /> : <Gem className="h-4 w-4" />}
                     </div>
                   </div>
                   <CardTitle className="text-xl group-hover:text-primary transition-colors">{asset.name}</CardTitle>
-                  <div className="flex items-center gap-2 text-muted-foreground">
+                  <div className="flex items-center gap-2 text-slate-400">
                     <MapPin className="h-3 w-3" />
                     <span className="text-[10px] uppercase font-bold tracking-widest">{asset.location}</span>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="p-4 rounded-xl bg-muted/50 space-y-1">
-                    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.2em]">Latest Appraisal</p>
-                    <p className="text-2xl font-headline font-bold text-primary">€{asset.appraisalValue?.toLocaleString()}</p>
-                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-1">
+                  <div className="p-4 rounded-xl bg-slate-50 space-y-1">
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em]">Latest Appraisal</p>
+                    <p className="text-2xl font-headline font-bold text-slate-900">€{asset.appraisalValue?.toLocaleString()}</p>
+                    <div className="flex items-center gap-2 text-[10px] text-slate-400 mt-1">
                       <Calendar className="h-3 w-3" />
                       <span>{asset.appraisalDate}</span>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between pt-2 border-t">
-                    <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                    <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
                       <FileText className="h-3.5 w-3.5" />
                       <span>{asset.documentCount} Document(s)</span>
                     </div>
@@ -456,13 +613,13 @@ export default function BridgeHub() {
               </Card>
             ))}
             
-            <Card className="border-2 border-dashed border-muted-foreground/10 hover:border-primary/50 transition-all cursor-pointer flex flex-col items-center justify-center p-8 text-center space-y-4 bg-transparent" onClick={() => setIsAddAssetOpen(true)}>
-              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
-                <Plus className="h-6 w-6 text-muted-foreground" />
+            <Card className="border-2 border-dashed border-slate-200 hover:border-primary/50 transition-all cursor-pointer flex flex-col items-center justify-center p-8 text-center space-y-4 bg-slate-50/20" onClick={() => setIsAddAssetOpen(true)}>
+              <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center">
+                <Plus className="h-6 w-6 text-slate-400" />
               </div>
               <div>
-                <p className="font-bold text-sm">Add New Manual Asset</p>
-                <p className="text-[10px] text-muted-foreground mt-1 px-4">Register non-liquid assets, art, or private real estate holdings.</p>
+                <p className="font-bold text-sm text-slate-900">Add New Manual Asset</p>
+                <p className="text-[10px] text-slate-400 mt-1 px-4">Register non-liquid assets, art, or private real estate holdings.</p>
               </div>
             </Card>
           </div>
@@ -471,23 +628,23 @@ export default function BridgeHub() {
 
       {/* Asset Addition Dialog */}
       <Dialog open={isAddAssetOpen} onOpenChange={setIsAddAssetOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px] rounded-2xl">
           <DialogHeader>
-            <DialogTitle>Register Manual Asset</DialogTitle>
+            <DialogTitle className="font-headline">Register Manual Asset</DialogTitle>
             <DialogDescription>
               Manually track assets like real estate, art, or private holdings that aren't linked via banking APIs.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="name">Asset Name</Label>
-              <Input id="name" placeholder="e.g. Aspen Ski Lodge" value={newAsset.name} onChange={(e) => setNewAsset({...newAsset, name: e.target.value})} />
+              <Label htmlFor="name" className="text-xs font-bold uppercase tracking-widest text-slate-400">Asset Name</Label>
+              <Input id="name" placeholder="e.g. Aspen Ski Lodge" className="rounded-xl" value={newAsset.name} onChange={(e) => setNewAsset({...newAsset, name: e.target.value})} />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label>Asset Type</Label>
+                <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Asset Type</Label>
                 <Select value={newAsset.type} onValueChange={(val) => setNewAsset({...newAsset, type: val})}>
-                  <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                  <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select type" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Real Estate">Real Estate</SelectItem>
                     <SelectItem value="Art">Fine Art</SelectItem>
@@ -499,17 +656,17 @@ export default function BridgeHub() {
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="value">Appraisal Value (€)</Label>
-                <Input id="value" type="number" placeholder="5000000" value={newAsset.appraisalValue} onChange={(e) => setNewAsset({...newAsset, appraisalValue: e.target.value})} />
+                <Label htmlFor="value" className="text-xs font-bold uppercase tracking-widest text-slate-400">Appraisal (€)</Label>
+                <Input id="value" type="number" placeholder="5000000" className="rounded-xl" value={newAsset.appraisalValue} onChange={(e) => setNewAsset({...newAsset, appraisalValue: e.target.value})} />
               </div>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="location">Location / Jurisdiction</Label>
-              <Input id="location" placeholder="e.g. Munich, Germany" value={newAsset.location} onChange={(e) => setNewAsset({...newAsset, location: e.target.value})} />
+              <Label htmlFor="location" className="text-xs font-bold uppercase tracking-widest text-slate-400">Location</Label>
+              <Input id="location" placeholder="e.g. Munich, Germany" className="rounded-xl" value={newAsset.location} onChange={(e) => setNewAsset({...newAsset, location: e.target.value})} />
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={handleAddAsset} disabled={isSubmitting || !newAsset.name || !newAsset.appraisalValue}>
+            <Button onClick={handleAddAsset} disabled={isSubmitting || !newAsset.name || !newAsset.appraisalValue} className="rounded-xl w-full">
               {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Register Asset"}
             </Button>
           </DialogFooter>
