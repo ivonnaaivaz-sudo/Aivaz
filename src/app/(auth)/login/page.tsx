@@ -80,7 +80,7 @@ export default function LoginPage() {
           </div>
           <div className="space-y-2">
             <CardTitle className="text-3xl font-headline font-bold tracking-tighter text-white">Aivaz Heritage</CardTitle>
-            <CardDescription className="text-slate-500 uppercase tracking-[0.3em] text-[10px] font-bold">Secure Node Access Protocol</CardDescription>
+            <CardDescription className="text-slate-400 italic text-sm font-medium">Complex legacies, simplified</CardDescription>
           </div>
         </CardHeader>
         <CardContent className="space-y-6 px-8">
@@ -109,7 +109,7 @@ export default function LoginPage() {
               />
             </div>
             <Button type="submit" className="w-full h-11 rounded-xl shadow-lg bg-primary hover:bg-primary/90 text-white font-bold text-xs uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-[0.98]" disabled={loading}>
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><LogIn className="mr-2 h-4 w-4" /> Establish Connection</>}
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><LogIn className="mr-2 h-4 w-4" /> Login</>}
             </Button>
           </form>
           
