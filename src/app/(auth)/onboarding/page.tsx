@@ -243,7 +243,7 @@ export default function OnboardingPage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  const captainAvatar = PlaceHolderImages.find(img => img.id === 'captain-avatar');
+  const brandLogo = PlaceHolderImages.find(img => img.id === 'brand-logo');
   const currentStep = allSteps[currentStepIndex];
 
   const getNextValidStepIndex = (fromIndex: number, currentAnswers: any) => {
@@ -374,22 +374,22 @@ export default function OnboardingPage() {
       </div>
 
       <div className="max-w-2xl w-full space-y-8 relative z-10">
-        <div className="flex flex-col items-center text-center space-y-4">
-          <div className="relative w-20 h-20 rounded-full bg-white/[0.03] border border-white/10 flex items-center justify-center shadow-[0_0_30px_rgba(75,163,199,0.2)] overflow-hidden">
-            {captainAvatar ? (
+        <div className="flex flex-col items-center text-center space-y-6">
+          <div className="mx-auto w-24 h-24 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center shadow-[0_0_40px_rgba(75,163,199,0.1)] overflow-hidden relative">
+            {brandLogo && (
               <Image 
-                src={captainAvatar.imageUrl} 
-                alt="AI Captain" 
-                fill 
-                className="object-cover"
-                data-ai-hint="3d character"
+                src={brandLogo.imageUrl} 
+                alt="Aivaz Heritage Logo" 
+                fill
+                className="object-contain p-3"
+                priority
               />
-            ) : (
-              <BrainCircuit className="h-10 w-10 text-primary" />
             )}
           </div>
-          <h1 className="text-3xl font-headline font-bold text-white tracking-tight">Legacy Discovery</h1>
-          <p className="text-slate-400 max-w-sm text-sm">Let's get to know your family's unique architecture.</p>
+          <div className="space-y-2">
+            <h1 className="text-3xl font-headline font-bold text-white tracking-tight">Legacy Discovery</h1>
+            <p className="text-slate-400 max-w-sm text-sm">Let's get to know your family's unique architecture.</p>
+          </div>
         </div>
 
         <div className="space-y-4">
