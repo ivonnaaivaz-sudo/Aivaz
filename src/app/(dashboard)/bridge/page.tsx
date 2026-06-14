@@ -1,7 +1,8 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
-import { useUser, useFirestore, useCollection } from "@/firebase";
+import { useUser, useFirestore, useCollection, useDoc } from "@/firebase";
 import { collection, doc, setDoc, query } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -43,7 +44,8 @@ import {
   Activity,
   ChevronRight,
   Info,
-  ArrowUpRight
+  ArrowUpRight,
+  Lock
 } from "lucide-react";
 import { 
   PieChart, 
@@ -51,11 +53,6 @@ import {
   Cell, 
   ResponsiveContainer, 
   Tooltip as RechartsTooltip,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid
 } from "recharts";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -103,6 +100,7 @@ export default function BridgeHub() {
   const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
+  const { data: profile } = useDoc(user ? `users/${user.uid}` : null);
   const [viewMode, setViewMode] = useState<"individual" | "aggregated">("aggregated");
   const [isAddAssetOpen, setIsAddAssetOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -113,6 +111,10 @@ export default function BridgeHub() {
     location: "",
     appraisalDate: new Date().toISOString().split('T')[0],
   });
+
+  const userRole = profile?.role || "Principal";
+  const hasDetailedAccess = userRole === "Principal" || userRole === "Co-Principal";
+  const isLimited = userRole === "Limited Member" || userRole === "Advisor/Guest";
 
   const assetsQuery = useMemo(() => {
     if (!user || !db) return null;
@@ -138,7 +140,7 @@ export default function BridgeHub() {
         appraisalValue: parseFloat(newAsset.appraisalValue),
         documentCount: 1,
         createdAt: new Date().toISOString(),
-        breakdown: [{ member: "Markus", pct: 100 }] // Default for Markus's view
+        breakdown: [{ member: "Markus", pct: 100 }]
       });
       toast({ title: "Asset Registered", description: `${newAsset.name} added to the Hartmann vault.` });
       setIsAddAssetOpen(false);
@@ -149,25 +151,28 @@ export default function BridgeHub() {
 
   const netWorth = viewMode === 'aggregated' ? "€380,000,000" : "€247,000,000";
 
-  const MemberBreakdown = ({ breakdown }: { breakdown: { member: string, pct: number }[] }) => (
-    <div className="flex -space-x-1 overflow-hidden p-1">
-      {breakdown.map((b, i) => {
-        const m = MEMBERS.find(mem => mem.name === b.member);
-        return (
-          <TooltipProvider key={i}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className={cn("w-2.5 h-2.5 rounded-full border border-white ring-1 ring-slate-100", m?.color)} />
-              </TooltipTrigger>
-              <TooltipContent className="p-2 text-[10px] font-bold">
-                {b.member}: {b.pct}% contribution
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        );
-      })}
-    </div>
-  );
+  const MemberBreakdown = ({ breakdown }: { breakdown: { member: string, pct: number }[] }) => {
+    if (isLimited) return null;
+    return (
+      <div className="flex -space-x-1 overflow-hidden p-1">
+        {breakdown.map((b, i) => {
+          const m = MEMBERS.find(mem => mem.name === b.member);
+          return (
+            <TooltipProvider key={i}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className={cn("w-2.5 h-2.5 rounded-full border border-white ring-1 ring-slate-100", m?.color)} />
+                </TooltipTrigger>
+                <TooltipContent className="p-2 text-[10px] font-bold">
+                  {hasDetailedAccess ? `${b.member}: ${b.pct}% contribution` : `Member Contribution: ${b.pct}%`}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          );
+        })}
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-10 max-w-[1600px] mx-auto pb-32">
@@ -177,6 +182,7 @@ export default function BridgeHub() {
           <div className="flex items-center gap-2">
             <Badge variant="secondary" className="uppercase tracking-widest text-[9px] font-bold">Total Portfolio Approach (TPA)</Badge>
             <span className="text-[10px] text-muted-foreground font-bold tracking-widest uppercase">Hartmann Heritage Ecosystem</span>
+            <Badge variant="outline" className="text-[8px] border-primary/20 text-primary uppercase ml-2">Access: {userRole}</Badge>
           </div>
           <h1 className="font-headline text-4xl font-bold tracking-tight">The Bridge</h1>
           <p className="text-muted-foreground italic text-sm">Consolidated operational hub for multi-jurisdictional heritage assets.</p>
@@ -208,42 +214,48 @@ export default function BridgeHub() {
         <>
           {/* Risk Alerts Teaser Row */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {RISK_ALERTS.map(alert => (
-              <Card key={alert.id} className="border-l-4 border-l-red-500 bg-red-50/10 border-slate-200">
-                <CardContent className="p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="p-2 rounded-lg bg-red-100 text-red-600">
-                      <ShieldAlert className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="text-xs font-bold text-slate-900">{alert.title}</p>
-                        <Badge variant="outline" className="text-[8px] border-red-200 text-red-600 uppercase">{alert.severity}</Badge>
+            {RISK_ALERTS.map(alert => {
+              const isRelevant = !isLimited || alert.severity === 'Critical';
+              if (!isRelevant) return null;
+              return (
+                <Card key={alert.id} className="border-l-4 border-l-red-500 bg-red-50/10 border-slate-200">
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="p-2 rounded-lg bg-red-100 text-red-600">
+                        <ShieldAlert className="h-5 w-5" />
                       </div>
-                      <p className="text-[10px] text-slate-500 mt-0.5">{alert.description}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="flex flex-col items-end">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase">Impacted Members</p>
-                      <div className="flex -space-x-1.5 mt-1">
-                        {alert.members.map(m => (
-                          <Avatar key={m} className="w-5 h-5 border-2 border-white ring-1 ring-slate-100">
-                            <AvatarImage src={MEMBERS.find(mem => mem.name === m)?.avatar} />
-                            <AvatarFallback>{m[0]}</AvatarFallback>
-                          </Avatar>
-                        ))}
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs font-bold text-slate-900">{alert.title}</p>
+                          <Badge variant="outline" className="text-[8px] border-red-200 text-red-600 uppercase">{alert.severity}</Badge>
+                        </div>
+                        <p className="text-[10px] text-slate-500 mt-0.5">{alert.description}</p>
                       </div>
                     </div>
-                    <Link href="/chart-room">
-                      <Button variant="ghost" size="sm" className="h-8 text-[9px] font-bold uppercase tracking-widest text-primary hover:bg-primary/5">
-                        Deep Dive <ArrowUpRight className="ml-1 h-3 w-3" />
-                      </Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                    <div className="flex items-center gap-4">
+                      {!isLimited && (
+                        <div className="flex flex-col items-end">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase">Impacted Members</p>
+                          <div className="flex -space-x-1.5 mt-1">
+                            {alert.members.map(m => (
+                              <Avatar key={m} className="w-5 h-5 border-2 border-white ring-1 ring-slate-100">
+                                <AvatarImage src={MEMBERS.find(mem => mem.name === m)?.avatar} />
+                                <AvatarFallback>{m[0]}</AvatarFallback>
+                              </Avatar>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      <Link href="/chart-room">
+                        <Button variant="ghost" size="sm" className="h-8 text-[9px] font-bold uppercase tracking-widest text-primary hover:bg-primary/5">
+                          Deep Dive <ArrowUpRight className="ml-1 h-3 w-3" />
+                        </Button>
+                      </Link>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
 
           {/* Executive Summary Row */}
@@ -329,7 +341,6 @@ export default function BridgeHub() {
                             <Cell key={`cell-detailed-${index}`} fill={entry.color} opacity={0.6} />
                           ))}
                         </Pie>
-                        <RechartsTooltip />
                       </PieChart>
                     </ResponsiveContainer>
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
@@ -366,7 +377,6 @@ export default function BridgeHub() {
 
           {/* Risk Matrix Row */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Concentration & Sector Breakdown */}
             <Card className="border-slate-200 shadow-sm bg-white">
               <CardHeader className="pb-2 border-b">
                 <CardTitle className="text-sm font-bold uppercase tracking-widest text-slate-600 flex items-center justify-between">
@@ -386,20 +396,9 @@ export default function BridgeHub() {
                     </div>
                   ))}
                 </div>
-                <div className="pt-4 border-t border-slate-50 grid grid-cols-2 gap-4 text-center">
-                  <div>
-                    <p className="text-[9px] font-bold uppercase text-slate-400 tracking-widest mb-1">Asia Exposure</p>
-                    <p className="text-lg font-bold text-slate-900">47%</p>
-                  </div>
-                  <div>
-                    <p className="text-[9px] font-bold uppercase text-slate-400 tracking-widest mb-1">Diversification</p>
-                    <p className="text-lg font-bold text-emerald-600">68/100</p>
-                  </div>
-                </div>
               </CardContent>
             </Card>
 
-            {/* Liquidity & Currency Risk */}
             <Card className="border-slate-200 shadow-sm bg-white">
               <CardHeader className="pb-2 border-b">
                 <CardTitle className="text-sm font-bold uppercase tracking-widest text-slate-600 flex items-center justify-between">
@@ -413,10 +412,6 @@ export default function BridgeHub() {
                     <span className="text-slate-500 uppercase tracking-widest">Idle Cash (11%)</span>
                     <span className="text-slate-900">€42.0M</span>
                   </div>
-                  <div className="flex items-center gap-2 text-[10px] text-amber-600 font-bold uppercase">
-                    <AlertTriangle className="h-3 w-3" />
-                    <span>Cost: €1.8M/yr opportunity cost</span>
-                  </div>
                 </div>
                 <div className="space-y-3">
                   <p className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Currency Risk (Unhedged)</p>
@@ -426,14 +421,9 @@ export default function BridgeHub() {
                     ))}
                   </div>
                 </div>
-                <div className="pt-4 border-t border-slate-50 flex items-center justify-between">
-                  <span className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Liquidity ≤30d</span>
-                  <span className="text-lg font-bold text-slate-900">18%</span>
-                </div>
               </CardContent>
             </Card>
 
-            {/* Generational & Family Risk */}
             <Card className="border-slate-200 shadow-sm bg-white border-l-4 border-l-primary">
               <CardHeader className="pb-2 border-b">
                 <CardTitle className="text-sm font-bold uppercase tracking-widest text-slate-600 flex items-center justify-between">
@@ -452,66 +442,8 @@ export default function BridgeHub() {
                     <p className="text-lg font-bold text-red-600">High</p>
                   </div>
                 </div>
-                <div className="space-y-3">
-                  <p className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Blockholder Dynamics</p>
-                  <div className="p-3 rounded-lg border border-primary/10 bg-primary/[0.02] text-[11px] italic text-slate-600 leading-snug">
-                    "Control remains highly concentrated in G1. Diverging risk appetites between G1 (Preservation) and G3 (Growth) detected."
-                  </div>
-                </div>
               </CardContent>
             </Card>
-          </div>
-
-          {/* Advanced Hedging Row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="border-slate-200 shadow-sm bg-white">
-              <CardHeader className="pb-4 border-b">
-                <CardTitle className="text-sm font-bold uppercase tracking-widest text-slate-600">Hedging Effectiveness & Beta</CardTitle>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="grid grid-cols-2 gap-8">
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-end">
-                      <span className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Portfolio Volatility</span>
-                      <span className="text-sm font-bold text-slate-900">12.4% (vs 14.1% BM)</span>
-                    </div>
-                    <div className="flex justify-between items-end">
-                      <span className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Hedging Coverage</span>
-                      <span className="text-sm font-bold text-amber-600">34.0%</span>
-                    </div>
-                    <Progress value={34} className="h-1.5" />
-                  </div>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-end">
-                      <span className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Beta to China Slowdown</span>
-                      <span className="text-sm font-bold text-slate-900">1.8</span>
-                    </div>
-                    <div className="p-3 rounded-xl bg-amber-500/5 border border-amber-500/10 text-[10px] text-amber-600 font-bold uppercase flex items-center gap-2">
-                      <ShieldAlert className="h-4 w-4" />
-                      <span>Non-Linear Risk Flag: Real Estate Concentration Blindspot</span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* TPA steps row (re-styled) */}
-            <div className="grid grid-cols-2 gap-4">
-              {TPA_STEPS.map((s) => (
-                <Card key={s.step} className="bg-slate-50/50 border-slate-200">
-                  <CardContent className="p-4 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <span className="w-5 h-5 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-[9px] font-bold text-primary">
-                        {s.step}
-                      </span>
-                      <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">TPA Step</span>
-                    </div>
-                    <p className="text-[13px] font-bold text-slate-900">{s.label}</p>
-                    <p className="text-[10px] text-slate-500 leading-tight line-clamp-2">{s.desc}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
           </div>
         </>
       ) : (
@@ -687,73 +619,9 @@ export default function BridgeHub() {
                 </CardContent>
               </Card>
             ))}
-            
-            <Card className="border-2 border-dashed border-slate-200 hover:border-primary/50 transition-all cursor-pointer flex flex-col items-center justify-center p-8 text-center space-y-4 bg-slate-50/20" onClick={() => setIsAddAssetOpen(true)}>
-              <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center">
-                <Plus className="h-6 w-6 text-slate-400" />
-              </div>
-              <div>
-                <p className="font-bold text-sm text-slate-900">Add New Manual Asset</p>
-                <p className="text-[10px] text-slate-400 mt-1 px-4">Register non-liquid assets, art, or private real estate holdings.</p>
-              </div>
-            </Card>
           </div>
         </TabsContent>
       </Tabs>
-
-      {/* Asset Addition Dialog */}
-      <Dialog open={isAddAssetOpen} onOpenChange={setIsAddAssetOpen}>
-        <DialogContent className="sm:max-w-[425px] rounded-2xl">
-          <DialogHeader>
-            <DialogTitle className="font-headline">Register Manual Asset</DialogTitle>
-            <DialogDescription>
-              Manually track assets like real estate, art, or private holdings that aren't linked via banking APIs.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name" className="text-xs font-bold uppercase tracking-widest text-slate-400">Asset Name</Label>
-              <Input id="name" placeholder="e.g. Aspen Ski Lodge" className="rounded-xl" value={newAsset.name} onChange={(e) => setNewAsset({...newAsset, name: e.target.value})} />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Asset Type</Label>
-                <Select value={newAsset.type} onValueChange={(val) => setNewAsset({...newAsset, type: val})}>
-                  <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select type" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Real Estate">Real Estate</SelectItem>
-                    <SelectItem value="Art">Fine Art</SelectItem>
-                    <SelectItem value="Collectibles">Collectibles</SelectItem>
-                    <SelectItem value="Jewelry">Jewelry</SelectItem>
-                    <SelectItem value="Private Equity">Private Equity</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="value" className="text-xs font-bold uppercase tracking-widest text-slate-400">Appraisal (€)</Label>
-                <Input id="value" type="number" placeholder="5000000" className="rounded-xl" value={newAsset.appraisalValue} onChange={(e) => setNewAsset({...newAsset, appraisalValue: e.target.value})} />
-              </div>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="location" className="text-xs font-bold uppercase tracking-widest text-slate-400">Location</Label>
-              <Input id="location" placeholder="e.g. Munich, Germany" className="rounded-xl" value={newAsset.location} onChange={(e) => setNewAsset({...newAsset, location: e.target.value})} />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button onClick={handleAddAsset} disabled={isSubmitting || !newAsset.name || !newAsset.appraisalValue} className="rounded-xl w-full">
-              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Register Asset"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
-
-const TPA_STEPS = [
-  { step: 1, label: "Set Risk Targets", desc: "Identify sustainable market risk appetite via board-level reference portfolio.", active: true },
-  { step: 2, label: "Set Exposure Targets", desc: "Determine factor mix (growth, rates, inflation) to maximize long-horizon returns.", active: true },
-  { step: 3, label: "Set Strategy Targets", desc: "Translate broad factor exposures into actual building blocks (Real Assets, PE).", active: true },
-  { step: 4, label: "Balance & Selection", desc: "Analyze how major new investments affect total portfolio factor exposures.", active: true }
-];

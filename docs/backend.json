@@ -10,7 +10,7 @@
         "displayName": { "type": "string" },
         "email": { "type": "string" },
         "hasCompletedProfiling": { "type": "boolean" },
-        "role": { "type": "string", "enum": ["Founder", "Next Generation", "Advisor"] },
+        "role": { "type": "string", "enum": ["Principal", "Co-Principal", "Active Member", "Limited Member", "Advisor/Guest"] },
         "generationalStage": { "type": "string" },
         "onboardingData": { "type": "object" },
         "updatedAt": { "type": "string", "format": "date-time" }
