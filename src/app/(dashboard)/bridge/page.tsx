@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo } from "react";
@@ -383,7 +382,6 @@ export default function BridgeHub() {
 
         <TabsContent value="physical">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Asset Add Card */}
             <Card className="border-2 border-dashed border-slate-200 shadow-none bg-slate-50/50 flex flex-col items-center justify-center p-12 text-center space-y-4 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer group rounded-3xl">
               <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
                 <Plus className="h-8 w-8 text-slate-400 group-hover:text-primary transition-colors" />

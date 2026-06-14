@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useUser, useDoc, useCollection, useFirestore } from "@/firebase";
@@ -78,7 +77,6 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-12 max-w-7xl mx-auto pb-32">
-      {/* Welcome Header with Image */}
       <div className="relative overflow-hidden rounded-3xl border border-slate-200 shadow-lg min-h-[350px] flex items-end">
         {heroImage && (
           <Image 

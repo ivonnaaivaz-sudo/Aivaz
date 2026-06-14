@@ -11,13 +11,12 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { user, loading: authLoading } = useUser();
-  // Fetch profile separately since useUser only handles Auth state
   const { data: profile, loading: profileLoading } = useDoc(user ? `users/${user.uid}` : null);
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    // DIAGNOSTIC LOGS: Use these to verify state in the browser console (F12)
+    // DIAGNOSTIC LOGS
     console.log("--- Dashboard Access Protection Sync ---");
     console.log("Auth State:", { email: user?.email, loading: authLoading });
     console.log("Profile State:", { 
@@ -27,11 +26,7 @@ export default function DashboardLayout({
     });
     console.log("Current Path:", pathname);
 
-    // Wait for all data to load before making redirection decisions
-    if (authLoading || profileLoading) {
-      console.log("Aivaz Protection: Data still loading...");
-      return;
-    }
+    if (authLoading || profileLoading) return;
 
     // Protection Gate Logic:
     // If the user is logged in but hasn't finished DNA profiling, force them to onboarding.

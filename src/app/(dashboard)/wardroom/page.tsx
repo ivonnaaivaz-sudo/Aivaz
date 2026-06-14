@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
@@ -125,7 +124,6 @@ export default function WardroomPage() {
 
   return (
     <div className="h-[calc(100vh-100px)] flex flex-col gap-6 max-w-[1800px] mx-auto animate-in fade-in duration-500">
-      {/* Ecosystem Presence Bar */}
       <Card className="border border-slate-200 shadow-sm bg-white flex items-center justify-between p-4 px-8 shrink-0 rounded-2xl">
         <div className="flex items-center gap-10">
           <div className="pr-10 border-r border-slate-100">
@@ -166,7 +164,6 @@ export default function WardroomPage() {
       </Card>
 
       <div className="flex-1 flex gap-6 overflow-hidden">
-        {/* Sidebar: Threads */}
         <Card className="w-80 flex flex-col border border-slate-200 shadow-sm bg-slate-50/50 shrink-0 rounded-2xl overflow-hidden">
           <CardHeader className="p-6 pb-4 border-b border-slate-200 bg-white space-y-4">
             <div className="flex items-center justify-between">
@@ -220,7 +217,6 @@ export default function WardroomPage() {
           </ScrollArea>
         </Card>
 
-        {/* Main Messenger Hub */}
         <Card className="flex-1 flex flex-col border border-slate-200 shadow-sm bg-white overflow-hidden rounded-2xl relative">
           <CardHeader className="border-b border-slate-200 py-4 px-8 flex flex-row items-center justify-between bg-white shrink-0 z-10">
             <div className="flex items-center gap-4">
@@ -249,12 +245,6 @@ export default function WardroomPage() {
           
           <ScrollArea className="flex-1 bg-white" ref={scrollRef}>
             <div className="py-10 px-10 space-y-10">
-              <div className="flex flex-col items-center justify-center space-y-4 opacity-10 py-6 select-none">
-                <Shield className="h-6 w-6 text-slate-600" />
-                <div className="h-px w-64 bg-slate-300" />
-                <p className="text-[9px] uppercase font-bold tracking-[0.4em] text-slate-600">Hartmann Legacy Encryption</p>
-              </div>
-
               {messages.map((msg: any) => {
                 const isCurrentUser = msg.senderName.includes("Markus");
                 const isAI = msg.senderName.includes("AI") || msg.senderName === "Captain (AI)";
@@ -322,19 +312,9 @@ export default function WardroomPage() {
                 onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()} 
               />
               <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className={cn("h-10 w-10 rounded-xl", activeThread.type === 'ai' ? "text-primary bg-primary/5" : "text-slate-400 hover:text-primary")}>
-                  <Sparkles className="h-5 w-5" />
-                </Button>
-                <div className="h-6 w-px bg-slate-200 mx-1" />
                 <Button size="icon" className="rounded-xl h-10 w-10 bg-primary hover:bg-primary/90 text-white transition-all shadow-sm" onClick={handleSendMessage} disabled={!inputText.trim()}>
                   <Send className="h-5 w-5" />
                 </Button>
-              </div>
-            </div>
-            <div className="flex justify-center mt-3">
-              <div className="flex items-center gap-2 text-[9px] uppercase font-bold tracking-widest text-slate-400">
-                <Shield className="h-3 w-3 text-emerald-500" />
-                Solid Channel: Hartmann heritage node active
               </div>
             </div>
           </div>
@@ -343,4 +323,3 @@ export default function WardroomPage() {
     </div>
   );
 }
-
