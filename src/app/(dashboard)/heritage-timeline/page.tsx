@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useUser, useFirestore, useCollection } from "@/firebase";
@@ -7,7 +6,8 @@ import { collection, query, orderBy } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { History, ShieldCheck, Milestone, Flag, Info, Clock, CheckCircle2, Landmark, Globe } from "lucide-react";
+import { History, Milestone, Flag, Clock, CheckCircle2, Landmark, Globe } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const HARTMANN_TIMELINE = [
   {
@@ -96,11 +96,10 @@ export default function HeritageTimelinePage() {
         </CardHeader>
         <CardContent className="pt-24 pb-24 overflow-x-auto">
           <div className="min-w-[1400px] relative px-10">
-            {/* The line */}
             <div className="absolute top-1/2 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-y-1/2" />
             
             <div className="flex justify-between items-center relative z-10">
-              {timelineEvents.map((event: any, i: number) => (
+              {timelineEvents.map((event: any) => (
                 <div key={event.id} className="flex flex-col items-center gap-4 w-72 group">
                   <div className={cn(
                     "text-[10px] font-bold uppercase tracking-[0.25em] transition-colors",
@@ -157,7 +156,7 @@ export default function HeritageTimelinePage() {
             <CardDescription>High-priority milestones required for institutional stability.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {timelineEvents.filter(e => e.status !== 'completed').slice(0, 3).map((event: any) => (
+            {timelineEvents.filter((e: any) => e.status !== 'completed').slice(0, 3).map((event: any) => (
               <div key={event.id} className="flex gap-4 p-5 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-primary/30 transition-all group">
                 <div className={cn(
                   "w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110",
@@ -196,7 +195,7 @@ export default function HeritageTimelinePage() {
                 <p className="text-[10px] font-bold uppercase tracking-widest text-primary">Succession Grade</p>
                 <p className="text-2xl font-headline font-bold">Institutional Pivot Phase</p>
               </div>
-              <ShieldCheck className="h-10 w-10 text-primary opacity-30" />
+              <Landmark className="h-10 w-10 text-primary opacity-30" />
             </div>
             
             <div className="space-y-4">
@@ -205,8 +204,7 @@ export default function HeritageTimelinePage() {
                 {[
                   { label: "Munich-Singapore Axis", icon: Globe },
                   { label: "G2 Trust Liquidity", icon: Landmark },
-                  { label: "Impact Fund Launch", icon: Sparkles },
-                  { label: "Charter Formalization", icon: ShieldCheck }
+                  { label: "Charter Formalization", icon: Milestone }
                 ].map((goal, i) => (
                   <div key={i} className="flex items-center gap-3 p-4 rounded-xl border border-white/5 bg-white/[0.01] text-xs font-bold group hover:border-primary/30 transition-all">
                     <goal.icon className="h-4 w-4 text-primary opacity-50 group-hover:opacity-100 transition-opacity" />

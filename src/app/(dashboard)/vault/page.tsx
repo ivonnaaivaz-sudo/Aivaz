@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -112,7 +111,6 @@ export default function VaultPage() {
         </div>
       </div>
 
-      {/* 1. Governance Bedrock (Highest Hierarchy) */}
       <section className="space-y-6">
         <div className="flex items-center gap-3 border-b border-slate-200 pb-4">
           <Gavel className="h-5 w-5 text-primary" />
@@ -142,7 +140,6 @@ export default function VaultPage() {
         </div>
       </section>
 
-      {/* 2. Principal Oversight / Advanced Analytics */}
       {isPrincipal && (
         <section className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-700">
           <div className="flex items-center justify-between border-b border-slate-200 pb-4">
@@ -259,7 +256,6 @@ export default function VaultPage() {
         </section>
       )}
 
-      {/* 3. Digital Vault Document Ledger */}
       <section className="space-y-6">
         <div className="flex items-center justify-between border-b border-slate-200 pb-4">
           <div className="flex items-center gap-3">
