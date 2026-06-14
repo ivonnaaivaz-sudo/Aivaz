@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Progress } from "@/components/ui/progress";
 import { 
   Landmark, 
   Plus, 
@@ -30,7 +31,9 @@ import {
   Palmtree,
   FileText,
   Calendar,
-  Layers
+  Layers,
+  Activity,
+  BarChart3
 } from "lucide-react";
 import { 
   PieChart, 
@@ -50,8 +53,51 @@ const MEMBERS = [
 ];
 
 const STRATEGIC_DATA = [
-  { name: 'Strategic', value: 76, color: '#1976d2' },
-  { name: 'Tactical', value: 24, color: '#4fc3f7' },
+  { name: 'Strategic', value: 76, color: 'hsl(var(--primary))' },
+  { name: 'Tactical', value: 24, color: '#94a3b8' },
+];
+
+const PORTFOLIO_BREAKDOWN = [
+  { 
+    name: "Real Estate & Industrial", 
+    pct: 55, 
+    icon: Home,
+    members: ["Markus", "Sophie"], 
+    contributions: [
+      { name: "Markus", share: 68 },
+      { name: "Sophie", share: 22 },
+      { name: "Alexander", share: 10 }
+    ]
+  },
+  { 
+    name: "Industrial Chemicals", 
+    pct: 25, 
+    icon: Landmark,
+    members: ["Markus", "Alexander"], 
+    contributions: [
+      { name: "Markus", share: 90 },
+      { name: "Alexander", share: 10 }
+    ]
+  },
+  { 
+    name: "Tech / Growth Equity", 
+    pct: 9, 
+    icon: Zap,
+    members: ["Alexander"], 
+    contributions: [
+      { name: "Alexander", share: 100 }
+    ]
+  },
+  { 
+    name: "Cash & Liquid", 
+    pct: 11, 
+    icon: Coins,
+    members: ["Markus", "Elena"], 
+    contributions: [
+      { name: "Markus", share: 50 },
+      { name: "Elena", share: 50 }
+    ]
+  }
 ];
 
 const HARTMANN_ACCOUNTS = [
@@ -68,10 +114,8 @@ export default function BridgeHub() {
   const { toast } = useToast();
   const { data: profile } = useDoc(user ? `users/${user.uid}` : null);
   const [viewMode, setViewMode] = useState<"individual" | "aggregated">("aggregated");
-  const [isAddAssetOpen, setIsAddAssetOpen] = useState(false);
   
   const userRole = profile?.role || "Principal";
-  const hasDetailedAccess = userRole === "Principal" || userRole === "Co-Principal";
   const isLimited = userRole === "Limited Member" || userRole === "Advisor/Guest";
 
   const assetsQuery = useMemo(() => {
@@ -88,8 +132,9 @@ export default function BridgeHub() {
     return HARTMANN_ACCOUNTS;
   }, [viewMode]);
 
-  const MemberIndicators = ({ members: membersList }: { members: string[] }) => {
+  const MemberIndicators = ({ members: membersList, size = "sm" }: { members: string[], size?: "xs" | "sm" }) => {
     if (isLimited) return null;
+    const dotSize = size === "xs" ? "w-1.5 h-1.5" : "w-2 h-2";
     return (
       <div className="flex -space-x-1 items-center ml-2">
         {membersList.map(name => {
@@ -98,7 +143,31 @@ export default function BridgeHub() {
             <TooltipProvider key={name}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div className={cn("w-2 h-2 rounded-full border border-white", m?.color)} />
+                  <div className={cn(dotSize, "rounded-full border border-white", m?.color)} />
+                </TooltipTrigger>
+                <TooltipContent className="p-1 text-[8px] font-bold uppercase">{name}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const MemberAvatars = ({ members: membersList }: { members: string[] }) => {
+    if (isLimited) return null;
+    return (
+      <div className="flex -space-x-2 items-center">
+        {membersList.map(name => {
+          const m = MEMBERS.find(mem => mem.name === name);
+          return (
+            <TooltipProvider key={name}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Avatar className="h-5 w-5 border-2 border-white">
+                    <AvatarImage src={m?.avatar} />
+                    <AvatarFallback className="text-[6px]">{name[0]}</AvatarFallback>
+                  </Avatar>
                 </TooltipTrigger>
                 <TooltipContent className="p-1 text-[8px] font-bold uppercase">{name}</TooltipContent>
               </Tooltip>
@@ -153,11 +222,11 @@ export default function BridgeHub() {
             </div>
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-[#1976d2]" />
+                <div className="w-2 h-2 rounded-full bg-primary" />
                 <span className="text-xs font-bold text-slate-700">Strategic (76%)</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-[#4fc3f7]" />
+                <div className="w-2 h-2 rounded-full bg-slate-400" />
                 <span className="text-xs font-bold text-slate-700">Tactical (24%)</span>
               </div>
               <p className="text-[10px] text-muted-foreground italic max-w-[140px]">Balanced for multi-generational stability.</p>
@@ -309,6 +378,64 @@ export default function BridgeHub() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Family Portfolio Breakdown */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4 text-primary" />
+              <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Family Portfolio Breakdown</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {PORTFOLIO_BREAKDOWN.map((item) => (
+                <TooltipProvider key={item.name}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Card className="bg-white border-slate-200 shadow-sm hover:border-primary/40 transition-all cursor-default overflow-hidden group">
+                        <CardHeader className="pb-2 flex flex-row items-center justify-between">
+                          <div className="space-y-1">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{item.name}</p>
+                            <p className="text-2xl font-headline font-bold text-slate-900">{item.pct}%</p>
+                          </div>
+                          <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center group-hover:bg-primary/5 transition-colors">
+                            <item.icon className="h-5 w-5 text-slate-400 group-hover:text-primary transition-colors" />
+                          </div>
+                        </CardHeader>
+                        <CardContent className="pt-2">
+                          <div className="flex items-center justify-between">
+                             <MemberAvatars members={item.members} />
+                             <Badge variant="ghost" className="text-[9px] text-slate-400 font-bold uppercase opacity-0 group-hover:opacity-100 transition-opacity">View Detail</Badge>
+                          </div>
+                          <div className="mt-4 flex gap-1 h-1 w-full rounded-full overflow-hidden bg-slate-100">
+                             {item.contributions.map((c, i) => (
+                                <div 
+                                  key={i} 
+                                  className={cn("h-full", MEMBERS.find(m => m.name === c.name)?.color)} 
+                                  style={{ width: `${c.share}%` }} 
+                                />
+                             ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="p-4 bg-white border-slate-200 shadow-xl rounded-2xl min-w-[200px] z-[100]">
+                      <div className="space-y-3">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">{item.name} Breakdown</p>
+                        {item.contributions.map((c, i) => (
+                          <div key={i} className="flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-2">
+                              <div className={cn("w-2 h-2 rounded-full", MEMBERS.find(m => m.name === c.name)?.color)} />
+                              <span className="text-xs font-bold text-slate-700">{c.name}</span>
+                            </div>
+                            <span className="text-xs font-bold text-primary">{c.share}%</span>
+                          </div>
+                        ))}
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ))}
+            </div>
+          </div>
         </div>
       ) : (
         /* Individual View for Markus */
@@ -390,7 +517,7 @@ export default function BridgeHub() {
              <Button variant="outline" size="sm" className="rounded-xl border-slate-200 h-9">
               <LinkIcon className="mr-2 h-4 w-4" /> Link External API
             </Button>
-            <Button size="sm" className="rounded-xl shadow-lg h-9" onClick={() => setIsAddAssetOpen(true)}>
+            <Button size="sm" className="rounded-xl shadow-lg h-9">
               <Plus className="mr-2 h-4 w-4" /> Register Asset
             </Button>
           </div>
@@ -405,7 +532,7 @@ export default function BridgeHub() {
                   <CardDescription>Real-time banking feeds and private trust holdings.</CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
-                  <RefreshCw className="h-3.5 w-3.5 text-slate-400 animate-spin-slow" />
+                  <RefreshCw className="h-3.5 w-3.5 text-slate-400" />
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Last synced 2m ago</span>
                 </div>
               </div>
@@ -425,7 +552,7 @@ export default function BridgeHub() {
                     <TableRow key={acc.id} className="hover:bg-slate-50 transition-colors border-slate-100 group">
                       <TableCell className="font-medium py-6 pl-8">
                         <div className="flex items-center gap-3">
-                          {viewMode === 'aggregated' && <MemberIndicators members={acc.breakdown.map((b: any) => b.member)} />}
+                          {viewMode === 'aggregated' && <MemberIndicators members={acc.breakdown?.map((b: any) => b.member) || []} />}
                           <div>
                             <p className="text-slate-900 font-bold">{acc.name}</p>
                             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest opacity-70">{acc.type}</p>
