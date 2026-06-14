@@ -11,17 +11,38 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { user, loading: authLoading } = useUser();
+  // Fetch profile separately since useUser only handles Auth state
   const { data: profile, loading: profileLoading } = useDoc(user ? `users/${user.uid}` : null);
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    // Wait for auth and profile to load
-    if (authLoading || profileLoading) return;
+    // DIAGNOSTIC LOGS: Use these to verify state in the browser console (F12)
+    console.log("--- Dashboard Access Protection Sync ---");
+    console.log("Auth State:", { email: user?.email, loading: authLoading });
+    console.log("Profile State:", { 
+      exists: !!profile, 
+      completed: profile?.hasCompletedProfiling, 
+      loading: profileLoading 
+    });
+    console.log("Current Path:", pathname);
 
-    // If the user is logged in, but hasn't completed profiling, force them to onboarding
-    if (user && profile && !profile.hasCompletedProfiling && pathname !== '/onboarding') {
+    // Wait for all data to load before making redirection decisions
+    if (authLoading || profileLoading) {
+      console.log("Aivaz Protection: Data still loading...");
+      return;
+    }
+
+    // Protection Gate Logic:
+    // If the user is logged in but hasn't finished DNA profiling, force them to onboarding.
+    const needsProfiling = user && (!profile || !profile.hasCompletedProfiling);
+    const isNotOnboarding = pathname !== '/onboarding';
+
+    if (needsProfiling && isNotOnboarding) {
+      console.log("ACTION: Redirecting to /onboarding (Incomplete Profile)");
       router.push('/onboarding');
+    } else {
+      console.log("ACTION: Access permitted.");
     }
   }, [user, profile, authLoading, profileLoading, pathname, router]);
 
