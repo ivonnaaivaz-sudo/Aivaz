@@ -8,6 +8,12 @@
       "imageHint": "heritage logo"
     },
     {
+      "id": "heritage-hero",
+      "description": "Hartmann Family Heritage Background",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/studio-9632545142-53067.firebasestorage.app/o/Branding%2FIMG_1935.jpeg?alt=media",
+      "imageHint": "heritage family"
+    },
+    {
       "id": "captain-avatar",
       "description": "The Captain - 3D AI Strategist",
       "imageUrl": "https://firebasestorage.googleapis.com/v0/b/studio-9632545142-53067.firebasestorage.app/o/Branding%2FIMG_1687.png?alt=media",

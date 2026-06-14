@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -26,7 +27,10 @@ import {
   Info,
   ChevronDown,
   LayoutGrid,
-  Users
+  Users,
+  ArrowRight,
+  ArrowDown,
+  RefreshCw
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -203,6 +207,17 @@ export default function StrategicPairingsPage() {
     }
   };
 
+  const createAutomaticPairing = (blindspotId: string) => {
+    const matchingPairing = GENERATED_PAIRINGS.find(p => p.components.blindspots.includes(blindspotId));
+    if (matchingPairing) {
+      setActivePairingId(matchingPairing.id);
+      toast({
+        title: "AI Strategy Drafted",
+        description: `Drafting "${matchingPairing.title}" to neutralize the detected blindspot.`,
+      });
+    }
+  };
+
   return (
     <div className="flex flex-col h-[calc(100vh-100px)] overflow-hidden bg-white antialiased">
       <header className="h-16 border-b border-slate-200 px-12 flex items-center justify-between shrink-0 bg-white z-[60]">
@@ -273,13 +288,23 @@ export default function StrategicPairingsPage() {
                 </h3>
               </div>
               {blindspots.map(item => (
-                <div key={item.id} className="p-3 rounded-xl bg-red-50/30 border border-red-100 shadow-sm space-y-2">
+                <div key={item.id} className="p-4 rounded-xl bg-red-50/30 border border-red-100 shadow-sm space-y-3">
                   <div className="flex justify-between items-start">
                     <p className="text-[11px] font-bold text-red-900">{item.title}</p>
                     <Badge className="text-[7px] uppercase bg-red-100 text-red-600 border-none">{item.severity}</Badge>
                   </div>
                   <p className="text-[9px] text-red-700/70 italic leading-tight">"{item.description}"</p>
-                  <MemberTags members={item.relatedMembers} />
+                  <div className="flex items-center justify-between">
+                    <MemberTags members={item.relatedMembers} />
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => createAutomaticPairing(item.id)}
+                      className="h-6 text-[8px] font-bold uppercase tracking-widest text-red-600 hover:bg-red-100"
+                    >
+                      Create Pairing <Sparkles className="ml-1.5 h-2.5 w-2.5" />
+                    </Button>
+                  </div>
                 </div>
               ))}
             </section>
@@ -287,7 +312,7 @@ export default function StrategicPairingsPage() {
         </aside>
 
         <main className="flex-1 overflow-y-auto bg-slate-50/30 p-12">
-          <div className="max-w-4xl mx-auto space-y-10">
+          <div className="max-w-4xl mx-auto space-y-12">
             <div className="flex items-center justify-between border-b border-slate-200 pb-4">
               <div className="flex items-center gap-3">
                 <Sparkles className="h-6 w-6 text-primary" />
@@ -299,6 +324,60 @@ export default function StrategicPairingsPage() {
               <Badge className="bg-primary/10 text-primary border-primary/20 uppercase tracking-widest text-[9px] py-1 px-3">
                 {GENERATED_PAIRINGS.length} Optimized Options
               </Badge>
+            </div>
+
+            {/* Vertical Drafting Canvas */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-2 px-1">
+                <LayoutGrid className="h-4 w-4 text-slate-400" />
+                <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Vertical Balancing Area</h3>
+              </div>
+              
+              <div className="grid grid-cols-1 gap-4 relative">
+                {/* Draft UI: Stacked layout */}
+                <div className="p-8 rounded-3xl border-2 border-dashed border-slate-200 bg-white/50 space-y-8">
+                  {activePairing ? (
+                    <>
+                      <div className="space-y-4">
+                        <p className="text-[9px] font-bold uppercase text-emerald-600 text-center tracking-widest">1. Strategic Offsets (Inflows)</p>
+                        <div className="flex flex-wrap justify-center gap-3">
+                          {activePairing.components.opportunities.map(id => (
+                            <div key={id} className="px-4 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-[10px] font-bold text-emerald-700 flex items-center gap-2 animate-in zoom-in-95">
+                              <TrendingUp className="h-3 w-3" /> {inputs.find(i => i.id === id)?.title}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col items-center gap-2">
+                        <ArrowDown className="h-5 w-5 text-slate-300 animate-bounce" />
+                        <div className="h-px w-32 bg-slate-100" />
+                      </div>
+
+                      <div className="space-y-4">
+                        <p className="text-[9px] font-bold uppercase text-amber-600 text-center tracking-widest">2. Proposed Actions (Outflows)</p>
+                        <div className="flex flex-wrap justify-center gap-3">
+                          {activePairing.components.needs.map(id => (
+                            <div key={id} className="px-4 py-2 rounded-xl bg-amber-50 border border-amber-200 text-[10px] font-bold text-amber-700 flex items-center gap-2 animate-in zoom-in-95">
+                              <Users className="h-3 w-3" /> {inputs.find(i => i.id === id)?.title}
+                            </div>
+                          ))}
+                          {activePairing.components.blindspots.map(id => (
+                            <div key={id} className="px-4 py-2 rounded-xl bg-red-50 border border-red-200 text-[10px] font-bold text-red-700 flex items-center gap-2 animate-in zoom-in-95">
+                              <ShieldAlert className="h-3 w-3" /> {inputs.find(i => i.id === id)?.title}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="py-20 text-center space-y-4 opacity-40">
+                      <RefreshCw className="h-10 w-10 mx-auto text-slate-300" />
+                      <p className="text-sm font-medium">Select a pairing or create one from a blindspot to begin vertical balancing.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
             <div className="space-y-6">
@@ -344,24 +423,6 @@ export default function StrategicPairingsPage() {
                   </CardHeader>
 
                   <CardContent className="p-8 pt-4">
-                    <div className="flex flex-wrap gap-2 mb-8">
-                      {pairing.components.opportunities.map(id => (
-                        <Badge key={id} variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px] flex items-center gap-1.5 py-1 px-3">
-                          <Zap className="h-3 w-3" /> {inputs.find(i => i.id === id)?.title}
-                        </Badge>
-                      ))}
-                      {pairing.components.needs.map(id => (
-                        <Badge key={id} variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-[10px] flex items-center gap-1.5 py-1 px-3">
-                          <Users className="h-3 w-3" /> {inputs.find(i => i.id === id)?.title}
-                        </Badge>
-                      ))}
-                      {pairing.components.blindspots.map(id => (
-                        <Badge key={id} variant="outline" className="bg-red-50 text-red-700 border-red-200 text-[10px] flex items-center gap-1.5 py-1 px-3">
-                          <ShieldAlert className="h-3 w-3" /> {inputs.find(i => i.id === id)?.title}
-                        </Badge>
-                      ))}
-                    </div>
-
                     <Accordion type="single" collapsible className="w-full border-t border-slate-100 pt-4">
                       <AccordionItem value="details" className="border-none">
                         <AccordionTrigger className="text-[10px] font-bold uppercase tracking-widest text-primary hover:no-underline py-2">
@@ -429,15 +490,15 @@ export default function StrategicPairingsPage() {
         
         <div className="flex items-center gap-4">
           <div className="text-right">
-             <p className="text-[9px] font-bold uppercase text-slate-400">TPA Phase</p>
-             <p className="text-xs font-bold uppercase text-primary tracking-widest">Execution Balance</p>
+             <p className="text-[9px] font-bold uppercase text-slate-400">Execution Phase</p>
+             <p className="text-xs font-bold uppercase text-primary tracking-widest">Ready for Wardroom</p>
           </div>
           <Button 
             onClick={handleCommit}
             disabled={!activePairing || isSubmitting}
             className="h-10 px-8 rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-xl"
           >
-            {isSubmitting ? "Transmitting..." : "Send Solution to Wardroom"}
+            {isSubmitting ? "Transmitting..." : "Commit Strategic Move"}
           </Button>
         </div>
       </div>

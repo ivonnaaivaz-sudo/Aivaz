@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useUser, useDoc, useCollection, useFirestore } from "@/firebase";
@@ -24,6 +25,7 @@ import { FamilyCalendar, type FamilyEvent } from "@/components/dashboard/FamilyC
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 const MOCK_EVENTS: FamilyEvent[] = [
   { id: "1", title: "Hartmann Family Council", date: "2026-06-12", eventType: "GOVERNANCE", priority: "URGENT", description: "Reviewing the €42M cash reserve deployment proposal.", memberAccess: ["Dr. Markus", "Elena", "Sophie", "Alexander"] },
@@ -43,6 +45,7 @@ export default function DashboardPage() {
   const { user } = useUser();
   const db = useFirestore();
   const { data: dna, loading: dnaLoading } = useDoc(user ? `users/${user.uid}/dna/current` : null);
+  const heroImage = PlaceHolderImages.find(img => img.id === 'heritage-hero');
 
   const timelineQuery = useMemo(() => {
     if (!user || !db) return null;
@@ -61,15 +64,17 @@ export default function DashboardPage() {
   return (
     <div className="space-y-12 max-w-7xl mx-auto pb-32">
       <div className="relative overflow-hidden rounded-3xl border border-slate-200 shadow-lg min-h-[340px] flex items-end">
-        <Image 
-          src="https://firebasestorage.googleapis.com/v0/b/studio-9632545142-53067.firebasestorage.app/o/Branding%2FIMG_1935.png?alt=media"
-          alt="Family Heritage"
-          fill
-          className="object-cover"
-          priority
-          data-ai-hint="heritage family"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/40 to-transparent" />
+        {heroImage && (
+          <Image 
+            src={heroImage.imageUrl}
+            alt="Family Heritage"
+            fill
+            className="object-cover"
+            priority
+            data-ai-hint="heritage family"
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent" />
         
         <div className="relative z-10 w-full p-10 flex flex-col md:flex-row md:items-end justify-between gap-8">
           <div className="space-y-6">
