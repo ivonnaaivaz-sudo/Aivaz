@@ -3,18 +3,18 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/firebase";
-import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ShieldCheck, LogIn, Loader2 } from "lucide-react";
+import { ShieldCheck, UserPlus, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import Link from "next/link";
 
-export default function LoginPage() {
+export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -24,34 +24,34 @@ export default function LoginPage() {
 
   const brandLogo = PlaceHolderImages.find(img => img.id === 'brand-logo');
 
-  const handleEmailLogin = async (e: React.FormEvent) => {
+  const handleEmailSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      router.push("/"); 
+      await createUserWithEmailAndPassword(auth, email, password);
+      router.push("/onboarding"); 
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Authentication Failed",
-        description: "Invalid credentials. Please verify your node access details.",
+        title: "Registration Failed",
+        description: error.message || "Could not establish credentials.",
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleAuth = async () => {
     setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
-      router.push("/"); 
+      router.push("/onboarding"); 
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Authentication Failed",
-        description: "Google verification failed. Please try an alternative method.",
+        description: "Google verification failed.",
       });
     } finally {
       setLoading(false);
@@ -84,9 +84,9 @@ export default function LoginPage() {
           </div>
         </CardHeader>
         <CardContent className="space-y-6 px-8">
-          <form onSubmit={handleEmailLogin} className="space-y-4">
+          <form onSubmit={handleEmailSignup} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Personnel Email</Label>
+              <Label htmlFor="email" className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Establish Email</Label>
               <Input 
                 id="email" 
                 type="email" 
@@ -109,13 +109,13 @@ export default function LoginPage() {
               />
             </div>
             <Button type="submit" className="w-full h-11 rounded-xl shadow-lg bg-primary hover:bg-primary/90 text-white font-bold text-xs uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-[0.98]" disabled={loading}>
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><LogIn className="mr-2 h-4 w-4" /> Login</>}
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><UserPlus className="mr-2 h-4 w-4" /> Create an account</>}
             </Button>
           </form>
           
           <div className="text-center">
-            <Link href="/signup" className="text-xs text-slate-500 hover:text-primary transition-colors font-medium">
-              Don't have an account? <span className="underline font-bold text-slate-300">Create one</span>
+            <Link href="/login" className="text-xs text-slate-500 hover:text-primary transition-colors font-medium">
+              Already have an account? <span className="underline font-bold text-slate-300">Login</span>
             </Link>
           </div>
           
@@ -124,8 +124,8 @@ export default function LoginPage() {
             <div className="relative flex justify-center text-[10px] uppercase tracking-tighter"><span className="bg-[#0b1224] px-4 text-slate-500 font-bold">Alternative Node</span></div>
           </div>
           
-          <Button variant="outline" className="w-full h-11 rounded-xl bg-white/[0.02] border-white/10 text-slate-300 hover:bg-white/[0.05] hover:text-white transition-all text-xs font-bold uppercase tracking-widest" onClick={handleGoogleLogin} disabled={loading}>
-            Authenticate with Google
+          <Button variant="outline" className="w-full h-11 rounded-xl bg-white/[0.02] border-white/10 text-slate-300 hover:bg-white/[0.05] hover:text-white transition-all text-xs font-bold uppercase tracking-widest" onClick={handleGoogleAuth} disabled={loading}>
+            Register with Google
           </Button>
         </CardContent>
         <CardFooter className="justify-center border-t border-white/5 py-6 bg-white/[0.01] rounded-b-xl">

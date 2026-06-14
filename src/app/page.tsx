@@ -19,8 +19,8 @@ export default function Home() {
     if (authLoading || profileLoading) return;
     
     if (!user) {
-      // No session found, send to login protocol
-      router.push("/login");
+      // No session found, send to registration node
+      router.push("/signup");
       return;
     }
 

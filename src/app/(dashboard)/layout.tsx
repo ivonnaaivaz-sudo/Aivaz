@@ -17,26 +17,18 @@ export default function DashboardLayout({
   const pathname = usePathname();
 
   useEffect(() => {
-    // Wait for auth and profile data to load before making access decisions
     if (authLoading || profileLoading) return;
 
-    // 1. Authenticated Check
     if (!user) {
-      console.log("SECURE NODE: No session detected. Redirecting to Login.");
-      router.push('/login');
+      router.push('/signup');
       return;
     }
 
-    // 2. Profiling Check
-    // If profiling is incomplete, force the user to the onboarding flow
-    // Onboarding is in the (auth) group, so it's outside this layout's scope
     if (profile && profile.hasCompletedProfiling === false) {
-      console.log("SECURE NODE: Profile incomplete. Redirecting to Onboarding.");
       router.push('/onboarding');
     }
   }, [user, profile, authLoading, profileLoading, router]);
 
-  // Loading State: Prevent UI flicker or sidebar flashing before auth is confirmed
   if (authLoading || profileLoading || !user || profile?.hasCompletedProfiling === false) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
