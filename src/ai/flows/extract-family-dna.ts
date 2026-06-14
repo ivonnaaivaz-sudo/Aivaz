@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A Genkit flow for extracting the comprehensive "Family DNA" profile.
@@ -83,13 +84,15 @@ const prompt = ai.definePrompt({
   prompt: `You are an expert legacy strategist, family office advisor, and biographer. 
 Your task is to analyze raw psychological profiling survey data and generate a "Family DNA" profile that reads like a premium, hyper-personalized Wikipedia page.
 
-The input data contains answers to questions about family roles, asset locations, current friction points, priorities, and gaps left by traditional advisors.
+The input data contains answers to questions about family roles, origin/location, company enterprise details, current friction points, priorities, and gaps left by traditional advisors.
+
+If the user provided a company name and authorized AI synthesis, use your internal expertise to infer dynamics related to that industry and size of enterprise.
 
 Focus on:
 1. Deep psychological insight: Synthesize the underlying motivations and fears.
 2. Generational context: Clearly distinguish between the Founder (Gen 1) and successive generations.
 3. Wikipedia Style: Use neutral, sophisticated, and analytical language for the legacy narratives.
-4. Social Capital: Infuse insights about their global footprint and reputation.
+4. Social Capital: Infuse insights about their global footprint and reputation, especially based on their provided location and business node.
 
 User Name: {{{userName}}}
 Survey Data:

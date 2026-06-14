@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
-import { Shield, Sparkles, BrainCircuit, ArrowRight, Loader2, Landmark, Users } from "lucide-react";
+import { Shield, Sparkles, BrainCircuit, ArrowRight, Loader2, Landmark, Users, Globe, Building2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -38,6 +38,31 @@ const allSteps: Step[] = [
     options: [
       { id: "create", label: "Establish New Legacy", icon: Landmark, description: "Start from scratch as the primary node." },
       { id: "join", label: "Join Existing Legacy", icon: Users, description: "Enter a family invite code to collaborate." }
+    ]
+  },
+  {
+    id: "origin",
+    title: "Family Roots",
+    question: "Where is your family primarily established?",
+    type: "input",
+    placeholder: "e.g. Munich, Germany"
+  },
+  {
+    id: "company",
+    title: "Legacy Enterprise",
+    question: "What is the name of your primary family business?",
+    type: "input",
+    placeholder: "Company name (optional)"
+  },
+  {
+    id: "ai_consent",
+    condition: (ans) => !!ans.company && ans.company.length > 2,
+    title: "Intelligence Protocol",
+    question: "Authorize AI Synthesis?",
+    type: "choice",
+    options: [
+      { id: "authorized", label: "Authorize AI Analysis", icon: BrainCircuit, description: "Allow Aivaz to scan public records and digital footprints for your enterprise." },
+      { id: "manual", label: "Manual Entry Only", icon: Shield, description: "Restrict AI logic to data provided strictly within this session." }
     ]
   },
   {
@@ -376,14 +401,14 @@ export default function OnboardingPage() {
             )}
           </CardHeader>
           <CardContent className="px-8 pb-8">
-            {currentStep.id === 'gateway' ? (
-              <RadioGroup value={answers.gateway} onValueChange={(val) => setAnswers({...answers, gateway: val})} className="grid gap-4">
+            {currentStep.id === 'gateway' || currentStep.id === 'ai_consent' ? (
+              <RadioGroup value={answers[currentStep.id]} onValueChange={(val) => setAnswers({...answers, [currentStep.id]: val})} className="grid gap-4">
                 {currentStep.options?.map((opt) => (
                   <div key={opt.id}>
                     <RadioGroupItem value={opt.id} id={opt.id} className="peer sr-only" />
                     <Label htmlFor={opt.id} className="flex items-center gap-4 p-5 rounded-2xl border border-white/5 bg-white/[0.01] hover:bg-white/[0.03] peer-data-[state=checked]:border-primary/50 peer-data-[state=checked]:bg-primary/5 cursor-pointer transition-all">
                       <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center border border-white/5">
-                        <opt.icon className="h-6 w-6 text-primary" />
+                        {opt.icon && <opt.icon className="h-6 w-6 text-primary" />}
                       </div>
                       <div className="flex flex-col">
                         <span className="font-bold text-base text-white">{opt.label}</span>
@@ -392,7 +417,7 @@ export default function OnboardingPage() {
                     </Label>
                   </div>
                 ))}
-                {answers.gateway === 'join' && (
+                {currentStep.id === 'gateway' && answers.gateway === 'join' && (
                   <div className="mt-4 animate-in fade-in slide-in-from-top-2">
                     <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Family Invite Code</Label>
                     <Input 
@@ -443,6 +468,15 @@ export default function OnboardingPage() {
                   </p>
                 )}
               </div>
+            ) : currentStep.type === "input" ? (
+              <div className="space-y-4">
+                <Input 
+                  placeholder={currentStep.placeholder}
+                  className="h-14 bg-white/[0.03] border-white/10 text-white rounded-xl text-lg px-6 focus-visible:ring-primary/20 placeholder:text-slate-700"
+                  value={answers[currentStep.id] || ""}
+                  onChange={(e) => setAnswers({ ...answers, [currentStep.id]: e.target.value })}
+                />
+              </div>
             ) : (
               <Textarea 
                 placeholder={currentStep.placeholder}
@@ -458,7 +492,13 @@ export default function OnboardingPage() {
             </Button>
             <Button 
               onClick={handleNext} 
-              disabled={(currentStep.id === 'gateway' && answers.gateway === 'join' && !familyCode) || (!answers[currentStep.id] && currentStep.type !== 'input') || (currentStep.maxSelect && (answers[currentStep.id] || []).length < currentStep.maxSelect) || loading}
+              disabled={
+                (currentStep.id === 'gateway' && answers.gateway === 'join' && !familyCode) || 
+                (currentStep.type === 'radio' && !answers[currentStep.id]) ||
+                (currentStep.type === 'choice' && !answers[currentStep.id]) ||
+                (currentStep.maxSelect && (answers[currentStep.id] || []).length < currentStep.maxSelect) || 
+                loading
+              }
               className="px-8 rounded-xl shadow-lg bg-primary hover:bg-primary/90 text-white font-bold uppercase text-[11px] tracking-widest h-11"
             >
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <> {currentStepIndex === allSteps.length - 1 ? "Complete Discovery" : "Continue"} <ArrowRight className="ml-2 h-4 w-4" /> </>}
