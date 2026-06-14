@@ -48,15 +48,21 @@ const MEMBERS = [
   { name: "Alexander", color: "bg-amber-500", avatar: "https://picsum.photos/seed/alexander/100/100" },
 ];
 
-const STRATEGIC_DATA = [
+const STRATEGIC_DATA_AGGREGATED = [
   { name: 'Strategic', value: 76, color: 'hsl(var(--primary))' },
   { name: 'Tactical', value: 24, color: '#CBD5E1' },
+];
+
+const STRATEGIC_DATA_INDIVIDUAL = [
+  { name: 'Strategic', value: 88, color: 'hsl(var(--primary))' },
+  { name: 'Tactical', value: 12, color: '#CBD5E1' },
 ];
 
 const PORTFOLIO_BREAKDOWN = [
   { 
     name: "Real Estate & Industrial", 
     pct: 55, 
+    individualPct: 68,
     icon: Home,
     members: ["Markus", "Sophie"], 
     contributions: [
@@ -68,6 +74,7 @@ const PORTFOLIO_BREAKDOWN = [
   { 
     name: "Industrial Chemicals", 
     pct: 25, 
+    individualPct: 90,
     icon: Landmark,
     members: ["Markus", "Alexander"], 
     contributions: [
@@ -78,6 +85,7 @@ const PORTFOLIO_BREAKDOWN = [
   { 
     name: "Tech / Growth Equity", 
     pct: 9, 
+    individualPct: 0,
     icon: Zap,
     members: ["Alexander"], 
     contributions: [
@@ -87,6 +95,7 @@ const PORTFOLIO_BREAKDOWN = [
   { 
     name: "Cash & Liquid", 
     pct: 11, 
+    individualPct: 50,
     icon: Coins,
     members: ["Markus", "Elena"], 
     contributions: [
@@ -125,6 +134,25 @@ export default function BridgeHub() {
       return HARTMANN_ACCOUNTS.filter(acc => acc.owner === 'Markus' || acc.breakdown?.some(b => b.member === 'Markus'));
     }
     return HARTMANN_ACCOUNTS;
+  }, [viewMode]);
+
+  const stats = useMemo(() => {
+    if (viewMode === 'individual') {
+      return [
+        { title: "Personal Risk", icon: AlertTriangle, val: "32%", label: "Concentration", desc: "Lower due to trust buffers.", color: "text-amber-600", members: ["Markus"] },
+        { title: "Net Liquidity", icon: Coins, val: "€28M", label: "Accessible", desc: "Ready for deployment.", color: "text-emerald-600", members: ["Markus"] },
+        { title: "Governance", icon: Zap, val: "92%", label: "Control Score", desc: "Primary voting authority.", color: "text-primary", members: [] },
+        { title: "Estate Path", icon: BarChart3, val: "98%", label: "Tax Ready", desc: "Markus specific planning.", color: "text-emerald-600", members: ["Markus"] },
+        { title: "Connectivity", icon: Globe, val: "Global", label: "Sync Level", desc: "4 Jurisdictions active.", color: "text-slate-500", members: ["Markus"] }
+      ];
+    }
+    return [
+      { title: "Biggest Risk", icon: AlertTriangle, val: "55%", label: "Property Concentration", desc: "Foundational industrial exposure.", color: "text-red-600", members: ["Markus", "Sophie"] },
+      { title: "Liquidity", icon: Coins, val: "€42M", label: "Cash Idle", desc: "Opportunity cost identified.", color: "text-amber-600", members: ["Markus"] },
+      { title: "Generational", icon: Zap, val: "78%", label: "DNA Alignment", desc: "Governance stability score.", color: "text-primary", members: [] },
+      { title: "Geography", icon: Globe, val: "47%", label: "Asia Exposure", desc: "Strategic Singapore node.", color: "text-slate-500", members: ["Sophie"] },
+      { title: "Efficiency", icon: BarChart3, val: "94%", label: "Tax Yield", desc: "Estate planning grade.", color: "text-emerald-600", members: ["Markus", "Sophie"] }
+    ];
   }, [viewMode]);
 
   const MemberIndicators = ({ members: membersList, size = "sm" }: { members: string[], size?: "xs" | "sm" }) => {
@@ -181,12 +209,16 @@ export default function BridgeHub() {
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-widest border-primary/40 text-primary bg-primary/10 px-3">Heritage Hub</Badge>
             <span className="text-slate-300">|</span>
-            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Protocol: Hartmann-Global</span>
+            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Protocol: {viewMode === 'individual' ? 'Personal-Markus' : 'Hartmann-Global'}</span>
           </div>
           <div className="space-y-1">
-            <p className="text-sm font-bold text-slate-400 uppercase tracking-[0.2em]">Hartmann Family Total Wealth</p>
+            <p className="text-sm font-bold text-slate-400 uppercase tracking-[0.2em]">
+              {viewMode === 'individual' ? "Markus's Portfolio Stake" : "Hartmann Family Total Wealth"}
+            </p>
             <div className="flex items-baseline gap-4">
-              <h1 className="text-5xl font-headline font-bold text-slate-900 tracking-tighter">€380M</h1>
+              <h1 className="text-5xl font-headline font-bold text-slate-900 tracking-tighter">
+                {viewMode === 'individual' ? "€242M" : "€380M"}
+              </h1>
               <span className="text-xl font-headline font-bold text-emerald-600">+4.2% <span className="text-sm opacity-60">annual growth</span></span>
             </div>
           </div>
@@ -198,14 +230,14 @@ export default function BridgeHub() {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={STRATEGIC_DATA}
+                    data={viewMode === 'individual' ? STRATEGIC_DATA_INDIVIDUAL : STRATEGIC_DATA_AGGREGATED}
                     innerRadius={28}
                     outerRadius={38}
                     paddingAngle={2}
                     dataKey="value"
                     stroke="none"
                   >
-                    {STRATEGIC_DATA.map((entry, index) => (
+                    {(viewMode === 'individual' ? STRATEGIC_DATA_INDIVIDUAL : STRATEGIC_DATA_AGGREGATED).map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
@@ -218,11 +250,11 @@ export default function BridgeHub() {
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-primary" />
-                <span className="text-xs font-bold text-slate-700">Strategic (76%)</span>
+                <span className="text-xs font-bold text-slate-700">Strategic ({viewMode === 'individual' ? '88%' : '76%'})</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-slate-300" />
-                <span className="text-xs font-bold text-slate-700">Tactical (24%)</span>
+                <span className="text-xs font-bold text-slate-700">Tactical ({viewMode === 'individual' ? '12%' : '24%'})</span>
               </div>
             </div>
           </div>
@@ -237,13 +269,7 @@ export default function BridgeHub() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-        {[
-          { title: "Biggest Risk", icon: AlertTriangle, val: "55%", label: "Property Concentration", desc: "Foundational industrial exposure.", color: "text-red-600", members: ["Markus", "Sophie"] },
-          { title: "Liquidity", icon: Coins, val: "€42M", label: "Cash Idle", desc: "Opportunity cost identified.", color: "text-amber-600", members: ["Markus"] },
-          { title: "Generational", icon: Zap, val: "78%", label: "DNA Alignment", desc: "Governance stability score.", color: "text-primary", members: [] },
-          { title: "Geography", icon: Globe, val: "47%", label: "Asia Exposure", desc: "Strategic Singapore node.", color: "text-slate-500", members: ["Sophie"] },
-          { title: "Efficiency", icon: BarChart3, val: "94%", label: "Tax Yield", desc: "Estate planning grade.", color: "text-emerald-600", members: ["Markus", "Sophie"] }
-        ].map((card, i) => (
+        {stats.map((card, i) => (
           <Card key={i} className="border-slate-200 shadow-sm bg-white overflow-hidden rounded-2xl">
             <CardHeader className="pb-2">
               <CardTitle className={cn("text-[10px] font-bold uppercase tracking-widest flex items-center gap-2", card.color)}>
@@ -312,7 +338,7 @@ export default function BridgeHub() {
           <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500">Capital Segmentation</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {PORTFOLIO_BREAKDOWN.map((item) => (
+          {PORTFOLIO_BREAKDOWN.filter(item => viewMode === 'aggregated' || item.individualPct > 0).map((item) => (
             <TooltipProvider key={item.name}>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -320,7 +346,7 @@ export default function BridgeHub() {
                     <CardHeader className="pb-2 flex flex-row items-center justify-between">
                       <div className="space-y-1">
                         <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{item.name}</p>
-                        <p className="text-2xl font-headline font-bold text-slate-900">{item.pct}%</p>
+                        <p className="text-2xl font-headline font-bold text-slate-900">{viewMode === 'individual' ? item.individualPct : item.pct}%</p>
                       </div>
                       <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center group-hover:bg-primary/5 transition-colors">
                         <item.icon className="h-5 w-5 text-slate-400 group-hover:text-primary transition-colors" />
@@ -328,16 +354,19 @@ export default function BridgeHub() {
                     </CardHeader>
                     <CardContent className="pt-2">
                       <div className="flex items-center justify-between">
-                         <MemberAvatars members={item.members} />
+                         {viewMode === 'aggregated' && <MemberAvatars members={item.members} />}
+                         {viewMode === 'individual' && <MemberAvatars members={['Markus']} />}
                       </div>
                       <div className="mt-4 flex gap-1 h-1 w-full rounded-full overflow-hidden bg-slate-100">
-                         {item.contributions.map((c, i) => (
+                         {viewMode === 'aggregated' ? item.contributions.map((c, i) => (
                             <div 
                               key={i} 
                               className={cn("h-full", MEMBERS.find(m => m.name === c.name)?.color)} 
                               style={{ width: `${c.share}%` }} 
                             />
-                         ))}
+                         )) : (
+                            <div className="h-full bg-blue-500" style={{ width: '100%' }} />
+                         )}
                       </div>
                     </CardContent>
                   </Card>
@@ -345,7 +374,7 @@ export default function BridgeHub() {
                 <TooltipContent side="top" className="p-4 bg-white border-slate-200 shadow-2xl rounded-2xl min-w-[200px] z-[100]">
                   <div className="space-y-3 text-slate-900">
                     <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">{item.name} Allocation</p>
-                    {item.contributions.map((c, i) => (
+                    {viewMode === 'aggregated' ? item.contributions.map((c, i) => (
                       <div key={i} className="flex items-center justify-between gap-4">
                         <div className="flex items-center gap-2">
                           <div className={cn("w-2 h-2 rounded-full", MEMBERS.find(m => m.name === c.name)?.color)} />
@@ -353,7 +382,15 @@ export default function BridgeHub() {
                         </div>
                         <span className="text-xs font-bold text-primary">{c.share}%</span>
                       </div>
-                    ))}
+                    )) : (
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-blue-500" />
+                          <span className="text-xs font-bold text-slate-700">Markus</span>
+                        </div>
+                        <span className="text-xs font-bold text-primary">100%</span>
+                      </div>
+                    )}
                   </div>
                 </TooltipContent>
               </Tooltip>
@@ -414,6 +451,7 @@ export default function BridgeHub() {
                       <TableCell className="font-medium py-6 pl-8">
                         <div className="flex items-center gap-3">
                           {viewMode === 'aggregated' && <MemberIndicators members={acc.breakdown?.map((b: any) => b.member) || []} />}
+                          {viewMode === 'individual' && <MemberIndicators members={['Markus']} />}
                           <div>
                             <p className="text-slate-900 font-bold">{acc.name}</p>
                             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest opacity-70">{acc.type}</p>
@@ -429,7 +467,11 @@ export default function BridgeHub() {
                           {acc.status}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-right font-headline font-bold text-primary pr-8 py-6 text-lg">{acc.balance}</TableCell>
+                      <TableCell className="text-right font-headline font-bold text-primary pr-8 py-6 text-lg">
+                        {viewMode === 'individual' && acc.breakdown ? (
+                           `€${((parseInt(acc.balance.replace(/[^\d]/g, '')) * (acc.breakdown.find((b: any) => b.member === 'Markus')?.pct || 0)) / 100).toLocaleString()}`
+                        ) : acc.balance}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

@@ -24,7 +24,6 @@ import {
   ShieldAlert,
   Plus,
   TrendingUp,
-  ChevronDown,
   LayoutGrid,
   Users,
   ArrowRight,
@@ -34,6 +33,24 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 interface InputItem {
   id: string;
@@ -77,7 +94,7 @@ const INITIAL_INPUTS: InputItem[] = [
   { id: 'o-2', type: 'opportunity', title: 'Industrial Dividends', value: 3200000, description: 'Surplus distribution from business operations.', relatedMembers: ['Markus', 'Elena'] },
   { id: 'n-1', type: 'need', title: 'Sophie London Residence', value: 6000000, description: 'Primary relocation and housing mandate.', relatedMembers: ['Sophie'] },
   { id: 'n-2', type: 'need', title: 'Next Gen Venture Fund', value: 4500000, description: 'Early-stage tech allocation for growth.', relatedMembers: ['Alexander'] },
-  { id: 'b-1', type: 'blindspot', title: 'Future Tax Risk', description: 'Detected €8.4M potential tax bill in transition path.', severity: 'Critical', relatedMembers: ['Markus', 'Sophie'] },
+  { id: 'b-1', type: 'blindspot', title: 'Future Tax Risk', description: 'Detected potential tax bill in transition path.', severity: 'Critical', relatedMembers: ['Markus', 'Sophie'] },
   { id: 'b-2', type: 'blindspot', title: 'Property Concentration', description: 'Real estate represents 55% of the total legacy.', severity: 'High', relatedMembers: ['Markus', 'Alexander'] },
 ];
 
@@ -131,6 +148,8 @@ export default function StrategicPairingsPage() {
   const [inputs, setInputs] = useState<InputItem[]>(INITIAL_INPUTS);
   const [activePairingId, setActivePairingId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isNewInputOpen, setIsNewInputOpen] = useState(false);
+  const [newInput, setNewInput] = useState<Partial<InputItem>>({ type: 'opportunity' });
   
   const userRole = profile?.role || "Principal";
   const hasDetailedAccess = userRole === "Principal" || userRole === "Co-Principal";
@@ -187,22 +206,32 @@ export default function StrategicPairingsPage() {
     }
   };
 
+  const handleAddNewInput = () => {
+    if (!newInput.title) return;
+    const item: InputItem = {
+      id: Math.random().toString(36).substr(2, 9),
+      type: newInput.type as any,
+      title: newInput.title,
+      value: Number(newInput.value) || 0,
+      description: newInput.description || "",
+      relatedMembers: ["Markus"],
+      severity: newInput.type === 'blindspot' ? 'Medium' : undefined,
+    };
+    setInputs([...inputs, item]);
+    setIsNewInputOpen(false);
+    setNewInput({ type: 'opportunity' });
+    toast({ title: "Input Registered", description: `Added ${item.title} to the strategic engine.` });
+  };
+
   const createAutomaticPairing = (blindspotId: string) => {
     const matchingPairing = GENERATED_PAIRINGS.find(p => p.components.blindspots.includes(blindspotId));
     if (matchingPairing) {
       setActivePairingId(matchingPairing.id);
       toast({
         title: "AI Strategy Drafted",
-        description: `Drafting "${matchingPairing.title}" to neutralize the alert.`,
+        description: `Drafting ${matchingPairing.title} to neutralize the alert.`,
       });
     }
-  };
-
-  const registerNewInput = () => {
-    toast({
-      title: "Input Terminal Active",
-      description: "Ready to register manual opportunity or liability data.",
-    });
   };
 
   return (
@@ -231,7 +260,7 @@ export default function StrategicPairingsPage() {
               <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-900 mb-1">Inputs</h2>
               <p className="text-[10px] text-muted-foreground italic">Legacy data points.</p>
             </div>
-            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={registerNewInput}>
+            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setIsNewInputOpen(true)}>
               <Plus className="h-4 w-4" />
             </Button>
           </div>
@@ -456,6 +485,75 @@ export default function StrategicPairingsPage() {
           </Button>
         </div>
       </div>
+
+      <Dialog open={isNewInputOpen} onOpenChange={setIsNewInputOpen}>
+        <DialogContent className="max-w-md rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="font-headline">Register Legacy Input</DialogTitle>
+            <DialogDescription>
+              Add a new opportunity, family need, or system risk to the strategic engine.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Input Type</Label>
+              <Select value={newInput.type} onValueChange={(val: any) => setNewInput({...newInput, type: val})}>
+                <SelectTrigger className="rounded-xl h-10">
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="opportunity">Opportunity (Inflow)</SelectItem>
+                  <SelectItem value="need">Family Need (Outflow)</SelectItem>
+                  <SelectItem value="blindspot">System Alert (Risk)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Title</Label>
+              <Input 
+                placeholder="e.g. Zurich Property Sale" 
+                className="rounded-xl h-10"
+                value={newInput.title || ""}
+                onChange={(e) => setNewInput({...newInput, title: e.target.value})}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Value (EUR)</Label>
+              <Input 
+                type="number"
+                placeholder="e.g. 5000000" 
+                className="rounded-xl h-10"
+                value={newInput.value || ""}
+                onChange={(e) => setNewInput({...newInput, value: Number(e.target.value)})}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Description</Label>
+              <Textarea 
+                placeholder="Briefly describe the context..." 
+                className="rounded-xl min-h-[80px]"
+                value={newInput.description || ""}
+                onChange={(e) => setNewInput({...newInput, description: e.target.value})}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setIsNewInputOpen(false)} className="text-[11px] uppercase font-bold tracking-widest">Cancel</Button>
+            <Button 
+              onClick={handleAddNewInput}
+              disabled={!newInput.title}
+              className="text-[11px] uppercase font-bold tracking-widest px-8"
+            >
+              Register Terminal Input
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
