@@ -2,7 +2,7 @@
 "use client";
 
 import { useUser, useDoc, useCollection, useFirestore } from "@/firebase";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { collection, query, orderBy } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +17,8 @@ import {
   Compass,
   AlertTriangle,
   FileText,
-  Zap
+  Zap,
+  MessageSquare
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -26,6 +27,9 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 
 const MOCK_EVENTS: FamilyEvent[] = [
   { id: "1", title: "Hartmann Family Council", date: "2026-06-12", eventType: "GOVERNANCE", priority: "URGENT", description: "Reviewing the €42M cash reserve deployment proposal.", memberAccess: ["Dr. Markus", "Elena", "Sophie", "Alexander"] },
@@ -44,8 +48,12 @@ const HARTMANN_TIMELINE = [
 export default function DashboardPage() {
   const { user } = useUser();
   const db = useFirestore();
+  const { toast } = useToast();
   const { data: dna, loading: dnaLoading } = useDoc(user ? `users/${user.uid}/dna/current` : null);
   const heroImage = PlaceHolderImages.find(img => img.id === 'heritage-hero');
+  const captainAvatar = PlaceHolderImages.find(img => img.id === 'captain-avatar');
+  
+  const [captainInput, setCaptainInput] = useState("");
 
   const timelineQuery = useMemo(() => {
     if (!user || !db) return null;
@@ -57,6 +65,14 @@ export default function DashboardPage() {
 
   const firstName = user?.displayName?.split(" ")[0] || "Markus";
   
+  const handleSendToCaptain = () => {
+    toast({
+      title: "Transmission Established",
+      description: "The Captain is processing your vision for the Hartmann legacy.",
+    });
+    setCaptainInput("");
+  };
+
   if (dnaLoading) {
     return <div className="p-8"><Skeleton className="h-[400px] w-full rounded-2xl" /></div>;
   }
@@ -246,6 +262,45 @@ export default function DashboardPage() {
                     Manage Portfolio Axis
                   </Button>
                 </Link>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* AI Captain Component */}
+          <Card className="border-none shadow-lg bg-white rounded-3xl overflow-hidden group">
+            <CardHeader className="bg-slate-50/50 p-6 pb-4">
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <Avatar className="h-12 w-12 border-2 border-primary/20">
+                    <AvatarImage src={captainAvatar?.imageUrl} />
+                    <AvatarFallback>AI</AvatarFallback>
+                  </Avatar>
+                  <div className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 bg-emerald-500 rounded-full border-2 border-white shadow-sm" />
+                </div>
+                <div>
+                  <CardTitle className="text-sm font-bold uppercase tracking-[0.2em] text-slate-900">Talk to the Captain</CardTitle>
+                  <p className="text-[10px] text-muted-foreground font-bold uppercase mt-0.5 tracking-tighter">Always Online • Strategic Advisor</p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-6 pt-2 space-y-4">
+              <p className="text-sm text-slate-600 italic leading-relaxed font-medium">
+                "Anything on your mind today, {firstName}? I'm here to incorporate your latest thoughts into our heritage strategy."
+              </p>
+              <div className="space-y-3">
+                <Textarea 
+                  placeholder="Share a vision, a worry, or a new goal..."
+                  className="bg-slate-50 border-slate-100 min-h-[100px] resize-none focus-visible:ring-primary/20 rounded-2xl text-sm"
+                  value={captainInput}
+                  onChange={(e) => setCaptainInput(e.target.value)}
+                />
+                <Button 
+                  className="w-full bg-slate-900 text-white hover:bg-slate-800 rounded-xl h-11 text-[10px] font-bold uppercase tracking-widest shadow-md group-hover:shadow-lg transition-all"
+                  onClick={handleSendToCaptain}
+                  disabled={!captainInput.trim()}
+                >
+                  Discuss with Aivaz <ChevronRight className="ml-2 h-4 w-4" />
+                </Button>
               </div>
             </CardContent>
           </Card>
