@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -27,15 +28,12 @@ import {
   ChevronUp,
   ChevronDown,
   ShieldCheck,
-  CircleAlert,
-  CheckCircle,
-  TrendingUp,
-  Trash2,
-  PlusCircle,
-  Activity,
   BarChart3,
   Dna,
-  Scale
+  Scale,
+  PlusCircle,
+  Trash2,
+  Activity
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -188,7 +186,6 @@ export default function DecisionSandboxPage() {
     const projectedVaR = Math.max(0, baselineVaR + varShift);
 
     // Simulated DNA Utility alignment (0-100)
-    // Low risk + High liquidity = High utility for "Preservation" DNA
     const dnaUtility = Math.max(0, Math.min(100, 85 - (netImpact.risk * 0.5) + (netImpact.liquidity / 1000000)));
 
     // Liquidity Penalty Function
@@ -236,12 +233,15 @@ export default function DecisionSandboxPage() {
         delete next[actionId];
         return next;
       }
+      // Auto-expand diagnosis on first pairing
+      if (Object.keys(prev).length === 0) setIsAnalysisExpanded(true);
       return { ...prev, [actionId]: offsetId };
     });
   };
 
   const handleAcceptAI = (id: string) => {
     setProposedActions(prev => prev.map(a => a.id === id ? { ...a, status: 'accepted' } : a));
+    setIsAnalysisExpanded(true); // Auto-expand when accepting an AI risk
     toast({ title: "Blindspot Accepted", description: "Risk is now on the board for stabilization." });
   };
 
@@ -329,7 +329,7 @@ export default function DecisionSandboxPage() {
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-white antialiased">
       {/* Header */}
-      <header className="h-20 border-b border-slate-200 px-12 flex items-center justify-between shrink-0 bg-white z-50">
+      <header className="h-20 border-b border-slate-200 px-12 flex items-center justify-between shrink-0 bg-white z-[60]">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-primary" />
@@ -358,7 +358,7 @@ export default function DecisionSandboxPage() {
           <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16">
             
             {/* Proposed Actions */}
-            <div className="flex flex-col h-full space-y-8">
+            <div className="flex flex-col space-y-8">
               <div className="flex items-center justify-between mb-4 border-b border-slate-200 pb-4">
                 <div className="flex items-center gap-3">
                   <LayoutGrid className="h-4 w-4 text-slate-400" />
@@ -382,7 +382,7 @@ export default function DecisionSandboxPage() {
                 </Dialog>
               </div>
               
-              <div className="space-y-6">
+              <div className="space-y-6 pb-20">
                 {aiBlindspots.length > 0 && (
                   <div className="space-y-4">
                     <div className="flex items-center gap-2 px-1">
@@ -390,7 +390,7 @@ export default function DecisionSandboxPage() {
                       <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Intelligence: Critical Blindspots</span>
                     </div>
                     {aiBlindspots.map((action) => (
-                      <Card key={action.id} className="border-primary/20 bg-primary/[0.02] shadow-sm relative overflow-hidden">
+                      <Card key={action.id} className="border-primary/20 bg-primary/[0.02] shadow-sm relative overflow-hidden transition-all hover:ring-2 hover:ring-primary/10">
                         <div className="absolute top-0 left-0 w-1 h-full bg-primary/40" />
                         <CardHeader className="pb-3">
                           <div className="flex justify-between items-start">
@@ -433,7 +433,7 @@ export default function DecisionSandboxPage() {
             </div>
 
             {/* Strategic Offsets */}
-            <div className="flex flex-col h-full space-y-6">
+            <div className="flex flex-col space-y-6">
               <div className="flex items-center justify-between mb-4 border-b border-slate-200 pb-4">
                 <div className="flex items-center gap-3">
                   <Zap className="h-4 w-4 text-primary/60" />
@@ -456,7 +456,7 @@ export default function DecisionSandboxPage() {
                 </Dialog>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-4 pb-20">
                 {strategicOffsets.map((offset) => {
                   const pairedActionId = Object.keys(pairedIds).find(key => pairedIds[key] === offset.id);
                   return (
@@ -488,122 +488,127 @@ export default function DecisionSandboxPage() {
         </div>
       </main>
 
-      {/* Truth Check Diagnostic Panel */}
-      {activeProposedActions.length > 0 && (
-        <div className={cn("sticky bottom-0 bg-white border-t border-slate-200 z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transition-all duration-500 ease-in-out", isAnalysisExpanded ? "h-[500px]" : "h-24")}>
-          <div className={cn("absolute top-0 left-0 w-full h-[calc(100%-6rem)] px-12 pt-8 transition-opacity duration-300", isAnalysisExpanded ? "opacity-100 visible" : "opacity-0 invisible")}>
-            <div className="max-w-7xl mx-auto flex flex-col h-full">
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-3">
-                  <ShieldCheck className="h-5 w-5 text-primary" />
-                  <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-slate-900">Truth Check: Total Portfolio Diagnostic</h3>
-                </div>
-                <Button variant="ghost" size="sm" onClick={() => setIsAnalysisExpanded(false)} className="h-8 text-[10px] font-bold uppercase tracking-widest">Minimize Diagnostic</Button>
+      {/* TPA Diagnostic Hub - Anchored and Interactive */}
+      <div className={cn(
+        "sticky bottom-0 bg-white border-t border-slate-200 z-[70] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transition-all duration-500 ease-in-out",
+        isAnalysisExpanded ? "h-[520px]" : "h-24"
+      )}>
+        <div className={cn(
+          "absolute top-0 left-0 w-full h-[calc(100%-6rem)] px-12 pt-8 transition-opacity duration-300",
+          isAnalysisExpanded ? "opacity-100 visible" : "opacity-0 invisible"
+        )}>
+          <div className="max-w-7xl mx-auto flex flex-col h-full">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3">
+                <ShieldCheck className="h-5 w-5 text-primary" />
+                <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-slate-900">Truth Check: Total Portfolio Diagnostic</h3>
               </div>
+              <Button variant="ghost" size="sm" onClick={() => setIsAnalysisExpanded(false)} className="h-8 text-[10px] font-bold uppercase tracking-widest">Minimize Diagnostic</Button>
+            </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 flex-1">
-                {analysisBreakdown.map((item, idx) => (
-                  <div key={idx} className="space-y-6">
-                    <div className="flex justify-between items-end border-b border-slate-100 pb-3">
-                      <div className="flex items-center gap-2">
-                        {item.isTechnical ? <BarChart3 className="h-3.5 w-3.5 text-slate-400" /> : item.isDNA ? <Dna className="h-3.5 w-3.5 text-primary" /> : <Scale className="h-3.5 w-3.5 text-slate-400" />}
-                        <span className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">{item.name}</span>
-                      </div>
-                      <span className="text-xs font-bold text-slate-900">
-                        {item.projected.toFixed(1)}{item.unit}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 flex-1 overflow-y-auto pb-4">
+              {analysisBreakdown.map((item, idx) => (
+                <div key={idx} className="space-y-6">
+                  <div className="flex justify-between items-end border-b border-slate-100 pb-3">
+                    <div className="flex items-center gap-2">
+                      {item.isTechnical ? <BarChart3 className="h-3.5 w-3.5 text-slate-400" /> : item.isDNA ? <Dna className="h-3.5 w-3.5 text-primary" /> : <Scale className="h-3.5 w-3.5 text-slate-400" />}
+                      <span className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">{item.name}</span>
+                    </div>
+                    <span className="text-xs font-bold text-slate-900">
+                      {item.projected.toFixed(1)}{item.unit}
+                    </span>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden relative">
+                      <div className="absolute top-0 left-1/2 w-0.5 h-full bg-slate-300 z-10" />
+                      <div 
+                        className={cn("h-full transition-all duration-1000", item.status === 'healthy' ? 'bg-emerald-500' : 'bg-amber-500')} 
+                        style={{ 
+                          width: `${Math.abs((item.projected - item.baseline) / item.baseline) * 50}%`,
+                          marginLeft: item.projected >= item.baseline ? '50%' : `${50 - Math.abs((item.projected - item.baseline) / item.baseline) * 50}%`
+                        }} 
+                      />
+                    </div>
+                    <div className="flex justify-between text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
+                      <span>Original: {item.baseline}{item.unit}</span>
+                      <span className={cn(item.projected > item.baseline ? 'text-emerald-600' : 'text-amber-600')}>
+                        Delta: {(item.projected - item.baseline).toFixed(1)}{item.unit}
                       </span>
                     </div>
-                    
-                    <div className="space-y-4">
-                      <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden relative">
-                        <div className="absolute top-0 left-1/2 w-0.5 h-full bg-slate-300 z-10" />
-                        <div 
-                          className={cn("h-full transition-all duration-1000", item.status === 'healthy' ? 'bg-emerald-500' : 'bg-amber-500')} 
-                          style={{ 
-                            width: `${Math.abs((item.projected - item.baseline) / item.baseline) * 50}%`,
-                            marginLeft: item.projected >= item.baseline ? '50%' : `${50 - Math.abs((item.projected - item.baseline) / item.baseline) * 50}%`
-                          }} 
-                        />
-                      </div>
-                      <div className="flex justify-between text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
-                        <span>Original: {item.baseline}{item.unit}</span>
-                        <span className={cn(item.projected > item.baseline ? 'text-emerald-600' : 'text-amber-600')}>
-                          Delta: {(item.projected - item.baseline).toFixed(1)}{item.unit}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="p-3 rounded-lg bg-slate-50 border border-slate-100">
-                      <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Risk Logic / Penalty</p>
-                      <p className="text-[11px] text-slate-600 italic">
-                        {item.isTechnical ? "Projected loss at 95% confidence interval." : item.isDNA ? "Calculated based on Family DNA utility weights." : `Liquidity Penalty: -€${(item as any).penalty?.toFixed(1)}M.`}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-2 text-[10px] text-slate-500 italic">
-                      <span className="font-bold text-primary not-italic">Key Driver:</span>
-                      <span className="truncate">{item.driver}</span>
-                    </div>
                   </div>
-                ))}
-              </div>
 
-              {/* TPA Methodology Steps */}
-              <div className="mt-8 pt-6 border-t border-slate-100 grid grid-cols-4 gap-4">
-                {[
-                  { step: 1, label: "Set Risk Targets", desc: "Identify sustainability goals", active: true },
-                  { step: 2, label: "Exposure Targets", desc: "Maximize factor exposures", active: activeProposedActions.length > 0 },
-                  { step: 3, label: "Strategy Targets", desc: "Model investment building blocks", active: activeSynergies.length > 0 },
-                  { step: 4, label: "Balance Portfolio", desc: "Total portfolio impact analysis", active: activeSynergies.length > 1 }
-                ].map((s) => (
-                  <div key={s.step} className={cn("flex flex-col gap-1 px-4 py-2 border-l-2", s.active ? "border-primary" : "border-slate-100 opacity-40")}>
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-primary">Step {s.step}</span>
-                    <span className="text-xs font-bold">{s.label}</span>
-                    <span className="text-[10px] text-slate-500 leading-tight">{s.desc}</span>
+                  <div className="p-3 rounded-lg bg-slate-50 border border-slate-100">
+                    <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Risk Logic / Penalty</p>
+                    <p className="text-[11px] text-slate-600 italic">
+                      {item.isTechnical ? "Projected loss at 95% confidence interval." : item.isDNA ? "Calculated based on Family DNA utility weights." : `Liquidity Penalty: -€${(item as any).penalty?.toFixed(1)}M.`}
+                    </p>
                   </div>
-                ))}
-              </div>
-            </div>
-          </div>
 
-          <div className="absolute bottom-0 left-0 w-full h-24 flex items-center justify-between px-12 border-t border-slate-50 bg-white">
-            <div className="flex items-center gap-12">
-              <div className="flex flex-col cursor-pointer group" onClick={() => setIsAnalysisExpanded(!isAnalysisExpanded)}>
-                <p className="text-[9px] font-bold uppercase text-slate-400 tracking-[0.2em] mb-1 group-hover:text-primary transition-colors">TPA Drafting Stability</p>
-                <p className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                  {activeSynergies.length} Strategic Pairs Established
-                  {isAnalysisExpanded ? <ChevronDown className="h-3.5 w-3.5 text-primary" /> : <ChevronUp className="h-3.5 w-3.5 text-primary" />}
-                </p>
-              </div>
-              <div className="h-10 w-px bg-slate-100" />
-              <div className="flex flex-col cursor-pointer group" onClick={() => setIsAnalysisExpanded(!isAnalysisExpanded)}>
-                <p className="text-[9px] font-bold uppercase text-slate-400 tracking-[0.2em] mb-1 group-hover:text-primary transition-colors">Net Portfolio Impact</p>
-                <div className="flex items-center gap-10">
-                  <div className="flex items-center gap-3">
-                    <span className={cn("text-xl font-bold", netImpact.liquidity >= 0 ? "text-emerald-600" : "text-red-600")}>
-                      {netImpact.liquidity >= 0 ? '+' : ''}€{(netImpact.liquidity / 1000000).toFixed(1)}M
-                    </span>
-                    <span className="text-[9px] font-bold text-slate-400 uppercase">Liquidity</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className={cn("text-xl font-bold", netImpact.risk <= 0 ? "text-emerald-600" : "text-amber-600")}>
-                      {netImpact.risk > 0 ? '+' : ''}{netImpact.risk}%
-                    </span>
-                    <span className="text-[9px] font-bold text-slate-400 uppercase">Risk Delta</span>
+                  <div className="flex items-center gap-2 text-[10px] text-slate-500 italic">
+                    <span className="font-bold text-primary not-italic">Key Driver:</span>
+                    <span className="truncate">{item.driver}</span>
                   </div>
                 </div>
-              </div>
+              ))}
             </div>
-            <div className="flex items-center gap-6">
-              <div className="text-right hidden md:block">
-                <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Stabilized State Confirmed</p>
-                <p className="text-[11px] text-slate-500 italic">Portfolio pillars balanced.</p>
-              </div>
-              <Button onClick={handleSendToWardroom} className="bg-primary hover:bg-primary/90 text-white rounded-xl h-12 px-8 text-[10px] font-bold uppercase tracking-[0.2em] shadow-lg shadow-primary/20">Commit Strategy</Button>
+
+            {/* TPA Methodology Steps */}
+            <div className="mt-4 pt-4 border-t border-slate-100 grid grid-cols-4 gap-4 pb-2">
+              {[
+                { step: 1, label: "Set Risk Targets", desc: "Identify sustainability goals", active: true },
+                { step: 2, label: "Exposure Targets", desc: "Maximize factor exposures", active: activeProposedActions.length > 0 },
+                { step: 3, label: "Strategy Targets", desc: "Model investment building blocks", active: activeSynergies.length > 0 },
+                { step: 4, label: "Balance Portfolio", desc: "Total portfolio impact analysis", active: activeSynergies.length > 1 }
+              ].map((s) => (
+                <div key={s.step} className={cn("flex flex-col gap-1 px-4 py-2 border-l-2", s.active ? "border-primary" : "border-slate-100 opacity-40")}>
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-primary">Step {s.step}</span>
+                  <span className="text-xs font-bold">{s.label}</span>
+                  <span className="text-[10px] text-slate-500 leading-tight">{s.desc}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
-      )}
+
+        {/* Permanent Summary Bar */}
+        <div className="absolute bottom-0 left-0 w-full h-24 flex items-center justify-between px-12 border-t border-slate-50 bg-white">
+          <div className="flex items-center gap-12">
+            <div className="flex flex-col cursor-pointer group" onClick={() => setIsAnalysisExpanded(!isAnalysisExpanded)}>
+              <p className="text-[9px] font-bold uppercase text-slate-400 tracking-[0.2em] mb-1 group-hover:text-primary transition-colors">TPA Drafting Stability</p>
+              <p className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                {activeSynergies.length} Strategic Pairs Established
+                {isAnalysisExpanded ? <ChevronDown className="h-3.5 w-3.5 text-primary" /> : <ChevronUp className="h-3.5 w-3.5 text-primary" />}
+              </p>
+            </div>
+            <div className="h-10 w-px bg-slate-100" />
+            <div className="flex flex-col cursor-pointer group" onClick={() => setIsAnalysisExpanded(!isAnalysisExpanded)}>
+              <p className="text-[9px] font-bold uppercase text-slate-400 tracking-[0.2em] mb-1 group-hover:text-primary transition-colors">Net Portfolio Impact</p>
+              <div className="flex items-center gap-10">
+                <div className="flex items-center gap-3">
+                  <span className={cn("text-xl font-bold", netImpact.liquidity >= 0 ? "text-emerald-600" : "text-red-600")}>
+                    {netImpact.liquidity >= 0 ? '+' : ''}€{(netImpact.liquidity / 1000000).toFixed(1)}M
+                  </span>
+                  <span className="text-[9px] font-bold text-slate-400 uppercase">Liquidity</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className={cn("text-xl font-bold", netImpact.risk <= 0 ? "text-emerald-600" : "text-amber-600")}>
+                    {netImpact.risk > 0 ? '+' : ''}{netImpact.risk}%
+                  </span>
+                  <span className="text-[9px] font-bold text-slate-400 uppercase">Risk Delta</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-6">
+            <div className="text-right hidden md:block">
+              <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Stabilized State Confirmed</p>
+              <p className="text-[11px] text-slate-500 italic">Portfolio pillars balanced.</p>
+            </div>
+            <Button onClick={handleSendToWardroom} className="bg-primary hover:bg-primary/90 text-white rounded-xl h-12 px-8 text-[10px] font-bold uppercase tracking-[0.2em] shadow-lg shadow-primary/20">Commit Strategy</Button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
