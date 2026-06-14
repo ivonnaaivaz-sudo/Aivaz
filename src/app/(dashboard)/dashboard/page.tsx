@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useUser, useDoc, useCollection, useFirestore } from "@/firebase";
@@ -18,7 +17,6 @@ import {
   AlertTriangle,
   FileText,
   Zap,
-  MessageSquare
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -279,7 +277,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent className="p-6 space-y-4">
               <p className="text-xs text-slate-600 italic leading-relaxed font-medium">
-                "Anything on your mind today, {firstName}? Share your thoughts to update our strategy."
+                Anything on your mind today, {firstName}? Share your thoughts to update our strategy.
               </p>
               <div className="space-y-3">
                 <Textarea 

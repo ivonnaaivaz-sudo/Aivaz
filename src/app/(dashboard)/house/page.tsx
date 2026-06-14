@@ -18,7 +18,6 @@ import {
   Compass,
   Link2
 } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
 
 const MOCK_DNA = {
   personalProfile: {
@@ -135,7 +134,7 @@ export default function HousePage() {
                 <BrainCircuit className="h-24 w-24" />
               </div>
               <p className="text-xl leading-relaxed text-foreground/90 italic font-headline relative z-10">
-                "{p.aiSummary}"
+                {p.aiSummary}
               </p>
             </div>
           </section>
@@ -208,7 +207,7 @@ export default function HousePage() {
               <BookOpen className="h-12 w-12" />
             </div>
             <p className="text-lg text-foreground/80 leading-relaxed font-body italic max-w-2xl mx-auto">
-              "The Hartmann legacy is defined by industrial excellence and a deep commitment to precision as a means of wealth preservation."
+              The Hartmann legacy is defined by industrial excellence and a deep commitment to precision as a means of wealth preservation.
             </p>
             <div className="mt-12 flex items-center justify-center gap-6 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/30">
               <Link2 className="h-4 w-4" />

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useUser, useDoc } from "@/firebase";
@@ -10,7 +9,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   Fingerprint, 
   Globe, 
-  History, 
   Heart, 
   User, 
   Users, 
@@ -68,7 +66,7 @@ const HARTMANN_DNA = {
     relationalDynamics: {
       keyFrictionPoints: ["Geographic relocation (Munich vs. Singapore/London)", "Investment risk tolerance (Dr. Markus vs. Alexander)"],
       alignmentLevel: "Medium-Low",
-      successionReadinessScore: 42
+      succession readinessScore: 42
     },
     familyLegacyNarrative: "The Hartmann family represents the quintessential European industrial legacy facing the complexity of the 21st century. Their DNA is a blend of traditional German precision and emerging global impacts."
   }
@@ -163,7 +161,7 @@ export default function FamilyDNAPage() {
               1. Family Narrative
             </h2>
             <div className="p-8 rounded-2xl bg-primary/5 border border-primary/10 italic text-xl font-headline">
-              "{f.familyLegacyNarrative}"
+              {f.familyLegacyNarrative}
             </div>
             <Card className="glass-panel border-white/5 bg-white/[0.01]">
               <CardContent className="p-8">
@@ -247,7 +245,7 @@ export default function FamilyDNAPage() {
 
           <div className="bg-white/[0.02] p-10 rounded-3xl border border-white/5 text-center">
             <p className="text-lg text-foreground/80 leading-relaxed font-body italic max-w-2xl mx-auto">
-              "The Hartmann legacy is defined by industrial excellence and a deep commitment to precision as a means of wealth preservation."
+              The Hartmann legacy is defined by industrial excellence and a deep commitment to precision as a means of wealth preservation.
             </p>
             <div className="mt-8 flex items-center justify-center gap-6 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/30">
               <Shield className="h-4 w-4" />

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -155,7 +154,7 @@ export default function SimulatorPage() {
                 </div>
                 <CardContent className="p-8">
                   <p className="text-lg font-headline font-medium leading-relaxed italic">
-                    "{result?.scenarioSummary}"
+                    {result?.scenarioSummary}
                   </p>
                 </CardContent>
               </Card>

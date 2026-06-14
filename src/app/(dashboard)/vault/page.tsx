@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -19,7 +18,6 @@ import {
   List, 
   FolderPlus,
   Gavel,
-  Book,
   Anchor,
   Scale,
   Scroll,
@@ -248,7 +246,7 @@ export default function VaultPage() {
               </CardHeader>
               <CardContent className="flex-1">
                 <p className="font-serif italic text-base leading-relaxed text-slate-500">
-                  "{doc.content}"
+                  {doc.content}
                 </p>
               </CardContent>
               <div className="p-5 border-t border-slate-100 flex items-center justify-between bg-slate-50/30">
