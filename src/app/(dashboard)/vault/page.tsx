@@ -193,8 +193,8 @@ export default function VaultPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="p-6">
-                  <div className="flex flex-col md:flex-row gap-6 items-end">
-                    <div className="w-full md:w-1/3 space-y-2">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+                    <div className="space-y-2">
                       <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">From Date</label>
                       <div className="relative">
                         <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
@@ -206,7 +206,7 @@ export default function VaultPage() {
                         />
                       </div>
                     </div>
-                    <div className="w-full md:w-1/3 space-y-2">
+                    <div className="space-y-2">
                       <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">To Date</label>
                       <div className="relative">
                         <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
@@ -218,7 +218,7 @@ export default function VaultPage() {
                         />
                       </div>
                     </div>
-                    <div className="w-full md:w-1/3">
+                    <div className="w-full">
                       <Button onClick={handleDownloadReasoning} className="bg-primary hover:bg-primary/90 text-white px-8 rounded-xl h-10 shadow-lg font-bold text-[10px] uppercase tracking-widest w-full">
                         <Download className="mr-2 h-4 w-4" /> Package Logic
                       </Button>
