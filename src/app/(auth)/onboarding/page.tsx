@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
-import { Shield, Sparkles, BrainCircuit, ArrowRight, Loader2, Landmark, Users, Globe, Building2 } from "lucide-react";
+import { Shield, Sparkles, BrainCircuit, ArrowRight, Loader2, Landmark, Users, Globe, Building2, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -27,6 +27,7 @@ type Step = {
   branch?: string;
   condition?: (answers: Record<string, any>) => boolean;
   maxSelect?: number;
+  optional?: boolean;
 };
 
 const allSteps: Step[] = [
@@ -45,14 +46,16 @@ const allSteps: Step[] = [
     title: "Family Roots",
     question: "Where is your family primarily established?",
     type: "input",
-    placeholder: "e.g. Munich, Germany"
+    placeholder: "e.g. Munich, Germany (Optional)",
+    optional: true
   },
   {
     id: "company",
     title: "Legacy Enterprise",
     question: "What is the name of your primary family business?",
     type: "input",
-    placeholder: "Company name (optional)"
+    placeholder: "Company name (Optional)",
+    optional: true
   },
   {
     id: "ai_consent",
@@ -195,7 +198,8 @@ const allSteps: Step[] = [
     title: "Future Objectives",
     question: "What is something you personally want to achieve with the family's support?",
     type: "textarea",
-    placeholder: "e.g. buy a home, invest in a cause, relocate, etc."
+    placeholder: "e.g. buy a home, invest in a cause, relocate, etc. (Optional)",
+    optional: true
   },
   // Universal Questions
   {
@@ -389,11 +393,18 @@ export default function OnboardingPage() {
 
         <Card className="bg-white/[0.02] border-white/5 shadow-2xl backdrop-blur-xl rounded-3xl overflow-hidden relative">
           <CardHeader className="space-y-1 p-8">
-            <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="h-4 w-4 text-primary" />
-              <span className="text-[10px] font-bold uppercase tracking-tighter text-primary">{currentStep.title}</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <span className="text-[10px] font-bold uppercase tracking-tighter text-primary">
+                  {currentStep.title} {currentStep.optional && "(Optional)"}
+                </span>
+              </div>
+              {currentStep.optional && (
+                <Badge variant="outline" className="text-[8px] border-white/10 text-slate-500 uppercase tracking-widest px-2">Privacy Enabled</Badge>
+              )}
             </div>
-            <CardTitle className="text-2xl font-headline text-white leading-tight">{currentStep.question}</CardTitle>
+            <CardTitle className="text-2xl font-headline text-white leading-tight mt-2">{currentStep.question}</CardTitle>
             {joiningFamily && (
               <p className="text-xs font-bold text-emerald-500 uppercase tracking-widest pt-2 flex items-center gap-2">
                 <Shield className="h-3 w-3" /> Linked to: {joiningFamily.name}
@@ -476,6 +487,12 @@ export default function OnboardingPage() {
                   value={answers[currentStep.id] || ""}
                   onChange={(e) => setAnswers({ ...answers, [currentStep.id]: e.target.value })}
                 />
+                {currentStep.optional && (
+                  <div className="flex items-center gap-2 text-[10px] text-slate-500 font-bold uppercase tracking-widest px-2">
+                    <Info className="h-3 w-3" />
+                    <span>This field is not mandatory for base profiling.</span>
+                  </div>
+                )}
               </div>
             ) : (
               <Textarea 
@@ -501,7 +518,14 @@ export default function OnboardingPage() {
               }
               className="px-8 rounded-xl shadow-lg bg-primary hover:bg-primary/90 text-white font-bold uppercase text-[11px] tracking-widest h-11"
             >
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <> {currentStepIndex === allSteps.length - 1 ? "Complete Discovery" : "Continue"} <ArrowRight className="ml-2 h-4 w-4" /> </>}
+              {loading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <>
+                  {currentStep.optional && !answers[currentStep.id] ? "Skip this step" : (currentStepIndex === allSteps.length - 1 ? "Complete Discovery" : "Continue")}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </>
+              )}
             </Button>
           </CardFooter>
         </Card>
