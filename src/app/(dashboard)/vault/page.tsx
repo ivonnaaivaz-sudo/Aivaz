@@ -24,16 +24,18 @@ import {
   History,
   Calendar,
   Zap,
-  ChevronRight
+  ChevronRight,
+  MoreVertical
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const documents = [
-  { name: "Hartmann_Legacy_Trust_2024.pdf", type: "Legal", date: "Jan 12, 2026", size: "3.4 MB", security: "High" },
-  { name: "Munich_Real_Estate_Q4_Audit.pdf", type: "Investment", date: "Jun 02, 2026", size: "2.1 MB", security: "Medium" },
-  { name: "Heritage_Foundation_Bylaws_Swiss.docx", type: "Legal", date: "Aug 21, 2024", size: "1.2 MB", security: "High" },
-  { name: "Chemical_Logistics_Valuation_2025.pdf", type: "Finance", date: "Dec 15, 2025", size: "15.8 MB", security: "High" },
-  { name: "Identity_Passports_Hartmann_Group.zip", type: "Sensitive", date: "Jun 05, 2026", size: "4.8 MB", security: "Military" },
+  { id: "d1", name: "Hartmann_Legacy_Trust_2024.pdf", type: "Legal", date: "Jan 12, 2026", size: "3.4 MB", security: "High" },
+  { id: "d2", name: "Munich_Real_Estate_Q4_Audit.pdf", type: "Investment", date: "Jun 02, 2026", size: "2.1 MB", security: "Medium" },
+  { id: "d3", name: "Heritage_Foundation_Bylaws_Swiss.docx", type: "Legal", date: "Aug 21, 2024", size: "1.2 MB", security: "High" },
+  { id: "d4", name: "Chemical_Logistics_Valuation_2025.pdf", type: "Finance", date: "Dec 15, 2025", size: "15.8 MB", security: "High" },
+  { id: "d5", name: "Identity_Passports_Hartmann_Group.zip", type: "Sensitive", date: "Jun 05, 2026", size: "4.8 MB", security: "Military" },
 ];
 
 const bedrockDocs = [
@@ -160,7 +162,7 @@ export default function VaultPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-end">
                     <div className="space-y-2">
                       <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">From Date</label>
                       <div className="relative">
@@ -185,7 +187,7 @@ export default function VaultPage() {
                         />
                       </div>
                     </div>
-                    <Button onClick={handleDownloadReasoning} className="bg-primary hover:bg-primary/90 text-white px-8 rounded-xl h-10 shadow-lg font-bold text-[10px] uppercase tracking-widest w-full shrink-0">
+                    <Button onClick={handleDownloadReasoning} className="bg-primary hover:bg-primary/90 text-white px-8 rounded-xl h-10 shadow-lg font-bold text-[10px] uppercase tracking-widest w-full">
                       <Download className="mr-2 h-4 w-4" /> Package Logic
                     </Button>
                   </div>
@@ -222,6 +224,76 @@ export default function VaultPage() {
           </div>
         </section>
       )}
+
+      {/* Digital Vault Document Ledger */}
+      <section className="space-y-6">
+        <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+          <div className="flex items-center gap-3">
+            <FileText className="h-5 w-5 text-primary" />
+            <h2 className="text-sm font-bold uppercase tracking-widest text-slate-800">Encrypted Document Ledger</h2>
+          </div>
+          <div className="relative w-64">
+            <Input placeholder="Search documents..." className="h-8 text-xs pl-8 rounded-lg" />
+            <History className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+          </div>
+        </div>
+
+        <Card className="border-slate-200 shadow-sm bg-white overflow-hidden rounded-2xl">
+          <Table>
+            <TableHeader className="bg-slate-50/50">
+              <TableRow className="border-slate-100 hover:bg-transparent">
+                <TableHead className="text-[10px] font-bold uppercase tracking-widest text-slate-400 pl-8">Document Name</TableHead>
+                <TableHead className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Classification</TableHead>
+                <TableHead className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Vaulted On</TableHead>
+                <TableHead className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Security</TableHead>
+                <TableHead className="text-right text-[10px] font-bold uppercase tracking-widest text-slate-400 pr-8">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {documents.map((doc) => (
+                <TableRow key={doc.id} className="border-slate-100 group hover:bg-slate-50 transition-colors">
+                  <TableCell className="pl-8 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-slate-50 border border-slate-100 group-hover:bg-white group-hover:border-primary/20 transition-all">
+                        <FileText className="h-4 w-4 text-slate-400 group-hover:text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-slate-900">{doc.name}</p>
+                        <p className="text-[10px] text-slate-400 font-mono">{doc.size}</p>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="text-[9px] uppercase tracking-tighter bg-slate-50 border-slate-200">
+                      {doc.type}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-xs text-slate-500 font-medium">{doc.date}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Lock className={cn(
+                        "h-3 w-3",
+                        doc.security === 'Military' ? 'text-red-500' : 'text-emerald-500'
+                      )} />
+                      <span className="text-[10px] font-bold text-slate-600 uppercase tracking-tight">{doc.security}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right pr-8">
+                    <div className="flex items-center justify-end gap-2">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary rounded-full" onClick={() => handleDownload(doc.name)}>
+                        <Download className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 rounded-full">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
+      </section>
 
       <section className="space-y-6">
         <div className="flex items-center gap-3 border-b border-slate-200 pb-4">
