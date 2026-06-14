@@ -5,23 +5,23 @@
 @layer base {
   :root {
     --background: 210 20% 98%;
-    --foreground: 225 18% 5%;
+    --foreground: 222 47% 11%;
     --card: 0 0% 100%;
-    --card-foreground: 225 18% 5%;
+    --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 225 18% 5%;
+    --popover-foreground: 222 47% 11%;
     --primary: 197 53% 54%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 197 20% 94%;
-    --secondary-foreground: 197 53% 40%;
-    --muted: 210 20% 92%;
-    --muted-foreground: 225 10% 45%;
+    --secondary: 210 20% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 20% 94%;
+    --muted-foreground: 215 16% 35%;
     --accent: 197 53% 54%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 225 10% 90%;
-    --input: 225 10% 90%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
     --ring: 197 53% 54%;
     --radius: 0.75rem;
     --chart-1: 197 53% 54%;
@@ -30,13 +30,13 @@
     --chart-4: 180 50% 50%;
     --chart-5: 210 60% 60%;
     
-    --sidebar-background: 225 18% 4%;
-    --sidebar-foreground: 200 52% 89%;
+    --sidebar-background: 222 47% 4%;
+    --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 197 53% 54%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 225 18% 12%;
+    --sidebar-accent: 217 32% 12%;
     --sidebar-accent-foreground: 197 53% 54%;
-    --sidebar-border: 225 18% 12%;
+    --sidebar-border: 217 32% 12%;
     --sidebar-ring: 197 53% 54%;
   }
 
@@ -66,16 +66,12 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-body;
-    background-image: 
-      radial-gradient(at 0% 0%, hsla(197, 53%, 54%, 0.03) 0, transparent 50%),
-      radial-gradient(at 100% 100%, hsla(201, 45%, 33%, 0.03) 0, transparent 50%);
-    background-attachment: fixed;
+    @apply bg-background text-foreground font-body antialiased;
   }
 }
 
 .glass-panel {
-  @apply bg-white/70 backdrop-blur-xl border border-black/5 shadow-xl;
+  @apply bg-white/70 backdrop-blur-xl border border-black/5 shadow-sm;
 }
 
 .dark .glass-panel {
