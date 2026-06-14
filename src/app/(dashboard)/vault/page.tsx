@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -193,7 +194,7 @@ export default function VaultPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-10 items-end">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
                     <div className="space-y-2">
                       <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">From Date</label>
                       <div className="relative">

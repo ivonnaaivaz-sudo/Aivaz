@@ -255,7 +255,6 @@ export default function ChartroomPage() {
         text: `Shared Strategic Pairing: ${activePairing.title}. This proposal balances ${activePairing.components.opportunities.length} opportunities against ${activePairing.components.needs.length + activePairing.components.blindspots.length} priorities. View full diagnostic in Chartroom.`,
         type: "recommendation",
         track: "governance",
-        threadId: "t1",
         timestamp: new Date().toISOString()
       });
       toast({ title: "Shared with Wardroom", description: "This pairing has been broadcast to the family group chat." });
