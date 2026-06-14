@@ -530,7 +530,35 @@ export default function DecisionSandboxPage() {
               <Button variant="ghost" size="sm" onClick={() => setIsAnalysisExpanded(false)} className="h-8 text-[10px] font-bold uppercase tracking-widest">Minimize Diagnostic</Button>
             </div>
 
-            {/* Pillar Grid */}
+            {/* Utility Leaderboard Section - MOVED ABOVE MATRICES */}
+            {utilityRanking.length > 0 && (
+              <div className="space-y-4 border-t border-slate-100 pt-4">
+                <div className="flex items-center gap-3">
+                  <Trophy className="h-4 w-4 text-amber-500" />
+                  <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-900">Strategy Utility Leaderboard</h4>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {utilityRanking.map((rank, i) => (
+                    <div key={rank.id} className={cn(
+                      "p-4 rounded-xl border transition-all flex flex-col gap-2 relative",
+                      i === 0 ? "bg-amber-50/30 border-amber-200" : "bg-slate-50/50 border-slate-200"
+                    )}>
+                      {i === 0 && <Badge className="absolute -top-2 -right-2 bg-amber-500 text-white border-transparent text-[8px] uppercase">Leader</Badge>}
+                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Rank #{i + 1} • {rank.driver}</p>
+                      <p className="text-xs font-bold truncate text-slate-900">{rank.title}</p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <div className="flex-1 h-1 bg-slate-200 rounded-full overflow-hidden">
+                          <div className={cn("h-full", i === 0 ? "bg-amber-500" : "bg-primary")} style={{ width: `${rank.score}%` }} />
+                        </div>
+                        <span className="text-[10px] font-bold text-slate-900">{rank.score.toFixed(0)}%</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Pillar Grid - NOW BELOW RANKING */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
               {analysisBreakdown.map((item, idx) => (
                 <div key={idx} className="space-y-4">
@@ -562,39 +590,11 @@ export default function DecisionSandboxPage() {
                   </div>
                   <div className="p-3 rounded-lg bg-slate-50 border border-slate-100 space-y-1">
                     <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Logic: {item.driver}</p>
-                    <p className="text-[11px] text-slate-600 italic leading-snug">{item.logic}</p>
+                    <p className="text-sm font-medium text-slate-600 italic leading-snug">{item.logic}</p>
                   </div>
                 </div>
               ))}
             </div>
-
-            {/* Utility Leaderboard Section */}
-            {utilityRanking.length > 0 && (
-              <div className="space-y-4 border-t border-slate-100 pt-8">
-                <div className="flex items-center gap-3">
-                  <Trophy className="h-4 w-4 text-amber-500" />
-                  <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-900">Strategy Utility Leaderboard</h4>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {utilityRanking.map((rank, i) => (
-                    <div key={rank.id} className={cn(
-                      "p-4 rounded-xl border transition-all flex flex-col gap-2 relative",
-                      i === 0 ? "bg-amber-50/30 border-amber-200" : "bg-slate-50/50 border-slate-200"
-                    )}>
-                      {i === 0 && <Badge className="absolute -top-2 -right-2 bg-amber-500 text-white border-transparent text-[8px] uppercase">Leader</Badge>}
-                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Rank #{i + 1} • {rank.driver}</p>
-                      <p className="text-xs font-bold truncate text-slate-900">{rank.title}</p>
-                      <div className="flex items-center gap-2 mt-2">
-                        <div className="flex-1 h-1 bg-slate-200 rounded-full overflow-hidden">
-                          <div className={cn("h-full", i === 0 ? "bg-amber-500" : "bg-primary")} style={{ width: `${rank.score}%` }} />
-                        </div>
-                        <span className="text-[10px] font-bold text-slate-900">{rank.score.toFixed(0)}%</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {/* TPA Methodology Tracker */}
             <div className="mt-4 pt-4 border-t border-slate-100 grid grid-cols-4 gap-4">
