@@ -111,6 +111,37 @@ export default function VaultPage() {
         </div>
       </div>
 
+      {/* 1. Governance Bedrock (Highest Hierarchy) */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-3 border-b border-slate-200 pb-4">
+          <Gavel className="h-5 w-5 text-primary" />
+          <h2 className="text-sm font-bold uppercase tracking-widest text-slate-800">Governance Bedrock</h2>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {bedrockDocs.map((doc, i) => (
+            <Card key={i} className="bg-white border-slate-200 hover:border-primary/30 transition-all flex flex-col h-full cursor-pointer shadow-sm group rounded-2xl overflow-hidden">
+              <CardHeader className="pb-4 relative">
+                <div className="w-10 h-10 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center mb-4 group-hover:bg-primary/5 transition-colors">
+                  <doc.icon className="h-5 w-5 text-slate-400 group-hover:text-primary transition-colors" />
+                </div>
+                <CardTitle className="text-lg font-headline font-bold text-slate-800">{doc.title}</CardTitle>
+              </CardHeader>
+              <CardContent className="flex-1">
+                <p className="font-serif italic text-base leading-relaxed text-slate-500">
+                  {doc.content}
+                </p>
+              </CardContent>
+              <div className="p-5 border-t border-slate-100 flex items-center justify-between bg-slate-50/30">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-300">{doc.footer}</span>
+                <Lock className="h-3 w-3 text-slate-200" />
+              </div>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* 2. Principal Oversight / Advanced Analytics */}
       {isPrincipal && (
         <section className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-700">
           <div className="flex items-center justify-between border-b border-slate-200 pb-4">
@@ -123,8 +154,8 @@ export default function VaultPage() {
             </Badge>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div className="lg:col-span-8 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {advancedAnalytics.map((report, i) => (
                   <Card key={i} className="bg-white border-slate-200 hover:border-primary/40 transition-all group cursor-pointer shadow-sm rounded-2xl overflow-hidden">
@@ -162,8 +193,8 @@ export default function VaultPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="p-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-end">
-                    <div className="space-y-2">
+                  <div className="flex flex-col md:flex-row gap-6 items-end">
+                    <div className="w-full md:w-1/3 space-y-2">
                       <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">From Date</label>
                       <div className="relative">
                         <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
@@ -175,7 +206,7 @@ export default function VaultPage() {
                         />
                       </div>
                     </div>
-                    <div className="space-y-2">
+                    <div className="w-full md:w-1/3 space-y-2">
                       <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">To Date</label>
                       <div className="relative">
                         <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
@@ -187,16 +218,18 @@ export default function VaultPage() {
                         />
                       </div>
                     </div>
-                    <Button onClick={handleDownloadReasoning} className="bg-primary hover:bg-primary/90 text-white px-8 rounded-xl h-10 shadow-lg font-bold text-[10px] uppercase tracking-widest w-full">
-                      <Download className="mr-2 h-4 w-4" /> Package Logic
-                    </Button>
+                    <div className="w-full md:w-1/3">
+                      <Button onClick={handleDownloadReasoning} className="bg-primary hover:bg-primary/90 text-white px-8 rounded-xl h-10 shadow-lg font-bold text-[10px] uppercase tracking-widest w-full">
+                        <Download className="mr-2 h-4 w-4" /> Package Logic
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-            <div className="space-y-6">
-              <Card className="bg-white border-slate-200 shadow-sm rounded-2xl">
+            <div className="lg:col-span-4 space-y-6">
+              <Card className="bg-white border-slate-200 shadow-sm rounded-2xl h-full">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
                     <Zap className="h-3.5 w-3.5 text-primary" /> Risk Intelligence
@@ -207,7 +240,7 @@ export default function VaultPage() {
                     { label: "Portfolio Risk (VaR)", val: "€11.2M", desc: "Estimated monthly drawdown risk." },
                     { label: "Stability Index", val: "0.82", desc: "Low correlation to global volatility." },
                   ].map((stat, i) => (
-                    <div key={i} className="p-3 rounded-xl bg-slate-50 border border-slate-100 space-y-1">
+                    <div key={i} className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-1">
                       <div className="flex justify-between items-center">
                         <span className="text-[10px] font-bold text-slate-500 uppercase">{stat.label}</span>
                         <span className="text-sm font-bold text-slate-900">{stat.val}</span>
@@ -215,8 +248,8 @@ export default function VaultPage() {
                       <p className="text-[9px] text-slate-400 italic">{stat.desc}</p>
                     </div>
                   ))}
-                  <Button variant="outline" className="w-full text-[10px] font-bold uppercase tracking-widest border-slate-200 h-10 rounded-xl hover:bg-slate-50 transition-colors">
-                    Stress-Test Matrix <ChevronRight className="ml-2 h-3 w-3" />
+                  <Button variant="outline" className="w-full text-[10px] font-bold uppercase tracking-widest border-slate-200 h-12 rounded-xl hover:bg-slate-50 transition-colors mt-4">
+                    Stress-Test Matrix <ChevronRight className="ml-2 h-4 w-4" />
                   </Button>
                 </CardContent>
               </Card>
@@ -225,7 +258,7 @@ export default function VaultPage() {
         </section>
       )}
 
-      {/* Digital Vault Document Ledger */}
+      {/* 3. Digital Vault Document Ledger */}
       <section className="space-y-6">
         <div className="flex items-center justify-between border-b border-slate-200 pb-4">
           <div className="flex items-center gap-3">
@@ -295,44 +328,15 @@ export default function VaultPage() {
         </Card>
       </section>
 
-      <section className="space-y-6">
-        <div className="flex items-center gap-3 border-b border-slate-200 pb-4">
-          <Gavel className="h-5 w-5 text-primary" />
-          <h2 className="text-sm font-bold uppercase tracking-widest text-slate-800">Governance Bedrock</h2>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {bedrockDocs.map((doc, i) => (
-            <Card key={i} className="bg-white border-slate-200 hover:border-primary/30 transition-all flex flex-col h-full cursor-pointer shadow-sm group rounded-2xl overflow-hidden">
-              <CardHeader className="pb-4 relative">
-                <div className="w-10 h-10 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center mb-4 group-hover:bg-primary/5 transition-colors">
-                  <doc.icon className="h-5 w-5 text-slate-400 group-hover:text-primary transition-colors" />
-                </div>
-                <CardTitle className="text-lg font-headline font-bold text-slate-800">{doc.title}</CardTitle>
-              </CardHeader>
-              <CardContent className="flex-1">
-                <p className="font-serif italic text-base leading-relaxed text-slate-500">
-                  {doc.content}
-                </p>
-              </CardContent>
-              <div className="p-5 border-t border-slate-100 flex items-center justify-between bg-slate-50/30">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-300">{doc.footer}</span>
-                <Lock className="h-3 w-3 text-slate-200" />
-              </div>
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      <div className="p-6 rounded-2xl border border-primary/20 bg-primary/5 flex items-center gap-6">
-        <div className="p-3 rounded-full bg-primary/20 shadow-sm">
-          <Shield className="h-6 w-6 text-primary" />
+      <div className="p-8 rounded-3xl border border-primary/20 bg-primary/5 flex items-center gap-6">
+        <div className="p-4 rounded-full bg-primary/20 shadow-sm">
+          <Shield className="h-8 w-8 text-primary" />
         </div>
         <div className="flex-1">
-          <p className="text-sm font-bold text-slate-900">Charter Integrity Active</p>
-          <p className="text-xs text-slate-500 mt-1">Immutable records serving as the single source of truth for the Hartmann council.</p>
+          <p className="text-base font-bold text-slate-900">Charter Integrity Active</p>
+          <p className="text-sm text-slate-500 mt-1">Immutable records serving as the single source of truth for the Hartmann council.</p>
         </div>
-        <Button variant="outline" size="sm" className="bg-white border-slate-200 text-[10px] font-bold uppercase tracking-widest hover:text-primary hover:border-primary/30 transition-all rounded-xl h-11 px-8 shadow-sm">
+        <Button variant="outline" size="sm" className="bg-white border-slate-200 text-[11px] font-bold uppercase tracking-widest hover:text-primary hover:border-primary/30 transition-all rounded-xl h-12 px-10 shadow-sm">
           Audit Ledger
         </Button>
       </div>
