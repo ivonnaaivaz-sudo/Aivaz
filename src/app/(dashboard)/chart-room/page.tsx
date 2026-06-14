@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo } from "react";
@@ -7,33 +6,30 @@ import { collection, addDoc } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { 
   Sparkles, 
   CheckCircle2, 
   Zap,
   ShieldCheck,
-  PlusCircle,
   Package,
   Trophy,
   ShieldAlert,
   ChevronUp,
   ChevronDown,
-  LayoutGrid
+  LayoutGrid,
+  ArrowUpRight
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 type CardType = 'action' | 'offset';
 
@@ -102,7 +98,7 @@ const INITIAL_PROPOSED_ACTIONS: DecisionCard[] = [
 
 const INITIAL_STRATEGIC_OFFSETS: DecisionCard[] = [
   {
-    id: 'o-2',
+    id: 'o-1',
     type: 'offset',
     title: "Dividend-Backed Mortgage",
     description: "Finance property via interest-only loan.",
@@ -250,6 +246,27 @@ export default function DecisionSandboxPage() {
     );
   };
 
+  const handleCommit = async () => {
+    if (!user || !db || activeSynergies.length === 0) return;
+    setIsSubmitting(true);
+    try {
+      const msgRef = collection(db, "users", user.uid, "messages");
+      await addDoc(msgRef, {
+        senderId: user.uid,
+        senderName: "Dr. Markus Hartmann",
+        text: `Transmitted a strategic TPA package with ${activeSynergies.length} pairings. Top Utility Alignment: ${utilityRanking[0]?.title}.`,
+        type: "recommendation",
+        track: "governance",
+        timestamp: new Date().toISOString()
+      });
+      toast({ title: "Strategy Transmitted", description: "The TPA package has been sent to the Council Wardroom." });
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="flex flex-col h-[calc(100vh-100px)] overflow-hidden bg-white antialiased">
       <header className="h-16 border-b border-slate-200 px-12 flex items-center justify-between shrink-0 bg-white z-[60]">
@@ -262,6 +279,7 @@ export default function DecisionSandboxPage() {
         </div>
         <Button 
           disabled={activeSynergies.length === 0 || isSubmitting}
+          onClick={handleCommit}
           className="h-9 px-6 rounded-xl text-[10px] font-bold uppercase tracking-widest bg-primary text-white shadow-lg"
         >
           {isSubmitting ? "Transmitting..." : "Send to Wardroom"}
@@ -306,7 +324,7 @@ export default function DecisionSandboxPage() {
         {/* Vertical Drafting Area */}
         <div className="flex-1 overflow-y-auto px-12 pt-8 pb-32">
           <div className="max-w-4xl mx-auto flex flex-col gap-12">
-            {/* Inflows */}
+            {/* Inflows - Strategic Offsets */}
             <div className="space-y-4">
               <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
                 <Zap className="h-4 w-4 text-emerald-500" />
@@ -341,7 +359,7 @@ export default function DecisionSandboxPage() {
               </div>
             </div>
 
-            {/* Outflows */}
+            {/* Outflows - Proposed Actions */}
             <div className="space-y-4">
               <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
                 <LayoutGrid className="h-4 w-4 text-slate-400" />
@@ -413,7 +431,10 @@ export default function DecisionSandboxPage() {
                     <span className="text-[9px] font-bold uppercase text-slate-400">{item.name}</span>
                     <span className="text-xs font-bold">{item.projected.toFixed(1)}{item.unit}</span>
                   </div>
-                  <Progress value={(item.projected / item.baseline) * 50} className="h-1.5" />
+                  <Progress value={(item.projected / Math.max(1, item.baseline)) * 50} className="h-1.5" />
+                  <p className="text-[10px] text-slate-500 leading-tight italic">
+                    <span className="font-bold">Key Driver:</span> {activeSynergies[0]?.action?.title || "Baseline"}
+                  </p>
                   <p className="text-[10px] text-slate-500 leading-tight italic">{item.logic}</p>
                 </div>
               ))}
