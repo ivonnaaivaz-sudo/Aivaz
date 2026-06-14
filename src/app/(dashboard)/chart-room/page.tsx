@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo } from "react";
@@ -33,7 +32,8 @@ import {
   Scale,
   PlusCircle,
   Trash2,
-  Activity
+  Activity,
+  Package
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -191,9 +191,20 @@ export default function DecisionSandboxPage() {
     // Liquidity Penalty Function
     const liquidityPenalty = projectLiquidity < 15 ? (15 - projectLiquidity) * 0.8 : 0;
 
-    const maxLiqAction = activeProposedActions.reduce((prev, curr) => 
-      (Math.abs(curr.liquidityValue) > Math.abs(prev?.liquidityValue || 0)) ? curr : prev
-    , null as DecisionCard | null);
+    // Identify Utility Leader (The pair that contributes most to alignment)
+    const utilityPerPair = activeSynergies.map(synergy => {
+      const action = synergy.action;
+      const offset = synergy.offset;
+      if (!action || !offset) return { title: 'Stable', utility: 0 };
+      const impact = (action.liquidityValue + offset.liquidityValue) / 1000000;
+      const risk = action.riskDelta + offset.riskDelta;
+      const pairUtility = 85 - (risk * 0.5) + impact;
+      return { title: `${action.title} + ${offset.title}`, utility: pairUtility };
+    });
+
+    const bestPair = utilityPerPair.length > 0 
+      ? utilityPerPair.reduce((prev, curr) => (curr.utility > prev.utility ? curr : prev))
+      : null;
 
     return [
       { 
@@ -201,7 +212,7 @@ export default function DecisionSandboxPage() {
         baseline: baselineLiquidity, 
         projected: projectLiquidity, 
         unit: '€M',
-        driver: maxLiqAction?.title || 'Stable Balance',
+        driver: bestPair?.title || 'Stable Balance',
         status: projectLiquidity < 15 ? 'warning' : 'healthy',
         penalty: liquidityPenalty
       },
@@ -210,7 +221,7 @@ export default function DecisionSandboxPage() {
         baseline: baselineVaR, 
         projected: projectedVaR, 
         unit: '€M',
-        driver: 'Market Sensitivity',
+        driver: 'Aggregate Market Sensitivity',
         status: projectedVaR > 15 ? 'warning' : 'healthy',
         isTechnical: true
       },
@@ -219,12 +230,12 @@ export default function DecisionSandboxPage() {
         baseline: 85, 
         projected: dnaUtility, 
         unit: '%',
-        driver: 'Preservation Mandate',
+        driver: bestPair ? `Utility Leader: ${bestPair.title}` : 'Preservation Mandate',
         status: dnaUtility < 70 ? 'warning' : 'healthy',
         isDNA: true
       },
     ];
-  }, [netImpact, activeProposedActions]);
+  }, [netImpact, activeSynergies]);
 
   const handlePairing = (actionId: string, offsetId: string) => {
     setPairedIds(prev => {
@@ -305,18 +316,20 @@ export default function DecisionSandboxPage() {
     setIsSubmitting(true);
     try {
       const msgRef = collection(db, "users", user.uid, "messages");
-      for (const synergy of activeSynergies) {
-        if (synergy.action && synergy.offset) {
-          await addDoc(msgRef, {
-            senderId: "aivaz-system",
-            senderName: "Decision Sandbox",
-            text: `STABILIZED TPA PACKAGE: ${synergy.action.title} + ${synergy.offset.title}. Net Impact: €${((synergy.action.liquidityValue + synergy.offset.liquidityValue) / 1000000).toFixed(1)}M. Utility Alignment: ${analysisBreakdown[2].projected.toFixed(0)}%.`,
-            type: "recommendation",
-            timestamp: new Date().toISOString(),
-            track: "strategy"
-          });
-        }
-      }
+      
+      const synergyTexts = activeSynergies.map(s => 
+        s.action && s.offset ? `[${s.action.title} paired with ${s.offset.title}]` : ''
+      ).filter(Boolean).join(', ');
+
+      await addDoc(msgRef, {
+        senderId: "aivaz-system",
+        senderName: "Decision Sandbox",
+        text: `STABILIZED TPA PACKAGE: ${activeSynergies.length} Strategic Pairs. ${synergyTexts}. Total Net Impact: €${(netImpact.liquidity / 1000000).toFixed(1)}M. Total Utility Alignment: ${analysisBreakdown[2].projected.toFixed(0)}%.`,
+        type: "recommendation",
+        timestamp: new Date().toISOString(),
+        track: "strategy"
+      });
+
       toast({ title: "Decision Package Transmitted", description: "TPA strategy sent to family council." });
       setPairedIds({});
     } catch (e) {
@@ -336,20 +349,25 @@ export default function DecisionSandboxPage() {
             <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary">TPA Decision Sandbox</span>
           </div>
           <div className="h-4 w-px bg-slate-200" />
-          <p className="text-sm font-medium text-slate-500 italic">Finding viable pairings to reach heritage stabilization.</p>
+          <p className="text-sm font-medium text-slate-500 italic">Establishing multi-layered strategic pairings for heritage stability.</p>
         </div>
-        <Button 
-          disabled={activeSynergies.length === 0 || isSubmitting}
-          onClick={handleSendToWardroom}
-          className={cn(
-            "h-10 px-8 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
-            activeSynergies.length > 0 
-              ? "bg-primary text-white shadow-lg" 
-              : "bg-slate-100 text-slate-400 border border-slate-200"
-          )}
-        >
-          {isSubmitting ? "Transmitting..." : "Send to Wardroom"}
-        </Button>
+        <div className="flex items-center gap-4">
+          <Badge variant="outline" className="h-8 bg-slate-50 border-slate-200 px-4 text-[9px] font-bold uppercase tracking-widest text-slate-500">
+            {activeSynergies.length} Active Pairings
+          </Badge>
+          <Button 
+            disabled={activeSynergies.length === 0 || isSubmitting}
+            onClick={handleSendToWardroom}
+            className={cn(
+              "h-10 px-8 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
+              activeSynergies.length > 0 
+                ? "bg-primary text-white shadow-lg" 
+                : "bg-slate-100 text-slate-400 border border-slate-200"
+            )}
+          >
+            {isSubmitting ? "Transmitting..." : "Send to Wardroom"}
+          </Button>
+        </div>
       </header>
 
       {/* Workspace */}
@@ -458,7 +476,8 @@ export default function DecisionSandboxPage() {
 
               <div className="space-y-4 pb-20">
                 {strategicOffsets.map((offset) => {
-                  const pairedActionId = Object.keys(pairedIds).find(key => pairedIds[key] === offset.id);
+                  const pairedActionIds = Object.keys(pairedIds).filter(key => pairedIds[key] === offset.id);
+                  const isPaired = pairedActionIds.length > 0;
                   return (
                     <Card 
                       key={offset.id}
@@ -466,7 +485,7 @@ export default function DecisionSandboxPage() {
                         const targetId = activeProposedActions.find(a => !pairedIds[a.id])?.id || activeProposedActions[0]?.id;
                         if (targetId) handlePairing(targetId, offset.id);
                       }}
-                      className={cn("border transition-all cursor-pointer relative shadow-sm group overflow-hidden", offset.isCritical ? "border-amber-200 bg-amber-50/30" : "border-slate-200 bg-white", !!pairedActionId && "border-primary bg-primary/[0.02]")}
+                      className={cn("border transition-all cursor-pointer relative shadow-sm group overflow-hidden", offset.isCritical ? "border-amber-200 bg-amber-50/30" : "border-slate-200 bg-white", isPaired && "border-primary bg-primary/[0.02]")}
                     >
                       <CardHeader className="pb-3">
                         <div className="flex justify-between items-start">
@@ -477,7 +496,16 @@ export default function DecisionSandboxPage() {
                       </CardHeader>
                       <CardContent className="space-y-3">
                         <p className="text-[11px] leading-relaxed text-slate-600 font-medium">"{offset.description}"</p>
-                        {!!pairedActionId && <div className="pt-3 border-t border-primary/10 flex items-center justify-between text-[8px] font-bold uppercase tracking-widest text-primary"><span className="flex items-center gap-1.5"><ArrowRightLeft className="h-3 w-3" /> Stabilizing {activeProposedActions.find(a => a.id === pairedActionId)?.title}</span><CheckCircle2 className="h-3 w-3" /></div>}
+                        {isPaired && (
+                          <div className="pt-3 border-t border-primary/10 space-y-2">
+                             {pairedActionIds.map(actionId => (
+                               <div key={actionId} className="flex items-center justify-between text-[8px] font-bold uppercase tracking-widest text-primary">
+                                 <span className="flex items-center gap-1.5"><ArrowRightLeft className="h-3 w-3" /> Stabilizing {activeProposedActions.find(a => a.id === actionId)?.title}</span>
+                                 <CheckCircle2 className="h-3 w-3" />
+                               </div>
+                             ))}
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   );
@@ -501,7 +529,7 @@ export default function DecisionSandboxPage() {
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-3">
                 <ShieldCheck className="h-5 w-5 text-primary" />
-                <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-slate-900">Truth Check: Total Portfolio Diagnostic</h3>
+                <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-slate-900">Total Portfolio Diagnostic (Cumulative TPA)</h3>
               </div>
               <Button variant="ghost" size="sm" onClick={() => setIsAnalysisExpanded(false)} className="h-8 text-[10px] font-bold uppercase tracking-widest">Minimize Diagnostic</Button>
             </div>
@@ -539,14 +567,14 @@ export default function DecisionSandboxPage() {
                   </div>
 
                   <div className="p-3 rounded-lg bg-slate-50 border border-slate-100">
-                    <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Risk Logic / Penalty</p>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Risk Logic / Analysis</p>
                     <p className="text-[11px] text-slate-600 italic">
-                      {item.isTechnical ? "Projected loss at 95% confidence interval." : item.isDNA ? "Calculated based on Family DNA utility weights." : `Liquidity Penalty: -€${(item as any).penalty?.toFixed(1)}M.`}
+                      {item.isTechnical ? "Projected loss at 95% confidence interval across the entire bundle." : item.isDNA ? "Cumulative utility based on Hartmann DNA weights." : `Aggregated Liquidity Penalty: -€${(item as any).penalty?.toFixed(1)}M.`}
                     </p>
                   </div>
 
                   <div className="flex items-center gap-2 text-[10px] text-slate-500 italic">
-                    <span className="font-bold text-primary not-italic">Key Driver:</span>
+                    <span className="font-bold text-primary not-italic">Utility Driver:</span>
                     <span className="truncate">{item.driver}</span>
                   </div>
                 </div>
@@ -559,7 +587,7 @@ export default function DecisionSandboxPage() {
                 { step: 1, label: "Set Risk Targets", desc: "Identify sustainability goals", active: true },
                 { step: 2, label: "Exposure Targets", desc: "Maximize factor exposures", active: activeProposedActions.length > 0 },
                 { step: 3, label: "Strategy Targets", desc: "Model investment building blocks", active: activeSynergies.length > 0 },
-                { step: 4, label: "Balance Portfolio", desc: "Total portfolio impact analysis", active: activeSynergies.length > 1 }
+                { step: 4, label: "Balance Portfolio", desc: "Bundle execution analysis", active: activeSynergies.length > 1 }
               ].map((s) => (
                 <div key={s.step} className={cn("flex flex-col gap-1 px-4 py-2 border-l-2", s.active ? "border-primary" : "border-slate-100 opacity-40")}>
                   <span className="text-[9px] font-bold uppercase tracking-widest text-primary">Step {s.step}</span>
@@ -575,15 +603,15 @@ export default function DecisionSandboxPage() {
         <div className="absolute bottom-0 left-0 w-full h-24 flex items-center justify-between px-12 border-t border-slate-50 bg-white">
           <div className="flex items-center gap-12">
             <div className="flex flex-col cursor-pointer group" onClick={() => setIsAnalysisExpanded(!isAnalysisExpanded)}>
-              <p className="text-[9px] font-bold uppercase text-slate-400 tracking-[0.2em] mb-1 group-hover:text-primary transition-colors">TPA Drafting Stability</p>
+              <p className="text-[9px] font-bold uppercase text-slate-400 tracking-[0.2em] mb-1 group-hover:text-primary transition-colors">Cumulative TPA Stability</p>
               <p className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                {activeSynergies.length} Strategic Pairs Established
+                <Package className="h-4 w-4 text-primary" /> {activeSynergies.length} Pairs Integrated
                 {isAnalysisExpanded ? <ChevronDown className="h-3.5 w-3.5 text-primary" /> : <ChevronUp className="h-3.5 w-3.5 text-primary" />}
               </p>
             </div>
             <div className="h-10 w-px bg-slate-100" />
             <div className="flex flex-col cursor-pointer group" onClick={() => setIsAnalysisExpanded(!isAnalysisExpanded)}>
-              <p className="text-[9px] font-bold uppercase text-slate-400 tracking-[0.2em] mb-1 group-hover:text-primary transition-colors">Net Portfolio Impact</p>
+              <p className="text-[9px] font-bold uppercase text-slate-400 tracking-[0.2em] mb-1 group-hover:text-primary transition-colors">Total Bundle Impact</p>
               <div className="flex items-center gap-10">
                 <div className="flex items-center gap-3">
                   <span className={cn("text-xl font-bold", netImpact.liquidity >= 0 ? "text-emerald-600" : "text-red-600")}>
@@ -602,10 +630,10 @@ export default function DecisionSandboxPage() {
           </div>
           <div className="flex items-center gap-6">
             <div className="text-right hidden md:block">
-              <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Stabilized State Confirmed</p>
-              <p className="text-[11px] text-slate-500 italic">Portfolio pillars balanced.</p>
+              <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Stabilized Bundle Confirmed</p>
+              <p className="text-[11px] text-slate-500 italic">Executing total portfolio rebalance.</p>
             </div>
-            <Button onClick={handleSendToWardroom} className="bg-primary hover:bg-primary/90 text-white rounded-xl h-12 px-8 text-[10px] font-bold uppercase tracking-[0.2em] shadow-lg shadow-primary/20">Commit Strategy</Button>
+            <Button onClick={handleSendToWardroom} className="bg-primary hover:bg-primary/90 text-white rounded-xl h-12 px-8 text-[10px] font-bold uppercase tracking-[0.2em] shadow-lg shadow-primary/20">Transmit Bundle</Button>
           </div>
         </div>
       </div>
