@@ -25,6 +25,7 @@ import {
   MoreVertical
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
 
 const HARTMANN_DNA = {
   personalProfile: {
@@ -194,7 +195,7 @@ export default function FamilyDNAPage() {
                       <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{member.role}</p>
                     </div>
                     <Badge variant="outline" className="text-[8px] uppercase">{member.generationalStage}</Badge>
-                  </Header>
+                  </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-1.5">
                       <div className="flex justify-between items-center text-[9px] uppercase font-bold tracking-widest">
