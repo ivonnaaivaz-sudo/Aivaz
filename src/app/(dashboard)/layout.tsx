@@ -6,6 +6,11 @@ import { useEffect } from "react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Loader2 } from "lucide-react";
 
+/**
+ * Dashboard Access Protection Layout
+ * This gatekeeper ensures that only authenticated users with 
+ * completed psychological profiles can access the legacy nodes.
+ */
 export default function DashboardLayout({
   children,
 }: {
@@ -19,12 +24,16 @@ export default function DashboardLayout({
   useEffect(() => {
     if (authLoading || profileLoading) return;
 
+    // Check 1: Authenticated Session
     if (!user) {
+      console.log("Gatekeeper: No session found. Redirecting to signup node.");
       router.push('/signup');
       return;
     }
 
+    // Check 2: Mandatory DNA Profiling
     if (profile && profile.hasCompletedProfiling === false) {
+      console.log("Gatekeeper: DNA extraction incomplete. Redirecting to onboarding node.");
       router.push('/onboarding');
     }
   }, [user, profile, authLoading, profileLoading, router]);

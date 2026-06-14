@@ -6,9 +6,9 @@ import { useUser, useDoc } from "@/firebase";
 import { Loader2 } from "lucide-react";
 
 /**
- * Root Redirector
- * This page serves as the entry point and directs the user to the 
- * appropriate node based on their authentication and profiling status.
+ * Root Redirector / Heritage Sync
+ * Serves as the primary routing node for the Aivaz platform.
+ * Directs users based on authentication status and profiling completion.
  */
 export default function Home() {
   const { user, loading: authLoading } = useUser();
@@ -19,16 +19,16 @@ export default function Home() {
     if (authLoading || profileLoading) return;
     
     if (!user) {
-      // No session found, send to registration node
+      // Unauthenticated -> Registration node
       router.push("/signup");
       return;
     }
 
     if (!profile || profile.hasCompletedProfiling === false) {
-      // Session found but human profiling incomplete
+      // Authenticated but Incomplete Profile -> Onboarding node
       router.push("/onboarding");
     } else {
-      // Authorized entry to legacy dashboard
+      // Authenticated and Complete Profile -> Legacy Dashboard
       router.push("/dashboard");
     }
   }, [user, profile, authLoading, profileLoading, router]);
