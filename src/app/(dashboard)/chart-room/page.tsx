@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Progress } from "@/components/ui/progress";
 import {
   Dialog,
   DialogContent,
@@ -77,8 +78,8 @@ const KEY_BLINDSPOTS = [
     impact: "-€8.4M Asset Value",
     relatedMembers: ["Markus", "Sophie"],
     suggestedPair: {
-      action: { title: "G1-G3 Trust Transfer", val: -8400000, risk: 2 },
-      offset: { title: "Dynasty Trust Recap", val: 8400000, risk: -5 }
+      action: { title: "G1-G3 Trust Transfer", val: -8400000, risk: 2, desc: "Mandatory tax exposure resolution." },
+      offset: { title: "Dynasty Trust Recap", val: 8400000, risk: -5, desc: "Strategic buffer for trust consolidation." }
     }
   },
   {
@@ -89,8 +90,8 @@ const KEY_BLINDSPOTS = [
     impact: "+18% Beta Sensitivity",
     relatedMembers: ["Markus", "Alexander"],
     suggestedPair: {
-      action: { title: "Asia Exposure Re-Weight", val: -12000000, risk: 18 },
-      offset: { title: "PE Tech Infrastructure Swap", val: 15000000, risk: -25 }
+      action: { title: "Asia Exposure Re-Weight", val: -12000000, risk: 18, desc: "Reducing geographic sensitivity." },
+      offset: { title: "PE Tech Infrastructure Swap", val: 15000000, risk: -25, desc: "Liquidity offset via industrial re-allocation." }
     }
   }
 ];
@@ -217,7 +218,7 @@ export default function DecisionSandboxPage() {
       id: actionId,
       type: 'action',
       title: bs.suggestedPair.action.title,
-      description: `Automated resolution for ${bs.title}.`,
+      description: bs.suggestedPair.action.desc,
       impactMetric: `€${(bs.suggestedPair.action.val / 1000000).toFixed(1)}M`,
       liquidityValue: bs.suggestedPair.action.val,
       riskDelta: bs.suggestedPair.action.risk,
@@ -232,7 +233,7 @@ export default function DecisionSandboxPage() {
       id: offsetId,
       type: 'offset',
       title: bs.suggestedPair.offset.title,
-      description: `Strategic buffer for ${bs.suggestedPair.action.title}.`,
+      description: bs.suggestedPair.offset.desc,
       impactMetric: `+€${(bs.suggestedPair.offset.val / 1000000).toFixed(1)}M`,
       liquidityValue: bs.suggestedPair.offset.val,
       riskDelta: bs.suggestedPair.offset.risk,
