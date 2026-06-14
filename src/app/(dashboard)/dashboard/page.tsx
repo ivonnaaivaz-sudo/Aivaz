@@ -1,7 +1,9 @@
 
 "use client";
 
-import { useUser, useDoc } from "@/firebase";
+import { useUser, useDoc, useCollection, useFirestore } from "@/firebase";
+import { useMemo } from "react";
+import { collection, query, orderBy } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,11 +20,18 @@ import {
   Heart,
   Anchor,
   TrendingUp,
-  ChevronRight
+  ChevronRight,
+  History,
+  CheckCircle2,
+  Clock,
+  Flag
 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { FamilyCalendar, type FamilyEvent } from "@/components/dashboard/FamilyCalendar";
 import { Button } from "@/components/ui/button";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 const MOCK_EVENTS: FamilyEvent[] = [
   { id: "1", title: "Hartmann Family Council", date: "2026-06-12", eventType: "GOVERNANCE", priority: "URGENT", description: "Reviewing the €42M cash reserve deployment proposal.", memberAccess: ["Dr. Markus", "Elena", "Sophie", "Alexander"] },
@@ -30,9 +39,26 @@ const MOCK_EVENTS: FamilyEvent[] = [
   { id: "3", title: "Heritage Gala Munich", date: "2026-07-15", eventType: "SOCIAL", priority: "NORMAL", description: "Annual family philanthropic event in Munich.", memberAccess: ["All Family"] },
 ];
 
+const HARTMANN_TIMELINE = [
+  { id: "h-1", title: "Foundation", date: "1992", type: "financial", status: "completed" },
+  { id: "h-2", title: "Singapore Pivot", date: "2008", type: "vision", status: "completed" },
+  { id: "h-3", title: "G2 Trust Capitalization", date: "2024", type: "succession", status: "completed" },
+  { id: "h-4", title: "Institutional Governance", date: "2026", type: "succession", status: "in-progress" },
+  { id: "h-5", title: "Family Foundation", date: "2027", type: "philanthropy", status: "target" }
+];
+
 export default function DashboardPage() {
   const { user } = useUser();
+  const db = useFirestore();
   const { data: dna, loading: dnaLoading } = useDoc(user ? `users/${user.uid}/dna/current` : null);
+
+  const timelineQuery = useMemo(() => {
+    if (!user || !db) return null;
+    return query(collection(db, "users", user.uid, "timeline"), orderBy("date", "asc"));
+  }, [user, db]);
+  
+  const { data: realEvents } = useCollection(timelineQuery);
+  const timelineEvents = realEvents && realEvents.length > 0 ? realEvents : HARTMANN_TIMELINE;
 
   const firstName = user?.displayName?.split(" ")[0] || "Markus";
   
@@ -42,37 +68,49 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-12 max-w-7xl mx-auto pb-32">
-      {/* Professional Command Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 pt-4">
-        <div className="space-y-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shadow-[0_0_20px_rgba(75,163,199,0.1)]">
-              <ShieldCheck className="h-5 w-5 text-primary" />
+      {/* Hero Header with Background Image */}
+      <div className="relative overflow-hidden rounded-3xl border border-slate-200 shadow-lg min-h-[340px] flex items-end">
+        <Image 
+          src="https://firebasestorage.googleapis.com/v0/b/studio-9632545142-53067.firebasestorage.app/o/Branding%2FIMG_1935.png?alt=media"
+          alt="Family Heritage"
+          fill
+          className="object-cover"
+          priority
+          data-ai-hint="heritage family"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/40 to-transparent" />
+        
+        <div className="relative z-10 w-full p-10 flex flex-col md:flex-row md:items-end justify-between gap-8">
+          <div className="space-y-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center">
+                <ShieldCheck className="h-5 w-5 text-white" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/90">Identity Secure</span>
+                <span className="text-[9px] text-white/60 uppercase font-bold tracking-widest">Hartmann Heritage Protocol</span>
+              </div>
             </div>
-            <div className="flex flex-col">
-              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Governance Active</span>
-              <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-widest">Hartmann Heritage Protocol • Level 4</span>
+            
+            <div className="space-y-2">
+              <h1 className="font-headline text-5xl font-bold tracking-tighter text-white">
+                Welcome back, {firstName}
+              </h1>
+              <p className="text-lg text-white/80 font-headline max-w-2xl leading-relaxed">
+                The Aivaz engine has synthesized your latest portfolio alignment data. Governance remains stable at 84.2%.
+              </p>
             </div>
           </div>
-          
-          <div className="space-y-2">
-            <h1 className="font-headline text-5xl font-bold tracking-tighter text-slate-900">
-              Welcome, <span className="text-primary">{firstName}</span>.
-            </h1>
-            <p className="text-lg text-muted-foreground font-headline max-w-2xl leading-relaxed">
-              The Aivaz engine has synthesized your latest portfolio alignment data. Governance remains stable at 84.2%.
-            </p>
-          </div>
-        </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="px-6 py-4 rounded-2xl bg-white shadow-sm border border-slate-100 text-center">
-            <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-widest mb-1">AUM Sync</p>
-            <p className="text-2xl font-headline font-bold text-slate-900 tracking-tighter">€380M</p>
-          </div>
-          <div className="px-6 py-4 rounded-2xl bg-white shadow-sm border border-slate-100 text-center">
-            <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-widest mb-1">Alignment</p>
-            <p className="text-2xl font-headline font-bold text-emerald-500 tracking-tighter">84.2%</p>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="px-6 py-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-center">
+              <p className="text-[9px] text-white/70 uppercase font-bold tracking-widest mb-1">AUM Sync</p>
+              <p className="text-2xl font-headline font-bold text-white tracking-tighter">€380M</p>
+            </div>
+            <div className="px-6 py-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-center">
+              <p className="text-[9px] text-white/70 uppercase font-bold tracking-widest mb-1">Alignment</p>
+              <p className="text-2xl font-headline font-bold text-emerald-400 tracking-tighter">84.2%</p>
+            </div>
           </div>
         </div>
       </div>
@@ -81,26 +119,51 @@ export default function DashboardPage() {
         {/* Main Strategic Column */}
         <div className="lg:col-span-8 space-y-12">
           
-          {/* Family Narrative Layer */}
+          {/* Condensed Heritage Journey Timeline */}
           <section className="space-y-4">
-            <div className="flex items-center gap-2 px-1">
-              <Heart className="h-4 w-4 text-primary" />
-              <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Legacy Status Narrative</h2>
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center gap-2">
+                <History className="h-4 w-4 text-primary" />
+                <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Heritage Journey Timeline</h2>
+              </div>
+              <Link href="/heritage-timeline">
+                <Button variant="ghost" size="sm" className="text-[10px] font-bold uppercase tracking-widest">Full Journey <ChevronRight className="ml-1 h-3 w-3" /></Button>
+              </Link>
             </div>
-            <Card className="border-none shadow-sm bg-primary/5 overflow-hidden rounded-3xl">
-              <CardContent className="p-10 relative">
-                <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
-                  <BrainCircuit className="h-32 w-32 text-primary" />
-                </div>
-                <div className="space-y-6 relative z-10">
-                  <p className="text-2xl font-headline font-medium leading-relaxed italic text-slate-800">
-                    "The Hartmann legacy is currently navigating a pivotal transition from G1 patriarch-led control to G3 institutional governance. Strategic tension is concentrated in the Munich-Singapore axis."
-                  </p>
-                  <div className="flex gap-4">
-                    <Badge variant="outline" className="bg-white/50 border-primary/20 text-[10px] font-bold uppercase tracking-tighter text-primary">Core Value: Industrial Precision</Badge>
-                    <Badge variant="outline" className="bg-white/50 border-primary/20 text-[10px] font-bold uppercase tracking-tighter text-primary">Next Milestone: Charter Formalization</Badge>
+            <Card className="border-slate-200 shadow-sm bg-white overflow-hidden rounded-3xl">
+              <CardContent className="p-8">
+                <ScrollArea className="w-full whitespace-nowrap pb-4">
+                  <div className="flex gap-6">
+                    {timelineEvents.map((event: any, i: number) => (
+                      <div key={i} className="flex flex-col gap-3 min-w-[180px] group">
+                        <div className={cn(
+                          "text-[9px] font-bold uppercase tracking-widest",
+                          event.status === 'completed' ? 'text-primary' : event.status === 'in-progress' ? 'text-amber-500' : 'text-slate-400'
+                        )}>
+                          {event.date}
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className={cn(
+                            "w-8 h-8 rounded-full border flex items-center justify-center shrink-0 transition-all group-hover:scale-110",
+                            event.status === 'completed' ? 'bg-primary/5 border-primary/20 text-primary' : 
+                            event.status === 'in-progress' ? 'bg-amber-50 border-amber-200 text-amber-500' : 
+                            'bg-slate-50 border-slate-100 text-slate-300'
+                          )}>
+                            {event.status === 'completed' ? <CheckCircle2 className="h-4 w-4" /> : 
+                             event.status === 'in-progress' ? <Clock className="h-4 w-4 animate-pulse" /> : 
+                             <Flag className="h-4 w-4" />}
+                          </div>
+                          <div className="h-px w-full bg-slate-100 last:hidden" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-slate-900 group-hover:text-primary transition-colors">{event.title}</p>
+                          <p className="text-[10px] text-slate-400 font-medium uppercase tracking-tighter mt-0.5">{event.type}</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                </div>
+                  <ScrollBar orientation="horizontal" />
+                </ScrollArea>
               </CardContent>
             </Card>
           </section>
