@@ -13,6 +13,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   Landmark, 
   Plus, 
@@ -40,7 +42,8 @@ import {
   ShieldAlert,
   Activity,
   ChevronRight,
-  Info
+  Info,
+  ArrowUpRight
 } from "lucide-react";
 import { 
   PieChart, 
@@ -57,6 +60,13 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+
+const MEMBERS = [
+  { name: "Markus", color: "bg-blue-500", avatar: "https://picsum.photos/seed/markus/100/100" },
+  { name: "Elena", color: "bg-purple-500", avatar: "https://picsum.photos/seed/elena/100/100" },
+  { name: "Sophie", color: "bg-emerald-500", avatar: "https://picsum.photos/seed/sophie/100/100" },
+  { name: "Alexander", color: "bg-amber-500", avatar: "https://picsum.photos/seed/alexander/100/100" },
+];
 
 const STRATEGIC_VS_TACTICAL = [
   { name: 'Strategic Allocation', value: 76, color: '#1e3a8a', description: 'Core Long-Term Holdings' },
@@ -77,18 +87,16 @@ const SECTOR_CONCENTRATION = [
 ];
 
 const HARTMANN_ACCOUNTS = [
-  { id: 1, name: "Hartmann Family Trust", institution: "Morgan Stanley", balance: "€45,200,000", type: "Irrevocable Trust", owner: "Aggregated", status: "Active" },
-  { id: 2, name: "Offshore Strategic Reserve", institution: "UBS Zurich", balance: "€28,150,000", type: "Private Banking", owner: "Markus", status: "Synchronized" },
-  { id: 3, name: "Industrial Holding Co", institution: "Deutsche Bank", balance: "€12,400,000", type: "Business Account", owner: "Markus", status: "Active" },
-  { id: 4, name: "Singapore Real Estate Fund", institution: "DBS Singapore", balance: "€56,750,230", type: "Investment Account", owner: "Aggregated", status: "Active" },
-  { id: 5, name: "Alexander London Growth", institution: "Goldman Sachs", balance: "€5,200,000", type: "Venture Fund", owner: "Next Gen", status: "Active" },
+  { id: 1, name: "Hartmann Family Trust", institution: "Morgan Stanley", balance: "€45,200,000", type: "Irrevocable Trust", owner: "Aggregated", status: "Active", breakdown: [{ member: "Markus", pct: 60 }, { member: "Elena", pct: 20 }, { member: "Sophie", pct: 10 }, { member: "Alexander", pct: 10 }] },
+  { id: 2, name: "Offshore Strategic Reserve", institution: "UBS Zurich", balance: "€28,150,000", type: "Private Banking", owner: "Markus", status: "Synchronized", breakdown: [{ member: "Markus", pct: 100 }] },
+  { id: 3, name: "Industrial Holding Co", institution: "Deutsche Bank", balance: "€12,400,000", type: "Business Account", owner: "Markus", status: "Active", breakdown: [{ member: "Markus", pct: 90 }, { member: "Alexander", pct: 10 }] },
+  { id: 4, name: "Singapore Real Estate Fund", institution: "DBS Singapore", balance: "€56,750,230", type: "Investment Account", owner: "Aggregated", status: "Active", breakdown: [{ member: "Sophie", pct: 60 }, { member: "Alexander", pct: 40 }] },
+  { id: 5, name: "Alexander London Growth", institution: "Goldman Sachs", balance: "€5,200,000", type: "Venture Fund", owner: "Next Gen", status: "Active", breakdown: [{ member: "Alexander", pct: 100 }] },
 ];
 
-const TPA_STEPS = [
-  { step: 1, label: "Set Risk Targets", desc: "Identify sustainable market risk appetite via board-level reference portfolio.", active: true },
-  { step: 2, label: "Set Exposure Targets", desc: "Determine factor mix (growth, rates, inflation) to maximize long-horizon returns.", active: true },
-  { step: 3, label: "Set Strategy Targets", desc: "Translate broad factor exposures into actual building blocks (Real Assets, PE).", active: true },
-  { step: 4, label: "Balance & Selection", desc: "Analyze how major new investments affect total portfolio factor exposures.", active: true }
+const RISK_ALERTS = [
+  { id: "bs-1", title: "Inheritance Tax Gap", severity: "Critical", impact: "-€8.4M", members: ["Markus", "Sophie"], description: "Exposure detected in G1 -> G3 transition." },
+  { id: "bs-2", title: "Real Estate Concentration", severity: "High", impact: "55% Portfolio", members: ["Markus", "Alexander"], description: "Munich/Singapore hub sensitivity." }
 ];
 
 export default function BridgeHub() {
@@ -129,7 +137,8 @@ export default function BridgeHub() {
         ...newAsset,
         appraisalValue: parseFloat(newAsset.appraisalValue),
         documentCount: 1,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        breakdown: [{ member: "Markus", pct: 100 }] // Default for Markus's view
       });
       toast({ title: "Asset Registered", description: `${newAsset.name} added to the Hartmann vault.` });
       setIsAddAssetOpen(false);
@@ -139,6 +148,26 @@ export default function BridgeHub() {
   };
 
   const netWorth = viewMode === 'aggregated' ? "€380,000,000" : "€247,000,000";
+
+  const MemberBreakdown = ({ breakdown }: { breakdown: { member: string, pct: number }[] }) => (
+    <div className="flex -space-x-1 overflow-hidden p-1">
+      {breakdown.map((b, i) => {
+        const m = MEMBERS.find(mem => mem.name === b.member);
+        return (
+          <TooltipProvider key={i}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className={cn("w-2.5 h-2.5 rounded-full border border-white ring-1 ring-slate-100", m?.color)} />
+              </TooltipTrigger>
+              <TooltipContent className="p-2 text-[10px] font-bold">
+                {b.member}: {b.pct}% contribution
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        );
+      })}
+    </div>
+  );
 
   return (
     <div className="space-y-10 max-w-[1600px] mx-auto pb-32">
@@ -177,6 +206,46 @@ export default function BridgeHub() {
 
       {viewMode === 'aggregated' ? (
         <>
+          {/* Risk Alerts Teaser Row */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {RISK_ALERTS.map(alert => (
+              <Card key={alert.id} className="border-l-4 border-l-red-500 bg-red-50/10 border-slate-200">
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="p-2 rounded-lg bg-red-100 text-red-600">
+                      <ShieldAlert className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs font-bold text-slate-900">{alert.title}</p>
+                        <Badge variant="outline" className="text-[8px] border-red-200 text-red-600 uppercase">{alert.severity}</Badge>
+                      </div>
+                      <p className="text-[10px] text-slate-500 mt-0.5">{alert.description}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="flex flex-col items-end">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase">Impacted Members</p>
+                      <div className="flex -space-x-1.5 mt-1">
+                        {alert.members.map(m => (
+                          <Avatar key={m} className="w-5 h-5 border-2 border-white ring-1 ring-slate-100">
+                            <AvatarImage src={MEMBERS.find(mem => mem.name === m)?.avatar} />
+                            <AvatarFallback>{m[0]}</AvatarFallback>
+                          </Avatar>
+                        ))}
+                      </div>
+                    </div>
+                    <Link href="/chart-room">
+                      <Button variant="ghost" size="sm" className="h-8 text-[9px] font-bold uppercase tracking-widest text-primary hover:bg-primary/5">
+                        Deep Dive <ArrowUpRight className="ml-1 h-3 w-3" />
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
           {/* Executive Summary Row */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <Card className="bg-white border-slate-200 shadow-sm">
@@ -545,12 +614,15 @@ export default function BridgeHub() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredAccounts.map((acc) => (
+                  {filteredAccounts.map((acc: any) => (
                     <TableRow key={acc.id} className="hover:bg-slate-50 transition-colors group">
                       <TableCell className="font-medium py-5 pl-8">
-                        <div>
-                          <p className="text-slate-900">{acc.name}</p>
-                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest opacity-60">{acc.type}</p>
+                        <div className="flex items-center gap-3">
+                          {viewMode === 'aggregated' && <MemberBreakdown breakdown={acc.breakdown} />}
+                          <div>
+                            <p className="text-slate-900">{acc.name}</p>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest opacity-60">{acc.type}</p>
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell className="text-slate-600 text-sm">{acc.institution}</TableCell>
@@ -573,13 +645,16 @@ export default function BridgeHub() {
 
         <TabsContent value="physical">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {manualAssets.map((asset) => (
+            {manualAssets.map((asset: any) => (
               <Card key={asset.id} className="border-slate-200 shadow-md bg-white hover:ring-2 hover:ring-primary/20 transition-all group">
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between mb-2">
-                    <Badge variant="outline" className="bg-primary/5 border-primary/20 text-primary text-[9px] font-bold uppercase">
-                      {asset.type}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="bg-primary/5 border-primary/20 text-primary text-[9px] font-bold uppercase">
+                        {asset.type}
+                      </Badge>
+                      {viewMode === 'aggregated' && <MemberBreakdown breakdown={asset.breakdown || [{ member: "Markus", pct: 100 }]} />}
+                    </div>
                     <div className="p-2 rounded-lg bg-slate-50 group-hover:bg-primary/5 transition-colors">
                       {asset.type === 'Real Estate' ? <Home className="h-4 w-4" /> : 
                        asset.type === 'Art' ? <Palmtree className="h-4 w-4" /> : <Gem className="h-4 w-4" />}
@@ -675,3 +750,10 @@ export default function BridgeHub() {
     </div>
   );
 }
+
+const TPA_STEPS = [
+  { step: 1, label: "Set Risk Targets", desc: "Identify sustainable market risk appetite via board-level reference portfolio.", active: true },
+  { step: 2, label: "Set Exposure Targets", desc: "Determine factor mix (growth, rates, inflation) to maximize long-horizon returns.", active: true },
+  { step: 3, label: "Set Strategy Targets", desc: "Translate broad factor exposures into actual building blocks (Real Assets, PE).", active: true },
+  { step: 4, label: "Balance & Selection", desc: "Analyze how major new investments affect total portfolio factor exposures.", active: true }
+];

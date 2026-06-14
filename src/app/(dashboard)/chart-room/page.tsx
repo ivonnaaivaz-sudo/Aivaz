@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo } from "react";
@@ -9,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Dialog,
   DialogContent,
@@ -63,23 +63,33 @@ interface DecisionCard {
   isUserGenerated?: boolean;
   isAI?: boolean;
   status?: 'pending' | 'accepted' | 'dismissed';
+  relatedMembers: string[];
 }
+
+const MEMBERS = [
+  { name: "Markus", avatar: "https://picsum.photos/seed/markus/100/100" },
+  { name: "Elena", avatar: "https://picsum.photos/seed/elena/100/100" },
+  { name: "Sophie", avatar: "https://picsum.photos/seed/sophie/100/100" },
+  { name: "Alexander", avatar: "https://picsum.photos/seed/alexander/100/100" },
+];
 
 const KEY_BLINDSPOTS = [
   {
     id: 'bs-1',
     title: "Inheritance Tax Gap (G1-G3)",
     severity: "Critical",
-    description: "Detected €8.4M exposure in the G1 -> G3 transition path due to new EU-wide reporting standards and lack of current trust alignment.",
+    description: "Detected €8.4M exposure in the G1 -> G3 transition path due to lack of current trust alignment. Affects Markus's core estate and Sophie's impact fund.",
     impact: "-€8.4M Asset Value",
+    relatedMembers: ["Markus", "Sophie"],
     suggestedOffsets: ["Dynasty Trust Re-capitalization", "Cross-Border Tax Hedge"],
   },
   {
     id: 'bs-2',
     title: "Real Estate Concentration",
     severity: "High",
-    description: "Munich and Singapore properties represent 55% of the Hartmann legacy. A 10% market correction in either hub would trigger a €21M liquidity penalty.",
+    description: "Munich and Singapore properties represent 55% of the Hartmann legacy. High sensitivity for Markus's industrial holdings and Alexander's tech workspace.",
     impact: "+18% Beta Sensitivity",
+    relatedMembers: ["Markus", "Alexander"],
     suggestedOffsets: ["REIT Partial Liquidation", "Tech Infrastructure Swap"],
   }
 ];
@@ -95,19 +105,21 @@ const INITIAL_PROPOSED_ACTIONS: DecisionCard[] = [
     riskDelta: 5,
     logic: "Sophie's professional relocation mandate.",
     category: "Real Estate",
-    status: 'accepted'
+    status: 'accepted',
+    relatedMembers: ["Sophie"]
   },
   {
     id: 'a-2',
     type: 'action',
     title: "Industrial Tech R&D",
-    description: "Self-funding a new chemical synthesis lab in Munich.",
+    description: "Self-funding a new chemical synthesis lab in Munich for Markus's core biz.",
     impactMetric: "-€12.0M Capex",
     liquidityValue: -12000000,
     riskDelta: 15,
     logic: "Core business preservation through innovation.",
     category: "Business",
-    status: 'accepted'
+    status: 'accepted',
+    relatedMembers: ["Markus"]
   }
 ];
 
@@ -116,25 +128,27 @@ const INITIAL_STRATEGIC_OFFSETS: DecisionCard[] = [
     id: 'o-1',
     type: 'offset',
     title: "Concentration Hedge",
-    description: "Immediate liquidation of €15M in stagnant commercial real estate to rebalance tech exposure.",
+    description: "Liquidation of Markus's stagnant commercial real estate to rebalance Alexander's tech exposure.",
     impactMetric: "+€15.0M Liquidity",
     liquidityValue: 15000000,
     riskDelta: -25,
     taxImpact: -2000000,
-    logic: "Mitigates the 55% real estate concentration risk detected in Hartmann DNA.",
+    logic: "Mitigates the 55% real estate concentration risk.",
     category: "Risk Management",
-    isCritical: true
+    isCritical: true,
+    relatedMembers: ["Markus", "Alexander"]
   },
   {
     id: 'o-2',
     type: 'offset',
     title: "Dividend-Backed Mortgage",
-    description: "Finance the London property via a 15-year interest-only loan backed by Specialty Chem dividends.",
+    description: "Finance Sophie's London property via a 15-year interest-only loan backed by Specialty Chem dividends.",
     impactMetric: "+€5.4M Liquidity Retention",
     liquidityValue: 5400000,
     riskDelta: -5,
-    logic: "Preserves dry powder for market volatility while satisfying the housing need.",
-    category: "Strategy"
+    logic: "Preserves dry powder for market volatility.",
+    category: "Strategy",
+    relatedMembers: ["Sophie", "Markus"]
   }
 ];
 
@@ -273,7 +287,8 @@ export default function DecisionSandboxPage() {
       logic: "AI-detected exposure blindspot.",
       category: "Exposure",
       isAI: true,
-      status: 'accepted'
+      status: 'accepted',
+      relatedMembers: bs.relatedMembers
     };
     setProposedActions(prev => [action, ...prev]);
     setIsAnalysisExpanded(true);
@@ -294,7 +309,8 @@ export default function DecisionSandboxPage() {
       logic: "User-defined capital event.",
       category: newAction.category,
       isUserGenerated: true,
-      status: 'accepted'
+      status: 'accepted',
+      relatedMembers: ["Markus"] // Default to Principal
     };
     setProposedActions(prev => [...prev, action]);
     setNewAction({ title: "", description: "", value: "0", riskDelta: "0", category: "Capital Event" });
@@ -314,7 +330,8 @@ export default function DecisionSandboxPage() {
       riskDelta: parseFloat(newOffset.riskDelta) || 0,
       logic: "User-defined strategic offset.",
       category: newOffset.category,
-      isUserGenerated: true
+      isUserGenerated: true,
+      relatedMembers: ["Markus"]
     };
     setStrategicOffsets(prev => [...prev, offset]);
     setNewOffset({ title: "", description: "", value: "0", riskDelta: "0", category: "Custom Strategy" });
@@ -385,7 +402,7 @@ export default function DecisionSandboxPage() {
       {/* Main Content Area */}
       <main className="flex-1 overflow-hidden flex flex-col bg-slate-50/50">
         
-        {/* 1. Key Exposure Blindspots Terminal (THE MOST PROMINENT SECTION) */}
+        {/* 1. Key Exposure Blindspots Terminal */}
         <section className="shrink-0 px-12 pt-8 pb-4 bg-white border-b border-slate-200 shadow-sm z-50">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center justify-between mb-4">
@@ -405,12 +422,22 @@ export default function DecisionSandboxPage() {
                   <div className={cn("absolute top-0 left-0 w-1.5 h-full", bs.severity === 'Critical' ? "bg-red-500" : "bg-amber-500")} />
                   <CardHeader className="py-4 pb-2">
                     <div className="flex justify-between items-start">
-                      <Badge className={cn(
-                        "text-[9px] uppercase tracking-tighter px-2 font-bold",
-                        bs.severity === 'Critical' ? "bg-red-500 text-white" : "bg-amber-500 text-white"
-                      )}>
-                        {bs.severity} Severity
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge className={cn(
+                          "text-[9px] uppercase tracking-tighter px-2 font-bold",
+                          bs.severity === 'Critical' ? "bg-red-500 text-white" : "bg-amber-500 text-white"
+                        )}>
+                          {bs.severity}
+                        </Badge>
+                        <div className="flex -space-x-1.5">
+                          {bs.relatedMembers.map(m => (
+                            <Avatar key={m} className="w-5 h-5 border-2 border-white ring-1 ring-slate-100">
+                              <AvatarImage src={MEMBERS.find(mem => mem.name === m)?.avatar} />
+                              <AvatarFallback>{m[0]}</AvatarFallback>
+                            </Avatar>
+                          ))}
+                        </div>
+                      </div>
                       <span className="text-[11px] font-bold text-slate-900">{bs.impact}</span>
                     </div>
                     <CardTitle className="text-sm font-bold mt-2 text-slate-900">{bs.title}</CardTitle>
@@ -440,7 +467,7 @@ export default function DecisionSandboxPage() {
                     </div>
                   </CardContent>
                   
-                  {/* Tactical Toolkit Overlay (Appears on Simulate) */}
+                  {/* Tactical Toolkit Overlay */}
                   {activeBlindspotId === bs.id && (
                     <div className="absolute inset-0 bg-white/95 backdrop-blur-sm z-10 flex flex-col p-4 animate-in fade-in zoom-in-95">
                       <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-2">
@@ -459,13 +486,14 @@ export default function DecisionSandboxPage() {
                               id: `ai-o-${Date.now()}`,
                               type: 'offset',
                               title: opt,
-                              description: `AI-curated stabilization for ${bs.title}.`,
+                              description: `AI-curated stabilization for ${bs.title} involving ${bs.relatedMembers.join(' & ')}.`,
                               impactMetric: "+€5.2M Stability",
                               liquidityValue: 5200000,
                               riskDelta: -12,
                               logic: "System toolkit offset.",
                               category: "Risk Management",
-                              isAI: true
+                              isAI: true,
+                              relatedMembers: bs.relatedMembers
                             }, ...prev]);
                             setActiveBlindspotId(null);
                           }}>
@@ -473,7 +501,7 @@ export default function DecisionSandboxPage() {
                               <span className="text-[11px] font-bold text-slate-800">{opt}</span>
                               <PlusCircle className="h-3 w-3 text-slate-300 group-hover:text-primary transition-colors" />
                             </div>
-                            <p className="text-[9px] text-slate-400 uppercase tracking-widest mt-1">Stabilizes Impact</p>
+                            <p className="text-[9px] text-slate-400 uppercase tracking-widest mt-1">Stabilizes {bs.relatedMembers[0]}'s Exposure</p>
                           </div>
                         ))}
                       </div>
@@ -485,7 +513,7 @@ export default function DecisionSandboxPage() {
           </div>
         </section>
 
-        {/* 2. Drafting Canvas (Scrollable Columns) */}
+        {/* 2. Drafting Canvas */}
         <div className="flex-1 overflow-hidden flex">
           <div className="flex-1 overflow-y-auto px-12 pt-12 pb-32">
             <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16">
@@ -518,7 +546,17 @@ export default function DecisionSandboxPage() {
                 <div className="space-y-6">
                   {activeProposedActions.map((action) => (
                     <Card key={action.id} className={cn("border transition-all relative shadow-sm group", pairedIds[action.id] ? "border-primary ring-1 ring-primary/10 bg-primary/[0.01]" : "border-slate-200 bg-white")}>
-                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100"><Button variant="ghost" size="icon" className="h-6 w-6 text-slate-300 hover:text-red-500" onClick={() => handleDismissAction(action.id)}><Trash2 className="h-3 w-3" /></Button></div>
+                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 flex items-center gap-2">
+                        <div className="flex -space-x-1.5 mr-2">
+                          {action.relatedMembers.map(m => (
+                            <Avatar key={m} className="w-5 h-5 border-2 border-white shadow-sm">
+                              <AvatarImage src={MEMBERS.find(mem => mem.name === m)?.avatar} />
+                              <AvatarFallback>{m[0]}</AvatarFallback>
+                            </Avatar>
+                          ))}
+                        </div>
+                        <Button variant="ghost" size="icon" className="h-6 w-6 text-slate-300 hover:text-red-500" onClick={() => handleDismissAction(action.id)}><Trash2 className="h-3 w-3" /></Button>
+                      </div>
                       <CardHeader className="pb-3">
                         <div className="flex justify-between items-start">
                           <Badge variant="outline" className={cn("text-[8px] uppercase tracking-widest", action.isAI ? "border-primary/20 text-primary" : "border-slate-100")}>{action.category}</Badge>
@@ -577,7 +615,16 @@ export default function DecisionSandboxPage() {
                       >
                         <CardHeader className="pb-3">
                           <div className="flex justify-between items-start">
-                            <Badge variant="outline" className={cn("text-[8px] uppercase tracking-widest", offset.isCritical ? "border-amber-400 text-amber-600" : "border-slate-100")}>{offset.category}</Badge>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className={cn("text-[8px] uppercase tracking-widest", offset.isCritical ? "border-amber-400 text-amber-600" : "border-slate-100")}>{offset.category}</Badge>
+                              <div className="flex -space-x-1 mt-0.5">
+                                {offset.relatedMembers.map(m => (
+                                  <div key={m} className="w-3.5 h-3.5 rounded-full border border-white ring-1 ring-slate-100 bg-slate-100 overflow-hidden">
+                                    <img src={MEMBERS.find(mem => mem.name === m)?.avatar} alt={m} className="w-full h-full object-cover" />
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
                             <span className="text-[10px] font-bold text-emerald-600">{offset.impactMetric}</span>
                           </div>
                           <CardTitle className="text-sm font-bold text-slate-900 mt-2">{offset.title}</CardTitle>
@@ -605,7 +652,7 @@ export default function DecisionSandboxPage() {
         </div>
       </main>
 
-      {/* TPA Diagnostic Hub - Anchored at Bottom */}
+      {/* TPA Diagnostic Hub */}
       <div className={cn(
         "sticky bottom-0 bg-white border-t border-slate-200 z-[70] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transition-all duration-500 ease-in-out",
         isAnalysisExpanded ? "h-[620px]" : "h-24"
