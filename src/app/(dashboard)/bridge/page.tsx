@@ -202,7 +202,6 @@ export default function BridgeHub() {
 
   return (
     <div className="space-y-10 max-w-7xl mx-auto pb-32 animate-in fade-in duration-500">
-      {/* Header Topline */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-slate-200 pb-10">
         <div className="space-y-4">
           <div className="flex items-center gap-2">
@@ -211,7 +210,7 @@ export default function BridgeHub() {
             <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Protocol: {viewMode === 'individual' ? 'Personal-Markus' : 'Hartmann-Global'}</span>
           </div>
           <div className="space-y-1">
-            <p className="text-sm font-bold text-slate-400 uppercase tracking-[0.2em]">
+            <p className="text-sm font-bold text-slate-500 uppercase tracking-[0.2em]">
               {viewMode === 'individual' ? "Markus's Portfolio Stake" : "Hartmann Family Total Wealth"}
             </p>
             <div className="flex items-baseline gap-4">
@@ -287,50 +286,6 @@ export default function BridgeHub() {
         ))}
       </div>
 
-      {/* Action Strategy Terminal */}
-      <Card className="border-none shadow-xl bg-slate-900 text-white overflow-hidden rounded-3xl relative">
-        <div className="absolute top-0 right-0 p-10 opacity-5 pointer-events-none">
-          <ShieldCheck className="h-40 w-40" />
-        </div>
-        <CardHeader className="border-b border-white/10 p-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-2xl font-headline font-bold flex items-center gap-3">
-                <Zap className="h-6 w-6 text-primary fill-primary" />
-                Strategic Council Tracks
-              </CardTitle>
-              <CardDescription className="text-slate-400 mt-1">Direct board actions to stabilize the Hartmann legacy.</CardDescription>
-            </div>
-            <Link href="/chart-room">
-              <Button className="bg-primary hover:bg-primary/90 text-white border-none px-6 rounded-xl shadow-lg h-11 text-[11px] font-bold uppercase tracking-widest">
-                Enter Chart Room <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-white/10">
-            {[
-              { title: "Reduce RE Concentration", desc: "Rebalance industrial holdings into liquid growth technology.", icon: Home, link: "/chart-room" },
-              { title: "Plan Inheritance Inflow", desc: "Structure the upcoming settlement for generational tax efficiency.", icon: Landmark, link: "/heritage-timeline" },
-              { title: "Secure G3 Mandate", desc: "Execute the primary relocation strategy using idle tactical reserves.", icon: MapPin, link: "/simulator" },
-            ].map((action, i) => (
-              <Link href={action.link} key={i} className="group p-8 hover:bg-white/[0.03] transition-colors cursor-pointer block">
-                <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center mb-6 border border-white/10 group-hover:border-primary/40 transition-all">
-                  <action.icon className="h-5 w-5 text-primary" />
-                </div>
-                <h4 className="font-bold text-lg mb-2 group-hover:text-primary transition-colors">{action.title}</h4>
-                <p className="text-sm text-slate-400 leading-relaxed">{action.desc}</p>
-                <div className="mt-6 flex items-center text-[10px] font-bold uppercase tracking-widest text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                  Open Action Track <ArrowRight className="ml-2 h-3 w-3" />
-                </div>
-              </Link>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Portfolio Breakdown Section */}
       <section className="space-y-6">
         <div className="flex items-center gap-2 px-1">
           <BarChart3 className="h-4 w-4 text-primary" />
@@ -398,7 +353,6 @@ export default function BridgeHub() {
         </div>
       </section>
 
-      {/* Ledger Section */}
       <Tabs defaultValue="linked" className="space-y-6">
         <div className="flex items-center justify-between border-b border-slate-200 pb-4 px-1">
           <TabsList className="bg-slate-100 p-1 rounded-xl">

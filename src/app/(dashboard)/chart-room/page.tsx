@@ -27,7 +27,8 @@ import {
   Users,
   ArrowRight,
   ArrowDown,
-  RefreshCw
+  RefreshCw,
+  X
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -146,6 +147,7 @@ export default function StrategicPairingsPage() {
   
   const [inputs, setInputs] = useState<InputItem[]>(INITIAL_INPUTS);
   const [activePairingId, setActivePairingId] = useState<string | null>(null);
+  const [selectedInputIds, setSelectedInputIds] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isNewInputOpen, setIsNewInputOpen] = useState(false);
   const [newInput, setNewInput] = useState<Partial<InputItem>>({ type: 'opportunity' });
@@ -160,6 +162,28 @@ export default function StrategicPairingsPage() {
   const activePairing = useMemo(() => 
     GENERATED_PAIRINGS.find(p => p.id === activePairingId)
   , [activePairingId]);
+
+  const displayedOpportunities = useMemo(() => {
+    if (activePairing) return inputs.filter(i => activePairing.components.opportunities.includes(i.id));
+    return inputs.filter(i => i.type === 'opportunity' && selectedInputIds.includes(i.id));
+  }, [activePairing, inputs, selectedInputIds]);
+
+  const displayedNeeds = useMemo(() => {
+    if (activePairing) return inputs.filter(i => activePairing.components.needs.includes(i.id));
+    return inputs.filter(i => i.type === 'need' && selectedInputIds.includes(i.id));
+  }, [activePairing, inputs, selectedInputIds]);
+
+  const displayedBlindspots = useMemo(() => {
+    if (activePairing) return inputs.filter(i => activePairing.components.blindspots.includes(i.id));
+    return inputs.filter(i => i.type === 'blindspot' && selectedInputIds.includes(i.id));
+  }, [activePairing, inputs, selectedInputIds]);
+
+  const toggleInputSelection = (id: string) => {
+    if (activePairingId) setActivePairingId(null);
+    setSelectedInputIds(prev => 
+      prev.includes(id) ? prev.filter(iid => iid !== id) : [...prev, id]
+    );
+  };
 
   const MemberTags = ({ members }: { members: string[] }) => {
     if (userRole === "Limited Member") return null;
@@ -185,14 +209,15 @@ export default function StrategicPairingsPage() {
   };
 
   const handleCommit = async () => {
-    if (!user || !db || !activePairing) return;
+    if (!user || !db || (!activePairing && selectedInputIds.length === 0)) return;
     setIsSubmitting(true);
     try {
+      const title = activePairing ? activePairing.title : "Manual Strategic Pair";
       const msgRef = collection(db, "users", user.uid, "messages");
       await addDoc(msgRef, {
         senderId: user.uid,
         senderName: "Dr. Markus Hartmann",
-        text: `Transmitted Ranked Strategy: ${activePairing.title}. Utility: ${activePairing.utilityScore}/100.`,
+        text: `Transmitted Strategy: ${title}. Prepared for Council approval.`,
         type: "recommendation",
         track: "governance",
         timestamp: new Date().toISOString()
@@ -222,10 +247,12 @@ export default function StrategicPairingsPage() {
     toast({ title: "Input Registered", description: `Added ${item.title} to the strategic engine.` });
   };
 
-  const createAutomaticPairing = (blindspotId: string) => {
+  const createAutomaticPairing = (e: React.MouseEvent, blindspotId: string) => {
+    e.stopPropagation();
     const matchingPairing = GENERATED_PAIRINGS.find(p => p.components.blindspots.includes(blindspotId));
     if (matchingPairing) {
       setActivePairingId(matchingPairing.id);
+      setSelectedInputIds([]);
       toast({
         title: "AI Strategy Drafted",
         description: `Drafting ${matchingPairing.title} to neutralize the alert.`,
@@ -244,7 +271,7 @@ export default function StrategicPairingsPage() {
           <Badge variant="outline" className="text-[8px] border-primary/20 text-primary uppercase">Protocol: {userRole}</Badge>
         </div>
         <Button 
-          disabled={!activePairing || isSubmitting}
+          disabled={(!activePairing && selectedInputIds.length === 0) || isSubmitting}
           onClick={handleCommit}
           className="h-9 px-6 rounded-xl text-[10px] font-bold uppercase tracking-widest bg-primary text-white shadow-lg"
         >
@@ -257,7 +284,7 @@ export default function StrategicPairingsPage() {
           <div className="p-6 border-b border-slate-200 flex items-center justify-between">
             <div>
               <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-900 mb-1">Inputs</h2>
-              <p className="text-[10px] text-muted-foreground italic">Legacy data points.</p>
+              <p className="text-[10px] text-muted-foreground italic">Click points to pair.</p>
             </div>
             <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setIsNewInputOpen(true)}>
               <Plus className="h-4 w-4" />
@@ -270,7 +297,14 @@ export default function StrategicPairingsPage() {
                 <TrendingUp className="h-3 w-3" /> Opportunities
               </h3>
               {opportunities.map(item => (
-                <div key={item.id} className="p-3 rounded-xl bg-white border border-slate-100 shadow-sm space-y-2">
+                <div 
+                  key={item.id} 
+                  onClick={() => toggleInputSelection(item.id)}
+                  className={cn(
+                    "p-3 rounded-xl border transition-all cursor-pointer shadow-sm space-y-2",
+                    selectedInputIds.includes(item.id) ? "bg-emerald-50 border-emerald-500 ring-2 ring-emerald-500/10" : "bg-white border-slate-100 hover:border-emerald-200"
+                  )}
+                >
                   <div className="flex justify-between items-start">
                     <p className="text-[11px] font-bold text-slate-900">{item.title}</p>
                     <MemberTags members={item.relatedMembers} />
@@ -285,7 +319,14 @@ export default function StrategicPairingsPage() {
                 <Users className="h-3 w-3" /> Family Needs
               </h3>
               {needs.map(item => (
-                <div key={item.id} className="p-3 rounded-xl bg-white border border-slate-100 shadow-sm space-y-2">
+                <div 
+                  key={item.id} 
+                  onClick={() => toggleInputSelection(item.id)}
+                  className={cn(
+                    "p-3 rounded-xl border transition-all cursor-pointer shadow-sm space-y-2",
+                    selectedInputIds.includes(item.id) ? "bg-amber-50 border-amber-500 ring-2 ring-amber-500/10" : "bg-white border-slate-100 hover:border-amber-200"
+                  )}
+                >
                   <div className="flex justify-between items-start">
                     <p className="text-[11px] font-bold text-slate-900">{item.title}</p>
                     <MemberTags members={item.relatedMembers} />
@@ -300,7 +341,14 @@ export default function StrategicPairingsPage() {
                 <ShieldAlert className="h-3 w-3" /> System Alerts
               </h3>
               {blindspots.map(item => (
-                <div key={item.id} className="p-3 rounded-xl bg-red-50/50 border border-red-100 shadow-sm space-y-2">
+                <div 
+                  key={item.id} 
+                  onClick={() => toggleInputSelection(item.id)}
+                  className={cn(
+                    "p-3 rounded-xl border transition-all cursor-pointer shadow-sm space-y-2",
+                    selectedInputIds.includes(item.id) ? "bg-red-50 border-red-500 ring-2 ring-red-500/10" : "bg-red-50/50 border-red-100 hover:border-red-200"
+                  )}
+                >
                   <div className="flex justify-between items-start">
                     <p className="text-[11px] font-bold text-red-900">{item.title}</p>
                     <Badge className="text-[7px] uppercase bg-red-100 text-red-600 border-none">{item.severity}</Badge>
@@ -311,7 +359,7 @@ export default function StrategicPairingsPage() {
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      onClick={() => createAutomaticPairing(item.id)}
+                      onClick={(e) => createAutomaticPairing(e, item.id)}
                       className="h-6 text-[8px] font-bold uppercase tracking-widest text-red-600 hover:bg-red-100"
                     >
                       Solve <Sparkles className="ml-1 h-2.5 w-2.5" />
@@ -340,22 +388,35 @@ export default function StrategicPairingsPage() {
 
             {/* Vertical Drafting Canvas */}
             <div className="space-y-6">
-              <div className="flex items-center gap-2 px-1">
-                <LayoutGrid className="h-4 w-4 text-slate-400" />
-                <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Drafting Canvas</h3>
+              <div className="flex items-center justify-between px-1">
+                <div className="flex items-center gap-2">
+                  <LayoutGrid className="h-4 w-4 text-slate-400" />
+                  <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Drafting Canvas</h3>
+                </div>
+                {(activePairing || selectedInputIds.length > 0) && (
+                   <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => { setActivePairingId(null); setSelectedInputIds([]); }}
+                    className="h-6 text-[8px] font-bold uppercase tracking-widest text-slate-400 hover:text-red-500"
+                   >
+                     <X className="mr-1 h-2.5 w-2.5" /> Clear Canvas
+                   </Button>
+                )}
               </div>
               
               <div className="p-8 rounded-3xl border-2 border-dashed border-slate-200 bg-white space-y-8 shadow-inner min-h-[350px] flex flex-col justify-center">
-                {activePairing ? (
+                {activePairing || selectedInputIds.length > 0 ? (
                   <div className="animate-in fade-in duration-500">
                     <div className="space-y-4">
                       <p className="text-[9px] font-bold uppercase text-emerald-600 text-center tracking-widest">Strategic Inflows</p>
                       <div className="flex flex-wrap justify-center gap-3">
-                        {activePairing.components.opportunities.map(id => (
-                          <div key={id} className="px-4 py-3 rounded-2xl bg-emerald-50 border border-emerald-100 text-[10px] font-bold text-emerald-700 flex items-center gap-2 shadow-sm">
-                            <TrendingUp className="h-3 w-3" /> {inputs.find(i => i.id === id)?.title}
+                        {displayedOpportunities.map(item => (
+                          <div key={item.id} className="px-4 py-3 rounded-2xl bg-emerald-50 border border-emerald-100 text-[10px] font-bold text-emerald-700 flex items-center gap-2 shadow-sm">
+                            <TrendingUp className="h-3 w-3" /> {item.title}
                           </div>
                         ))}
+                        {displayedOpportunities.length === 0 && <p className="text-[10px] text-slate-300 italic">Select opportunity...</p>}
                       </div>
                     </div>
 
@@ -366,23 +427,24 @@ export default function StrategicPairingsPage() {
                     <div className="space-y-4">
                       <p className="text-[9px] font-bold uppercase text-amber-600 text-center tracking-widest">Proposed Outflows & Actions</p>
                       <div className="flex flex-wrap justify-center gap-3">
-                        {activePairing.components.needs.map(id => (
-                          <div key={id} className="px-4 py-3 rounded-2xl bg-amber-50 border border-amber-100 text-[10px] font-bold text-amber-700 flex items-center gap-2 shadow-sm">
-                            <Users className="h-3 w-3" /> {inputs.find(i => i.id === id)?.title}
+                        {displayedNeeds.map(item => (
+                          <div key={item.id} className="px-4 py-3 rounded-2xl bg-amber-50 border border-amber-100 text-[10px] font-bold text-amber-700 flex items-center gap-2 shadow-sm">
+                            <Users className="h-3 w-3" /> {item.title}
                           </div>
                         ))}
-                        {activePairing.components.blindspots.map(id => (
-                          <div key={id} className="px-4 py-3 rounded-2xl bg-red-50 border border-red-100 text-[10px] font-bold text-red-700 flex items-center gap-2 shadow-sm">
-                            <ShieldAlert className="h-3 w-3" /> {inputs.find(i => i.id === id)?.title}
+                        {displayedBlindspots.map(item => (
+                          <div key={item.id} className="px-4 py-3 rounded-2xl bg-red-50 border border-red-100 text-[10px] font-bold text-red-700 flex items-center gap-2 shadow-sm">
+                            <ShieldAlert className="h-3 w-3" /> {item.title}
                           </div>
                         ))}
+                        {displayedNeeds.length === 0 && displayedBlindspots.length === 0 && <p className="text-[10px] text-slate-300 italic">Select need or risk...</p>}
                       </div>
                     </div>
                   </div>
                 ) : (
                   <div className="py-20 text-center space-y-4 opacity-40">
                     <RefreshCw className="h-8 w-8 mx-auto text-slate-300" />
-                    <p className="text-sm font-medium text-slate-500">Select a ranked plan below or use Solve on an Alert to begin.</p>
+                    <p className="text-sm font-medium text-slate-500 px-20">Click items in the sidebar to pair them manually, or select a ranked plan below.</p>
                   </div>
                 )}
               </div>
@@ -396,7 +458,7 @@ export default function StrategicPairingsPage() {
                     "relative overflow-hidden transition-all duration-300 border cursor-pointer group rounded-2xl",
                     activePairingId === pairing.id ? "border-primary shadow-lg ring-4 ring-primary/5" : "border-slate-200 hover:border-primary/20 shadow-sm"
                   )}
-                  onClick={() => setActivePairingId(pairing.id)}
+                  onClick={() => { setActivePairingId(pairing.id); setSelectedInputIds([]); }}
                 >
                   <CardHeader className="p-8 pb-4">
                     <div className="flex justify-between items-start mb-2">
@@ -425,7 +487,7 @@ export default function StrategicPairingsPage() {
                   </CardHeader>
 
                   <CardContent className="p-8 pt-4">
-                    <Accordion type="single" collapsible className="w-full border-t border-slate-100 pt-4">
+                    <Accordion type="single" collapsible className="w-full border-t border-slate-100 pt-4" onClick={(e) => e.stopPropagation()}>
                       <AccordionItem value="details" className="border-none">
                         <AccordionTrigger className="text-[10px] font-bold uppercase tracking-widest text-primary hover:no-underline py-2">
                           View Strategic Diagnostic
@@ -463,13 +525,13 @@ export default function StrategicPairingsPage() {
 
       <div className={cn(
         "h-20 border-t border-slate-200 bg-white flex items-center justify-between px-12 z-[70] transition-all",
-        !activePairing && "opacity-50 pointer-events-none"
+        (!activePairing && selectedInputIds.length === 0) && "opacity-50 pointer-events-none"
       )}>
         <div className="flex items-center gap-12">
           <div className="flex flex-col">
             <p className="text-[9px] font-bold uppercase text-slate-400 mb-1">Active Scenario</p>
             <p className="text-sm font-bold flex items-center gap-2 text-primary">
-              <Package className="h-4 w-4" /> {activePairing?.title || "None Selected"}
+              <Package className="h-4 w-4" /> {activePairing ? activePairing.title : selectedInputIds.length > 0 ? "Manual Strategic Pairing" : "None Selected"}
             </p>
           </div>
         </div>
@@ -477,7 +539,7 @@ export default function StrategicPairingsPage() {
         <div className="flex items-center gap-4">
           <Button 
             onClick={handleCommit}
-            disabled={!activePairing || isSubmitting}
+            disabled={(!activePairing && selectedInputIds.length === 0) || isSubmitting}
             className="h-10 px-8 rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-xl"
           >
             {isSubmitting ? "Transmitting..." : "Execute Strategic Move"}
