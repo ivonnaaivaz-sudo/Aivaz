@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo } from "react";
@@ -9,11 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -22,27 +19,23 @@ import {
 import { 
   Sparkles, 
   CheckCircle2, 
-  Plus, 
   LayoutGrid,
   Zap,
-  ShieldAlert,
-  ArrowRight,
-  TrendingUp,
-  AlertTriangle,
-  X,
-  PlusCircle,
-  Loader2,
-  Trash2,
   ArrowRightLeft,
   Check,
   Ban,
   ChevronUp,
   ChevronDown,
-  Activity,
   ShieldCheck,
-  Landmark,
   CircleAlert,
-  CheckCircle
+  CheckCircle,
+  TrendingUp,
+  Trash2,
+  PlusCircle,
+  Activity,
+  BarChart3,
+  Dna,
+  Scale
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -141,7 +134,7 @@ export default function DecisionSandboxPage() {
   
   const [proposedActions, setProposedActions] = useState<DecisionCard[]>(INITIAL_PROPOSED_ACTIONS);
   const [strategicOffsets, setStrategicOffsets] = useState<DecisionCard[]>(INITIAL_STRATEGIC_OFFSETS);
-  const [pairedIds, setPairedIds] = useState<Record<string, string>>({}); // ActionId -> OffsetId
+  const [pairedIds, setPairedIds] = useState<Record<string, string>>({}); 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAnalysisExpanded, setIsAnalysisExpanded] = useState(false);
   
@@ -181,40 +174,57 @@ export default function DecisionSandboxPage() {
     return { liquidity, risk, tax };
   }, [activeSynergies]);
 
+  // Advanced TPA & Monte Carlo Logic
   const analysisBreakdown = useMemo(() => {
-    // Find key drivers
+    const baselineLiquidity = 42; // €M
+    const baselineRisk = 55; // %
+    const baselineVaR = 12.4; // €M
+    
+    const projectLiquidity = baselineLiquidity + (netImpact.liquidity / 1000000);
+    const projectRisk = baselineRisk + netImpact.risk;
+    
+    // Simulated Monte Carlo VaR Calculation (95% CI)
+    const varShift = (netImpact.risk * 0.15) + (netImpact.liquidity / 20000000);
+    const projectedVaR = Math.max(0, baselineVaR + varShift);
+
+    // Simulated DNA Utility alignment (0-100)
+    // Low risk + High liquidity = High utility for "Preservation" DNA
+    const dnaUtility = Math.max(0, Math.min(100, 85 - (netImpact.risk * 0.5) + (netImpact.liquidity / 1000000)));
+
+    // Liquidity Penalty Function
+    const liquidityPenalty = projectLiquidity < 15 ? (15 - projectLiquidity) * 0.8 : 0;
+
     const maxLiqAction = activeProposedActions.reduce((prev, curr) => 
       (Math.abs(curr.liquidityValue) > Math.abs(prev?.liquidityValue || 0)) ? curr : prev
-    , null as DecisionCard | null);
-    
-    const maxRiskAction = activeProposedActions.reduce((prev, curr) => 
-      (Math.abs(curr.riskDelta) > Math.abs(prev?.riskDelta || 0)) ? curr : prev
     , null as DecisionCard | null);
 
     return [
       { 
-        name: 'Liquidity', 
-        baseline: 42, 
-        projected: 42 + (netImpact.liquidity / 1000000), 
+        name: 'Liquidity Matrix', 
+        baseline: baselineLiquidity, 
+        projected: projectLiquidity, 
         unit: '€M',
         driver: maxLiqAction?.title || 'Stable Balance',
-        status: netImpact.liquidity < -15000000 ? 'warning' : 'healthy'
+        status: projectLiquidity < 15 ? 'warning' : 'healthy',
+        penalty: liquidityPenalty
       },
       { 
-        name: 'Risk Shift', 
-        baseline: 55, 
-        projected: 55 + netImpact.risk, 
-        unit: '%',
-        driver: maxRiskAction?.title || 'Diversified',
-        status: netImpact.risk > 0 ? 'warning' : 'healthy'
-      },
-      { 
-        name: 'Tax/Compliance', 
-        baseline: 8, 
-        projected: 8 + (netImpact.tax / 1000000), 
+        name: 'Monte Carlo VaR', 
+        baseline: baselineVaR, 
+        projected: projectedVaR, 
         unit: '€M',
-        driver: 'Trust Provisions',
-        status: netImpact.tax > 0 ? 'warning' : 'healthy'
+        driver: 'Market Sensitivity',
+        status: projectedVaR > 15 ? 'warning' : 'healthy',
+        isTechnical: true
+      },
+      { 
+        name: 'DNA Utility Alignment', 
+        baseline: 85, 
+        projected: dnaUtility, 
+        unit: '%',
+        driver: 'Preservation Mandate',
+        status: dnaUtility < 70 ? 'warning' : 'healthy',
+        isDNA: true
       },
     ];
   }, [netImpact, activeProposedActions]);
@@ -290,17 +300,6 @@ export default function DecisionSandboxPage() {
     });
   };
 
-  const handleDismissOffset = (id: string) => {
-    setStrategicOffsets(prev => prev.filter(o => o.id !== id));
-    setPairedIds(prev => {
-      const next = { ...prev };
-      Object.keys(next).forEach(key => {
-        if (next[key] === id) delete next[key];
-      });
-      return next;
-    });
-  };
-
   const handleSendToWardroom = async () => {
     if (!user || !db || activeSynergies.length === 0) return;
     setIsSubmitting(true);
@@ -311,14 +310,14 @@ export default function DecisionSandboxPage() {
           await addDoc(msgRef, {
             senderId: "aivaz-system",
             senderName: "Decision Sandbox",
-            text: `STABILIZED PACKAGE: ${synergy.action.title} + ${synergy.offset.title}. Net Impact: €${((synergy.action.liquidityValue + synergy.offset.liquidityValue) / 1000000).toFixed(1)}M.`,
+            text: `STABILIZED TPA PACKAGE: ${synergy.action.title} + ${synergy.offset.title}. Net Impact: €${((synergy.action.liquidityValue + synergy.offset.liquidityValue) / 1000000).toFixed(1)}M. Utility Alignment: ${analysisBreakdown[2].projected.toFixed(0)}%.`,
             type: "recommendation",
             timestamp: new Date().toISOString(),
             track: "strategy"
           });
         }
       }
-      toast({ title: "Decision Package Sent", description: "Synergies transmitted to the family council." });
+      toast({ title: "Decision Package Transmitted", description: "TPA strategy sent to family council." });
       setPairedIds({});
     } catch (e) {
       console.error(e);
@@ -329,12 +328,12 @@ export default function DecisionSandboxPage() {
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-white antialiased">
-      {/* Fixed Header */}
+      {/* Header */}
       <header className="h-20 border-b border-slate-200 px-12 flex items-center justify-between shrink-0 bg-white z-50">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary">Decision Sandbox</span>
+            <ShieldCheck className="h-4 w-4 text-primary" />
+            <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary">TPA Decision Sandbox</span>
           </div>
           <div className="h-4 w-px bg-slate-200" />
           <p className="text-sm font-medium text-slate-500 italic">Finding viable pairings to reach heritage stabilization.</p>
@@ -353,13 +352,13 @@ export default function DecisionSandboxPage() {
         </Button>
       </header>
 
-      {/* Scrollable Drafting Area */}
+      {/* Workspace */}
       <main className="flex-1 overflow-hidden flex bg-slate-50/50">
         <div className="flex-1 overflow-y-auto px-12 pt-12 pb-32">
           <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16">
             
-            {/* Column 1: Proposed Actions */}
-            <div className="space-y-8 h-full">
+            {/* Proposed Actions */}
+            <div className="flex flex-col h-full space-y-8">
               <div className="flex items-center justify-between mb-4 border-b border-slate-200 pb-4">
                 <div className="flex items-center gap-3">
                   <LayoutGrid className="h-4 w-4 text-slate-400" />
@@ -367,17 +366,15 @@ export default function DecisionSandboxPage() {
                 </div>
                 <Dialog open={isAddActionOpen} onOpenChange={setIsAddActionOpen}>
                   <DialogTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-8 text-[9px] font-bold uppercase tracking-widest gap-2 text-slate-500 hover:bg-slate-100">
+                    <Button variant="ghost" size="sm" className="h-8 text-[9px] font-bold uppercase tracking-widest gap-2 text-slate-500">
                       <PlusCircle className="h-3.5 w-3.5" /> Add New Action
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Propose Capital Event</DialogTitle>
-                    </DialogHeader>
+                    <DialogHeader><DialogTitle>Propose Capital Event</DialogTitle></DialogHeader>
                     <div className="grid gap-4 py-4">
                       <div className="grid gap-2"><Label>Title</Label><Input value={newAction.title} onChange={e => setNewAction({...newAction, title: e.target.value})} /></div>
-                      <div className="grid gap-2"><Label>Value (€) - Outflow as negative</Label><Input type="number" value={newAction.value} onChange={e => setNewAction({...newAction, value: e.target.value})} /></div>
+                      <div className="grid gap-2"><Label>Value (€) - Outflow negative</Label><Input type="number" value={newAction.value} onChange={e => setNewAction({...newAction, value: e.target.value})} /></div>
                       <div className="grid gap-2"><Label>Risk Delta (0-100)</Label><Input type="number" value={newAction.riskDelta} onChange={e => setNewAction({...newAction, riskDelta: e.target.value})} /></div>
                     </div>
                     <DialogFooter><Button onClick={handleAddAction}>Register Action</Button></DialogFooter>
@@ -393,14 +390,14 @@ export default function DecisionSandboxPage() {
                       <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Intelligence: Critical Blindspots</span>
                     </div>
                     {aiBlindspots.map((action) => (
-                      <Card key={action.id} className="border-primary/20 bg-primary/[0.02] shadow-sm relative group overflow-hidden">
+                      <Card key={action.id} className="border-primary/20 bg-primary/[0.02] shadow-sm relative overflow-hidden">
                         <div className="absolute top-0 left-0 w-1 h-full bg-primary/40" />
                         <CardHeader className="pb-3">
                           <div className="flex justify-between items-start">
                             <Badge variant="outline" className="text-[8px] uppercase tracking-widest border-primary/20 text-primary">AI Proposed</Badge>
                             <span className="text-[10px] font-bold text-red-600">{action.impactMetric}</span>
                           </div>
-                          <CardTitle className="text-sm font-bold tracking-tight text-slate-900 mt-2">{action.title}</CardTitle>
+                          <CardTitle className="text-sm font-bold text-slate-900 mt-2">{action.title}</CardTitle>
                         </CardHeader>
                         <CardContent>
                           <p className="text-[11px] text-slate-500 leading-relaxed italic mb-4">"{action.description}"</p>
@@ -415,13 +412,13 @@ export default function DecisionSandboxPage() {
                 )}
                 {activeProposedActions.map((action) => (
                   <Card key={action.id} className={cn("border transition-all relative shadow-sm group", pairedIds[action.id] ? "border-primary ring-1 ring-primary/10 bg-primary/[0.01]" : "border-slate-200 bg-white")}>
-                    {!action.isAI && <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"><Button variant="ghost" size="icon" className="h-6 w-6 text-slate-300 hover:text-red-500" onClick={() => handleDismissAction(action.id)}><Trash2 className="h-3 w-3" /></Button></div>}
+                    {!action.isAI && <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100"><Button variant="ghost" size="icon" className="h-6 w-6 text-slate-300 hover:text-red-500" onClick={() => handleDismissAction(action.id)}><Trash2 className="h-3 w-3" /></Button></div>}
                     <CardHeader className="pb-3">
                       <div className="flex justify-between items-start">
                         <Badge variant="outline" className="text-[8px] uppercase tracking-widest border-slate-100">{action.category}</Badge>
                         <span className="text-[10px] font-bold text-red-600">{action.impactMetric}</span>
                       </div>
-                      <CardTitle className="text-sm font-bold tracking-tight text-slate-900 mt-2">{action.title}</CardTitle>
+                      <CardTitle className="text-sm font-bold text-slate-900 mt-2">{action.title}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <p className="text-[11px] text-slate-500 leading-relaxed italic mb-4">"{action.description}"</p>
@@ -435,8 +432,8 @@ export default function DecisionSandboxPage() {
               </div>
             </div>
 
-            {/* Column 2: Strategic Offsets */}
-            <div className="space-y-6 h-full">
+            {/* Strategic Offsets */}
+            <div className="flex flex-col h-full space-y-6">
               <div className="flex items-center justify-between mb-4 border-b border-slate-200 pb-4">
                 <div className="flex items-center gap-3">
                   <Zap className="h-4 w-4 text-primary/60" />
@@ -444,7 +441,7 @@ export default function DecisionSandboxPage() {
                 </div>
                 <Dialog open={isAddOffsetOpen} onOpenChange={setIsAddOffsetOpen}>
                   <DialogTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-8 text-[9px] font-bold uppercase tracking-widest gap-2 text-primary hover:bg-primary/5">
+                    <Button variant="ghost" size="sm" className="h-8 text-[9px] font-bold uppercase tracking-widest gap-2 text-primary">
                       <PlusCircle className="h-3.5 w-3.5" /> Add New Offset
                     </Button>
                   </DialogTrigger>
@@ -476,7 +473,7 @@ export default function DecisionSandboxPage() {
                           <Badge variant="outline" className={cn("text-[8px] uppercase tracking-widest", offset.isCritical ? "border-amber-400 text-amber-600" : "border-slate-100")}>{offset.category}</Badge>
                           <span className="text-[10px] font-bold text-emerald-600">{offset.impactMetric}</span>
                         </div>
-                        <CardTitle className="text-sm font-bold tracking-tight text-slate-900 mt-2">{offset.title}</CardTitle>
+                        <CardTitle className="text-sm font-bold text-slate-900 mt-2">{offset.title}</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         <p className="text-[11px] leading-relaxed text-slate-600 font-medium">"{offset.description}"</p>
@@ -491,31 +488,32 @@ export default function DecisionSandboxPage() {
         </div>
       </main>
 
-      {/* Grounded Truth Check Panel */}
-      {activeSynergies.length > 0 && (
-        <div className={cn("sticky bottom-0 bg-white border-t border-slate-200 z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transition-all duration-500 ease-in-out", isAnalysisExpanded ? "h-[420px]" : "h-24")}>
-          <div className={cn("absolute top-0 left-0 w-full h-[calc(100%-6rem)] px-12 pt-12 transition-opacity duration-300", isAnalysisExpanded ? "opacity-100 visible" : "opacity-0 invisible")}>
-            <div className="max-w-7xl mx-auto">
-              <div className="flex items-center justify-between mb-10">
+      {/* Truth Check Diagnostic Panel */}
+      {activeProposedActions.length > 0 && (
+        <div className={cn("sticky bottom-0 bg-white border-t border-slate-200 z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transition-all duration-500 ease-in-out", isAnalysisExpanded ? "h-[500px]" : "h-24")}>
+          <div className={cn("absolute top-0 left-0 w-full h-[calc(100%-6rem)] px-12 pt-8 transition-opacity duration-300", isAnalysisExpanded ? "opacity-100 visible" : "opacity-0 invisible")}>
+            <div className="max-w-7xl mx-auto flex flex-col h-full">
+              <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-3">
                   <ShieldCheck className="h-5 w-5 text-primary" />
-                  <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-slate-900">Truth Check: Professional Legacy Diagnostic</h3>
+                  <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-slate-900">Truth Check: Total Portfolio Diagnostic</h3>
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => setIsAnalysisExpanded(false)} className="h-8 text-[10px] font-bold uppercase tracking-widest hover:bg-slate-50">Minimize Diagnostic</Button>
+                <Button variant="ghost" size="sm" onClick={() => setIsAnalysisExpanded(false)} className="h-8 text-[10px] font-bold uppercase tracking-widest">Minimize Diagnostic</Button>
               </div>
 
-              <div className="grid grid-cols-3 gap-16">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 flex-1">
                 {analysisBreakdown.map((item, idx) => (
                   <div key={idx} className="space-y-6">
                     <div className="flex justify-between items-end border-b border-slate-100 pb-3">
                       <div className="flex items-center gap-2">
-                        {item.status === 'healthy' ? <CheckCircle className="h-3.5 w-3.5 text-emerald-500" /> : <CircleAlert className="h-3.5 w-3.5 text-amber-500" />}
+                        {item.isTechnical ? <BarChart3 className="h-3.5 w-3.5 text-slate-400" /> : item.isDNA ? <Dna className="h-3.5 w-3.5 text-primary" /> : <Scale className="h-3.5 w-3.5 text-slate-400" />}
                         <span className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">{item.name}</span>
                       </div>
-                      <span className="text-xs font-bold text-slate-900">Delta: {(item.projected - item.baseline).toFixed(1)}{item.unit}</span>
+                      <span className="text-xs font-bold text-slate-900">
+                        {item.projected.toFixed(1)}{item.unit}
+                      </span>
                     </div>
                     
-                    {/* Professional Micro-Bar Visualization */}
                     <div className="space-y-4">
                       <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden relative">
                         <div className="absolute top-0 left-1/2 w-0.5 h-full bg-slate-300 z-10" />
@@ -529,16 +527,39 @@ export default function DecisionSandboxPage() {
                       </div>
                       <div className="flex justify-between text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
                         <span>Original: {item.baseline}{item.unit}</span>
-                        <span>Projected: {item.projected.toFixed(1)}{item.unit}</span>
+                        <span className={cn(item.projected > item.baseline ? 'text-emerald-600' : 'text-amber-600')}>
+                          Delta: {(item.projected - item.baseline).toFixed(1)}{item.unit}
+                        </span>
                       </div>
                     </div>
 
-                    <div className="pt-2">
-                      <div className="flex items-center gap-2 text-[10px] text-slate-500 italic">
-                        <span className="font-bold text-primary not-italic">Key Driver:</span>
-                        <span className="truncate">{item.driver}</span>
-                      </div>
+                    <div className="p-3 rounded-lg bg-slate-50 border border-slate-100">
+                      <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Risk Logic / Penalty</p>
+                      <p className="text-[11px] text-slate-600 italic">
+                        {item.isTechnical ? "Projected loss at 95% confidence interval." : item.isDNA ? "Calculated based on Family DNA utility weights." : `Liquidity Penalty: -€${(item as any).penalty?.toFixed(1)}M.`}
+                      </p>
                     </div>
+
+                    <div className="flex items-center gap-2 text-[10px] text-slate-500 italic">
+                      <span className="font-bold text-primary not-italic">Key Driver:</span>
+                      <span className="truncate">{item.driver}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* TPA Methodology Steps */}
+              <div className="mt-8 pt-6 border-t border-slate-100 grid grid-cols-4 gap-4">
+                {[
+                  { step: 1, label: "Set Risk Targets", desc: "Identify sustainability goals", active: true },
+                  { step: 2, label: "Exposure Targets", desc: "Maximize factor exposures", active: activeProposedActions.length > 0 },
+                  { step: 3, label: "Strategy Targets", desc: "Model investment building blocks", active: activeSynergies.length > 0 },
+                  { step: 4, label: "Balance Portfolio", desc: "Total portfolio impact analysis", active: activeSynergies.length > 1 }
+                ].map((s) => (
+                  <div key={s.step} className={cn("flex flex-col gap-1 px-4 py-2 border-l-2", s.active ? "border-primary" : "border-slate-100 opacity-40")}>
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-primary">Step {s.step}</span>
+                    <span className="text-xs font-bold">{s.label}</span>
+                    <span className="text-[10px] text-slate-500 leading-tight">{s.desc}</span>
                   </div>
                 ))}
               </div>
@@ -548,27 +569,27 @@ export default function DecisionSandboxPage() {
           <div className="absolute bottom-0 left-0 w-full h-24 flex items-center justify-between px-12 border-t border-slate-50 bg-white">
             <div className="flex items-center gap-12">
               <div className="flex flex-col cursor-pointer group" onClick={() => setIsAnalysisExpanded(!isAnalysisExpanded)}>
-                <p className="text-[9px] font-bold uppercase text-slate-400 tracking-[0.2em] mb-1 group-hover:text-primary transition-colors">Drafting Stability</p>
-                <p className="text-sm font-headline font-bold text-slate-900 flex items-center gap-2">
-                  {activeSynergies.length} Packages Established
+                <p className="text-[9px] font-bold uppercase text-slate-400 tracking-[0.2em] mb-1 group-hover:text-primary transition-colors">TPA Drafting Stability</p>
+                <p className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                  {activeSynergies.length} Strategic Pairs Established
                   {isAnalysisExpanded ? <ChevronDown className="h-3.5 w-3.5 text-primary" /> : <ChevronUp className="h-3.5 w-3.5 text-primary" />}
                 </p>
               </div>
               <div className="h-10 w-px bg-slate-100" />
               <div className="flex flex-col cursor-pointer group" onClick={() => setIsAnalysisExpanded(!isAnalysisExpanded)}>
-                <p className="text-[9px] font-bold uppercase text-slate-400 tracking-[0.2em] mb-1 group-hover:text-primary transition-colors">Net Analysis</p>
+                <p className="text-[9px] font-bold uppercase text-slate-400 tracking-[0.2em] mb-1 group-hover:text-primary transition-colors">Net Portfolio Impact</p>
                 <div className="flex items-center gap-10">
                   <div className="flex items-center gap-3">
-                    <span className={cn("text-xl font-headline font-bold", netImpact.liquidity >= 0 ? "text-emerald-600" : "text-red-600")}>
+                    <span className={cn("text-xl font-bold", netImpact.liquidity >= 0 ? "text-emerald-600" : "text-red-600")}>
                       {netImpact.liquidity >= 0 ? '+' : ''}€{(netImpact.liquidity / 1000000).toFixed(1)}M
                     </span>
                     <span className="text-[9px] font-bold text-slate-400 uppercase">Liquidity</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className={cn("text-xl font-headline font-bold", netImpact.risk <= 0 ? "text-emerald-600" : "text-amber-600")}>
+                    <span className={cn("text-xl font-bold", netImpact.risk <= 0 ? "text-emerald-600" : "text-amber-600")}>
                       {netImpact.risk > 0 ? '+' : ''}{netImpact.risk}%
                     </span>
-                    <span className="text-[9px] font-bold text-slate-400 uppercase">Risk</span>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase">Risk Delta</span>
                   </div>
                 </div>
               </div>
@@ -576,7 +597,7 @@ export default function DecisionSandboxPage() {
             <div className="flex items-center gap-6">
               <div className="text-right hidden md:block">
                 <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Stabilized State Confirmed</p>
-                <p className="text-[11px] text-slate-500 italic">Financial pillars balanced on table.</p>
+                <p className="text-[11px] text-slate-500 italic">Portfolio pillars balanced.</p>
               </div>
               <Button onClick={handleSendToWardroom} className="bg-primary hover:bg-primary/90 text-white rounded-xl h-12 px-8 text-[10px] font-bold uppercase tracking-[0.2em] shadow-lg shadow-primary/20">Commit Strategy</Button>
             </div>
