@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -60,6 +60,11 @@ const priorityConfig = {
 
 export function FamilyCalendar({ events }: { events: FamilyEvent[] }) {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const days = useMemo(() => {
     const monthStart = startOfMonth(currentDate);
@@ -115,7 +120,7 @@ export function FamilyCalendar({ events }: { events: FamilyEvent[] }) {
         <div className="grid grid-cols-7 auto-rows-fr">
           {days.map((day, idx) => {
             const dayEvents = getEventsForDay(day);
-            const isToday = isSameDay(day, new Date());
+            const isToday = mounted && isSameDay(day, new Date());
             const isCurrentMonth = isSameMonth(day, currentDate);
 
             return (
