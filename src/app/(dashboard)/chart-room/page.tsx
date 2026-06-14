@@ -1,10 +1,9 @@
-
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useUser, useFirestore, useDoc } from "@/firebase";
 import { collection, addDoc } from "firebase/firestore";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -17,20 +16,15 @@ import {
 } from "@/components/ui/tooltip";
 import { 
   Sparkles, 
-  CheckCircle2, 
   Zap,
   ShieldCheck,
   Package,
   Trophy,
   ShieldAlert,
-  ChevronRight,
   Plus,
   TrendingUp,
-  Landmark,
-  ArrowUpRight,
   Info,
   ChevronDown,
-  ChevronUp,
   LayoutGrid,
   Users
 } from "lucide-react";
@@ -150,7 +144,7 @@ export default function StrategicPairingsPage() {
   const { toast } = useToast();
   const { data: profile } = useDoc(user ? `users/${user.uid}` : null);
   
-  const [inputs, setInputs] = useState<InputItem[]>(INITIAL_INPUTS);
+  const [inputs] = useState<InputItem[]>(INITIAL_INPUTS);
   const [activePairingId, setActivePairingId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -229,7 +223,6 @@ export default function StrategicPairingsPage() {
       </header>
 
       <div className="flex-1 overflow-hidden flex">
-        {/* Left Sidebar: Library of Inputs */}
         <aside className="w-80 border-r border-slate-200 bg-slate-50/50 flex flex-col shrink-0">
           <div className="p-6 border-b border-slate-200 bg-white">
             <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-900 mb-1">Strategy Inputs</h2>
@@ -237,7 +230,6 @@ export default function StrategicPairingsPage() {
           </div>
           
           <div className="flex-1 overflow-y-auto p-4 space-y-8 pb-20">
-            {/* Opportunities */}
             <section className="space-y-3">
               <div className="flex items-center justify-between px-2">
                 <h3 className="text-[9px] font-bold uppercase tracking-widest text-emerald-600 flex items-center gap-2">
@@ -256,7 +248,6 @@ export default function StrategicPairingsPage() {
               ))}
             </section>
 
-            {/* Needs */}
             <section className="space-y-3">
               <div className="flex items-center justify-between px-2">
                 <h3 className="text-[9px] font-bold uppercase tracking-widest text-amber-600 flex items-center gap-2">
@@ -275,7 +266,6 @@ export default function StrategicPairingsPage() {
               ))}
             </section>
 
-            {/* AI Blindspots */}
             <section className="space-y-3">
               <div className="flex items-center justify-between px-2">
                 <h3 className="text-[9px] font-bold uppercase tracking-widest text-red-600 flex items-center gap-2">
@@ -296,7 +286,6 @@ export default function StrategicPairingsPage() {
           </div>
         </aside>
 
-        {/* Main Content: AI Strategy Deck */}
         <main className="flex-1 overflow-y-auto bg-slate-50/30 p-12">
           <div className="max-w-4xl mx-auto space-y-10">
             <div className="flex items-center justify-between border-b border-slate-200 pb-4">
@@ -355,7 +344,6 @@ export default function StrategicPairingsPage() {
                   </CardHeader>
 
                   <CardContent className="p-8 pt-4">
-                    {/* Visual Component Tags */}
                     <div className="flex flex-wrap gap-2 mb-8">
                       {pairing.components.opportunities.map(id => (
                         <Badge key={id} variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px] flex items-center gap-1.5 py-1 px-3">
@@ -415,7 +403,6 @@ export default function StrategicPairingsPage() {
         </main>
       </div>
 
-      {/* Global Impact Bar: Reflects Active Pairing */}
       <div className={cn(
         "h-20 border-t border-slate-200 bg-white flex items-center justify-between px-12 z-[70] transition-all",
         !activePairing && "opacity-50 pointer-events-none"
@@ -457,4 +444,3 @@ export default function StrategicPairingsPage() {
     </div>
   );
 }
-

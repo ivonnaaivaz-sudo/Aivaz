@@ -17,7 +17,6 @@ import {
   Grid, 
   List, 
   FolderPlus,
-  Eye,
   Gavel,
   Book,
   Anchor,
@@ -77,7 +76,6 @@ export default function VaultPage() {
   const [dateFrom, setDateFrom] = useState("2026-01-01");
   const [dateTo, setDateTo] = useState("2026-12-31");
 
-  // Default to Principal for the prototype if profile hasn't loaded
   const userRole = profile?.role || "Principal";
   const isPrincipal = userRole === 'Principal' || userRole === 'Co-Principal';
 
@@ -116,7 +114,6 @@ export default function VaultPage() {
         </div>
       </div>
 
-      {/* Advanced Analytics Section - Principals Only */}
       {isPrincipal && (
         <section className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-700">
           <div className="flex items-center justify-between border-b border-slate-200 pb-4">

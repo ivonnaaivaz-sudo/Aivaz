@@ -1,30 +1,22 @@
-
 "use client";
 
 import { useUser, useDoc, useCollection, useFirestore } from "@/firebase";
 import { useMemo } from "react";
 import { collection, query, orderBy } from "firebase/firestore";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
   ShieldCheck, 
-  Sparkles, 
-  ArrowRight, 
-  Activity, 
-  AlertTriangle,
-  BrainCircuit,
-  Compass,
-  FileText,
-  Zap,
-  Heart,
-  Anchor,
-  TrendingUp,
   ChevronRight,
   History,
   CheckCircle2,
   Clock,
-  Flag
+  Flag,
+  Compass,
+  AlertTriangle,
+  FileText,
+  Zap
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -68,7 +60,6 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-12 max-w-7xl mx-auto pb-32">
-      {/* Hero Header with Background Image */}
       <div className="relative overflow-hidden rounded-3xl border border-slate-200 shadow-lg min-h-[340px] flex items-end">
         <Image 
           src="https://firebasestorage.googleapis.com/v0/b/studio-9632545142-53067.firebasestorage.app/o/Branding%2FIMG_1935.png?alt=media"
@@ -116,10 +107,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-        {/* Main Strategic Column */}
         <div className="lg:col-span-8 space-y-12">
-          
-          {/* Condensed Heritage Journey Timeline */}
           <section className="space-y-4">
             <div className="flex items-center justify-between px-1">
               <div className="flex items-center gap-2">
@@ -168,7 +156,6 @@ export default function DashboardPage() {
             </Card>
           </section>
 
-          {/* Action Hub */}
           <section className="space-y-4">
             <div className="flex items-center justify-between px-1">
               <div className="flex items-center gap-2">
@@ -215,10 +202,7 @@ export default function DashboardPage() {
           <FamilyCalendar events={MOCK_EVENTS} />
         </div>
 
-        {/* Sidebar Intelligence Column */}
         <div className="lg:col-span-4 space-y-10">
-          
-          {/* Intelligence Sidebar */}
           <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
             <CardHeader className="border-b bg-slate-50/50 p-6">
               <div className="flex items-center gap-3">
@@ -230,22 +214,15 @@ export default function DashboardPage() {
               <div className="p-5 rounded-2xl bg-primary/5 border border-primary/10">
                 <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-2">Relational Alert</p>
                 <p className="text-sm font-medium leading-relaxed text-slate-700">12% Alignment gap detected: Alexander's growth mindset vs your preservation mandate.</p>
-                <Link href="/wardroom" className="text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-1 hover:text-primary pt-3 transition-colors">
-                  Initiate Alignment Workshop <ArrowRight className="h-3 w-3" />
-                </Link>
               </div>
 
               <div className="p-5 rounded-2xl bg-amber-500/[0.03] border border-amber-500/10">
                 <p className="text-[10px] font-bold text-amber-600 uppercase tracking-widest mb-2">Capital Efficiency</p>
                 <p className="text-sm font-medium leading-relaxed text-slate-700">€42M Cash idle in the MS Trust. Opportunity cost of €1.8M/year detected.</p>
-                <Link href="/bridge" className="text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-1 hover:text-primary pt-3 transition-colors">
-                  Execute Rebalancing <ArrowRight className="h-3 w-3" />
-                </Link>
               </div>
             </CardContent>
           </Card>
 
-          {/* Aggregate Pulse */}
           <Card className="border-none shadow-xl bg-slate-900 text-white rounded-3xl overflow-hidden">
             <CardHeader className="p-6 pb-2">
               <CardTitle className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Total Heritage Pulse</CardTitle>
