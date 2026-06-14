@@ -141,7 +141,7 @@ const INITIAL_PAIRINGS: StrategicPairing[] = [
   }
 ];
 
-export default function StrategicPairingsPage() {
+export default function ChartroomPage() {
   const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
@@ -255,6 +255,7 @@ export default function StrategicPairingsPage() {
         text: `Shared Strategic Pairing: ${activePairing.title}. This proposal balances ${activePairing.components.opportunities.length} opportunities against ${activePairing.components.needs.length + activePairing.components.blindspots.length} priorities. View full diagnostic in Chartroom.`,
         type: "recommendation",
         track: "governance",
+        threadId: "t1",
         timestamp: new Date().toISOString()
       });
       toast({ title: "Shared with Wardroom", description: "This pairing has been broadcast to the family group chat." });
@@ -577,7 +578,7 @@ export default function StrategicPairingsPage() {
           {selectedInputIds.length > 0 && !activePairing ? (
             <Button 
               onClick={handleCreatePair}
-              className="h-10 px-8 rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-xl"
+              className="h-10 px-8 rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-xl bg-primary hover:bg-primary/90 text-white"
             >
               Create a pair
             </Button>
