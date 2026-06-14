@@ -17,47 +17,44 @@ export default function DashboardLayout({
   const pathname = usePathname();
 
   useEffect(() => {
-    // Wait for all data to load before making decisions
+    // Wait for auth and profile data to load before making access decisions
     if (authLoading || profileLoading) return;
 
-    // 1. AUTH GATE: If no user is logged in, redirect to the login page
+    // 1. Authenticated Check
     if (!user) {
-      console.log("SHIELD: No session detected. Redirecting to /login.");
+      console.log("SECURE NODE: No session detected. Redirecting to Login.");
       router.push('/login');
       return;
     }
 
-    // 2. DISCOVERY GATE: If user exists but hasn't finished profiling, force onboarding
-    // We exclude the onboarding path itself to prevent recursive loops
-    const hasFinishedProfiling = profile?.hasCompletedProfiling === true;
-    const isNotOnboarding = pathname !== '/onboarding';
-
-    if (!hasFinishedProfiling && isNotOnboarding) {
-      console.log("SHIELD: Profile incomplete. Redirecting to /onboarding.");
+    // 2. Profiling Check
+    // If profiling is incomplete, force the user to the onboarding flow
+    // Onboarding is in the (auth) group, so it's outside this layout's scope
+    if (profile && profile.hasCompletedProfiling === false) {
+      console.log("SECURE NODE: Profile incomplete. Redirecting to Onboarding.");
       router.push('/onboarding');
     }
-  }, [user, profile, authLoading, profileLoading, pathname, router]);
+  }, [user, profile, authLoading, profileLoading, router]);
 
-  // Prevent UI flicker: Don't show the dashboard UI until we know the user is allowed to see it
-  if (authLoading || profileLoading) {
+  // Loading State: Prevent UI flicker or sidebar flashing before auth is confirmed
+  if (authLoading || profileLoading || !user || profile?.hasCompletedProfiling === false) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
-        <Loader2 className="h-8 w-8 text-primary animate-spin" />
+        <div className="relative">
+          <div className="w-16 h-16 rounded-full border-2 border-primary/20 animate-ping absolute inset-0" />
+          <div className="w-16 h-16 rounded-full border-2 border-primary flex items-center justify-center bg-primary/5">
+            <Loader2 className="h-8 w-8 text-primary animate-spin" />
+          </div>
+        </div>
         <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Synchronizing Node Access</p>
       </div>
     );
   }
 
-  // If the gate is active and redirecting, we shouldn't render the dashboard frame
-  const isAuthorized = user && (profile?.hasCompletedProfiling === true || pathname === '/onboarding');
-  if (!isAuthorized && pathname !== '/onboarding') return null;
-
   return (
     <div className="flex min-h-screen bg-background">
-      {/* Sidebar only visible when authorized and not in the minimalist onboarding view */}
-      {pathname !== '/onboarding' && <Sidebar />}
-      
-      <main className={pathname === '/onboarding' ? "flex-1" : "ml-[280px] flex-1 min-w-0 flex flex-col relative shadow-[-15px_0_30px_-5px_rgba(0,0,0,0.25)]"}>
+      <Sidebar />
+      <main className="ml-[280px] flex-1 min-w-0 flex flex-col relative shadow-[-15px_0_30px_-5px_rgba(0,0,0,0.25)]">
         <div className="flex-1 p-8 pb-12 overflow-y-auto">
           {children}
         </div>

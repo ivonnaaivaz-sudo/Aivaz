@@ -5,6 +5,11 @@ import { useRouter } from "next/navigation";
 import { useUser, useDoc } from "@/firebase";
 import { Loader2 } from "lucide-react";
 
+/**
+ * Root Redirector
+ * This page serves as the entry point and directs the user to the 
+ * appropriate node based on their authentication and profiling status.
+ */
 export default function Home() {
   const { user, loading: authLoading } = useUser();
   const { data: profile, loading: profileLoading } = useDoc(user ? `users/${user.uid}` : null);
@@ -14,13 +19,16 @@ export default function Home() {
     if (authLoading || profileLoading) return;
     
     if (!user) {
+      // No session found, send to login protocol
       router.push("/login");
       return;
     }
 
-    if (!profile || !profile.hasCompletedProfiling) {
+    if (!profile || profile.hasCompletedProfiling === false) {
+      // Session found but human profiling incomplete
       router.push("/onboarding");
     } else {
+      // Authorized entry to legacy dashboard
       router.push("/dashboard");
     }
   }, [user, profile, authLoading, profileLoading, router]);

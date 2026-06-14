@@ -24,7 +24,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      router.push("/dashboard");
+      router.push("/"); // Redirect through root logic to dashboard or onboarding
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -41,7 +41,7 @@ export default function LoginPage() {
     try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
-      router.push("/dashboard");
+      router.push("/"); 
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -90,7 +90,7 @@ export default function LoginPage() {
                 required
               />
             </div>
-            <Button type="submit" className="w-full h-11 rounded-xl shadow-lg bg-primary hover:bg-primary/90" disabled={loading}>
+            <Button type="submit" className="w-full h-11 rounded-xl shadow-lg bg-primary hover:bg-primary/90 text-white" disabled={loading}>
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><LogIn className="mr-2 h-4 w-4" /> Establish Connection</>}
             </Button>
           </form>
