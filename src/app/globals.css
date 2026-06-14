@@ -4,9 +4,9 @@
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
+    --background: 215 16% 93%; /* Light charcoal/slate workspace background */
     --foreground: 222 47% 11%;
-    --card: 0 0% 100%;
+    --card: 0 0% 100%; /* Pure white cards for high contrast */
     --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
@@ -14,16 +14,16 @@
     --primary-foreground: 0 0% 100%;
     --secondary: 210 20% 96%;
     --secondary-foreground: 222 47% 11%;
-    --muted: 210 20% 94%;
+    --muted: 215 16% 90%;
     --muted-foreground: 215 16% 35%;
     --accent: 197 53% 54%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
+    --border: 214 32% 88%;
+    --input: 214 32% 88%;
     --ring: 197 53% 54%;
-    --radius: 0.75rem;
+    --radius: 1rem;
     --chart-1: 197 53% 54%;
     --chart-2: 201 45% 33%;
     --chart-3: 198 54% 79%;
@@ -71,7 +71,7 @@
 }
 
 .glass-panel {
-  @apply bg-white/70 backdrop-blur-xl border border-black/5 shadow-sm;
+  @apply bg-white border border-black/5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] transition-all duration-300;
 }
 
 .dark .glass-panel {
@@ -79,7 +79,7 @@
 }
 
 .glass-card {
-  @apply bg-white/50 backdrop-blur-md border border-black/5 hover:border-black/10 transition-all duration-300;
+  @apply bg-white border border-black/5 shadow-sm hover:shadow-md transition-all duration-300;
 }
 
 .dark .glass-card {
