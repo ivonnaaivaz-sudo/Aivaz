@@ -48,6 +48,8 @@ export default function DashboardPage() {
   const db = useFirestore();
   const { toast } = useToast();
   const { data: dna, loading: dnaLoading } = useDoc(user ? `users/${user.uid}/dna/current` : null);
+  const { data: profile } = useDoc(user ? `users/${user.uid}` : null);
+  
   const heroImage = PlaceHolderImages.find(img => img.id === 'heritage-hero');
   const captainAvatar = PlaceHolderImages.find(img => img.id === 'captain-avatar');
   
@@ -61,7 +63,7 @@ export default function DashboardPage() {
   const { data: realEvents } = useCollection(timelineQuery);
   const timelineEvents = realEvents && realEvents.length > 0 ? realEvents : HARTMANN_TIMELINE;
 
-  const firstName = user?.displayName?.split(" ")[0] || "Markus";
+  const firstName = user?.displayName?.split(" ")[0] || profile?.displayName?.split(" ")[0] || "Principal";
   
   const handleSendToCaptain = () => {
     toast({
@@ -78,16 +80,14 @@ export default function DashboardPage() {
   return (
     <div className="space-y-12 max-w-7xl mx-auto pb-32">
       <div className="relative overflow-hidden rounded-3xl border border-slate-200 shadow-lg min-h-[350px] flex items-end">
-        {heroImage && (
-          <Image 
-            src={heroImage.imageUrl}
-            alt="Family Heritage"
-            fill
-            className="object-cover"
-            priority
-            data-ai-hint="heritage family"
-          />
-        )}
+        <Image 
+          src={profile?.dashboardBackgroundUrl || heroImage?.imageUrl || "https://picsum.photos/seed/heritage/1200/600"}
+          alt="Family Heritage"
+          fill
+          className="object-cover"
+          priority
+          data-ai-hint="heritage family"
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent" />
         
         <div className="relative z-10 w-full p-10 flex flex-col md:flex-row md:items-end justify-between gap-8">

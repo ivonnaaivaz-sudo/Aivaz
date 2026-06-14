@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { useUser, useFirestore } from "@/firebase";
+import { useUser, useFirestore, useStorage } from "@/firebase";
 import { doc, collection, writeBatch, query, where, getDocs, arrayUnion } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { extractFamilyDNA } from "@/ai/flows/extract-family-dna";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Sparkles, BrainCircuit, ArrowRight, Loader2, Landmark, Users, Info } from "lucide-react";
+import { 
+  Shield, 
+  Sparkles, 
+  BrainCircuit, 
+  ArrowRight, 
+  Loader2, 
+  Landmark, 
+  Users, 
+  Info,
+  Camera,
+  ImagePlus,
+  Upload
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -23,7 +36,7 @@ type Step = {
   id: string;
   title: string;
   question: string;
-  type: "choice" | "radio" | "multi-select" | "textarea" | "input";
+  type: "choice" | "radio" | "multi-select" | "textarea" | "input" | "image-picker";
   options?: { id: string; label: string; icon?: any; description?: string }[];
   placeholder?: string;
   branch?: string;
@@ -229,6 +242,13 @@ const allSteps: Step[] = [
     question: "What is one thing you hope AIVAZ will help your family with?",
     type: "textarea",
     placeholder: "Describe your primary goal for using this platform..."
+  },
+  {
+    id: "visuals",
+    title: "Visual Identity",
+    question: "Personalize your heritage node.",
+    type: "image-picker",
+    optional: true
   }
 ];
 
@@ -240,8 +260,17 @@ export default function OnboardingPage() {
   const [loading, setLoading] = useState(false);
   const { user } = useUser();
   const db = useFirestore();
+  const storage = useStorage();
   const router = useRouter();
   const { toast } = useToast();
+
+  // Image Upload State
+  const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
+  const [dashboardBg, setDashboardBg] = useState<File | null>(null);
+  const [profilePreview, setProfilePreview] = useState<string | null>(null);
+  const [bgPreview, setBgPreview] = useState<string | null>(null);
+  const profileInputRef = useRef<HTMLInputElement>(null);
+  const bgInputRef = useRef<HTMLInputElement>(null);
 
   const brandLogo = PlaceHolderImages.find(img => img.id === 'brand-logo');
   const currentStep = allSteps[currentStepIndex];
@@ -264,6 +293,23 @@ export default function OnboardingPage() {
       return i;
     }
     return 0;
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'bg') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (type === 'profile') {
+        setProfilePhoto(file);
+        setProfilePreview(reader.result as string);
+      } else {
+        setDashboardBg(file);
+        setBgPreview(reader.result as string);
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleNext = async () => {
@@ -296,11 +342,29 @@ export default function OnboardingPage() {
       setLoading(true);
       try {
         if (user && db) {
+          // 1. Extract DNA
           const dnaResult = await extractFamilyDNA({ 
             surveyData: answers,
             userName: user.displayName || undefined
           });
 
+          // 2. Handle Image Uploads
+          let profileUrl = null;
+          let bgUrl = null;
+
+          if (profilePhoto) {
+            const profileRef = ref(storage, `users/${user.uid}/profile-photo.jpg`);
+            await uploadBytes(profileRef, profilePhoto);
+            profileUrl = await getDownloadURL(profileRef);
+          }
+
+          if (dashboardBg) {
+            const bgRef = ref(storage, `users/${user.uid}/dashboard-background.jpg`);
+            await uploadBytes(bgRef, dashboardBg);
+            bgUrl = await getDownloadURL(bgRef);
+          }
+
+          // 3. Database Updates
           const batch = writeBatch(db);
           let targetFamilyId = joiningFamily?.id;
 
@@ -326,6 +390,8 @@ export default function OnboardingPage() {
             role: answers.q2,
             generationalStage: dnaResult.personalProfile.generationalStage,
             onboardingData: answers,
+            profilePhotoUrl: profileUrl,
+            dashboardBackgroundUrl: bgUrl,
             updatedAt: new Date().toISOString()
           }, { merge: true });
 
@@ -344,6 +410,7 @@ export default function OnboardingPage() {
         }
       } catch (e) {
         console.error("Onboarding failed:", e);
+        toast({ variant: "destructive", title: "Synthesis Error", description: "Could not finalize legacy profile." });
       } finally {
         setLoading(false);
       }
@@ -421,7 +488,49 @@ export default function OnboardingPage() {
             )}
           </CardHeader>
           <CardContent className="px-8 pb-8">
-            {currentStep.id === 'gateway' || currentStep.id === 'ai_consent' ? (
+            {currentStep.type === "image-picker" ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Principal Portrait</Label>
+                  <div 
+                    onClick={() => profileInputRef.current?.click()}
+                    className="aspect-square rounded-3xl border-2 border-dashed border-white/10 bg-white/[0.01] hover:bg-white/[0.03] hover:border-primary/40 transition-all cursor-pointer flex flex-col items-center justify-center p-4 text-center group overflow-hidden relative"
+                  >
+                    {profilePreview ? (
+                      <Image src={profilePreview} alt="Preview" fill className="object-cover opacity-60 group-hover:scale-105 transition-transform" />
+                    ) : (
+                      <div className="space-y-2">
+                        <Camera className="h-8 w-8 text-slate-500 group-hover:text-primary transition-colors mx-auto" />
+                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tight">Select Photo</p>
+                      </div>
+                    )}
+                    <input type="file" ref={profileInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, 'profile')} />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Legacy Background</Label>
+                  <div 
+                    onClick={() => bgInputRef.current?.click()}
+                    className="aspect-square rounded-3xl border-2 border-dashed border-white/10 bg-white/[0.01] hover:bg-white/[0.03] hover:border-primary/40 transition-all cursor-pointer flex flex-col items-center justify-center p-4 text-center group overflow-hidden relative"
+                  >
+                    {bgPreview ? (
+                      <Image src={bgPreview} alt="Preview" fill className="object-cover opacity-60 group-hover:scale-105 transition-transform" />
+                    ) : (
+                      <div className="space-y-2">
+                        <ImagePlus className="h-8 w-8 text-slate-500 group-hover:text-primary transition-colors mx-auto" />
+                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tight">Select Background</p>
+                      </div>
+                    )}
+                    <input type="file" ref={bgInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, 'bg')} />
+                  </div>
+                </div>
+                <div className="md:col-span-2 p-4 rounded-xl bg-primary/5 border border-primary/10 flex items-start gap-3">
+                  <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                  <p className="text-[10px] text-slate-400 leading-relaxed italic">These visuals will personalize your Family DNA and Dashboard node. You can update them later in settings.</p>
+                </div>
+              </div>
+            ) : currentStep.id === 'gateway' || currentStep.id === 'ai_consent' ? (
               <RadioGroup value={answers[currentStep.id]} onValueChange={(val) => setAnswers({...answers, [currentStep.id]: val})} className="grid gap-4">
                 {currentStep.options?.map((opt) => (
                   <div key={opt.id}>
@@ -531,7 +640,7 @@ export default function OnboardingPage() {
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <>
-                  {currentStep.optional && !answers[currentStep.id] ? "Skip this step" : (currentStepIndex === allSteps.length - 1 ? "Complete Discovery" : "Continue")}
+                  {currentStep.optional && !answers[currentStep.id] && currentStep.type !== 'image-picker' ? "Skip this step" : (currentStepIndex === allSteps.length - 1 ? "Complete Discovery" : "Continue")}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </>
               )}

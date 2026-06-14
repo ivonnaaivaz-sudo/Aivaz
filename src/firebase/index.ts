@@ -1,4 +1,3 @@
-
 'use client';
 
 export * from './provider';
@@ -8,3 +7,7 @@ export * from './firestore/use-doc';
 export * from './firestore/use-collection';
 export * from './errors';
 export * from './error-emitter';
+
+// Re-export storage helpers
+import { useFirebase } from './provider';
+export const useStorage = () => useFirebase().storage;

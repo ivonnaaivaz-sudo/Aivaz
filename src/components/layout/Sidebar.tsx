@@ -21,6 +21,7 @@ export function Sidebar() {
   const { user } = useUser();
   const brandLogo = PlaceHolderImages.find(img => img.id === 'brand-logo');
   const { data: dna } = useDoc(user ? `users/${user.uid}/dna/current` : null);
+  const { data: profile } = useDoc(user ? `users/${user.uid}` : null);
 
   const familyName = dna?.familyProfile?.familyName?.split(' ')[0] || "Legacy";
 
@@ -105,7 +106,7 @@ export function Sidebar() {
         >
           <div className="relative">
             <Avatar className="h-9 w-9 border border-white/10 group-hover:border-primary/30 transition-all">
-              <AvatarImage src={user?.photoURL || "https://picsum.photos/seed/markus/100/100"} />
+              <AvatarImage src={profile?.profilePhotoUrl || user?.photoURL || "https://picsum.photos/seed/markus/100/100"} />
               <AvatarFallback>{user?.displayName ? user.displayName[0] : "P"}</AvatarFallback>
             </Avatar>
             {pathname === "/house" && (
@@ -116,10 +117,10 @@ export function Sidebar() {
           </div>
           <div className="flex-1 overflow-hidden">
             <p className="text-xs font-semibold truncate text-foreground group-hover:text-primary transition-colors">
-              {user?.displayName || "Principal"}
+              {profile?.displayName || user?.displayName || "Principal"}
             </p>
             <p className="text-[9px] text-muted-foreground truncate uppercase font-bold tracking-widest opacity-60">
-              {dna?.personalProfile?.roleInFamily || "Principal"}
+              {dna?.personalProfile?.roleInFamily || profile?.role || "Principal"}
             </p>
           </div>
         </Link>
