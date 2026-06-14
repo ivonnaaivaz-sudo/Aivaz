@@ -13,8 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Shield, Sparkles, BrainCircuit, ArrowRight, Loader2, Landmark, Users, UserCircle2 } from "lucide-react";
+import { Shield, Sparkles, BrainCircuit, ArrowRight, Loader2, Landmark, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -34,7 +33,7 @@ const allSteps: Step[] = [
   {
     id: "gateway",
     title: "Legacy Gateway",
-    question: "Do you want to establish a new legacy or join an existing one?",
+    question: "How would you like to start your journey?",
     type: "choice",
     options: [
       { id: "create", label: "Establish New Legacy", icon: Landmark, description: "Start from scratch as the primary node." },
@@ -44,7 +43,7 @@ const allSteps: Step[] = [
   {
     id: "q1",
     title: "Core Identity",
-    question: "Which generation best describes your position in the family’s wealth journey?",
+    question: "Which generation best describes your position in the family’s journey?",
     type: "radio",
     options: [
       { id: "First Generation", label: "First Generation (Founder / Creator)" },
@@ -70,7 +69,7 @@ const allSteps: Step[] = [
     id: "q3a",
     branch: "First Generation",
     title: "Strategic Focus",
-    question: "In the past 5 years, which of these has taken up most of your mental energy regarding family wealth? (Choose top 2)",
+    question: "In the past 5 years, which of these has taken up most of your mental energy? (Choose top 2)",
     type: "multi-select",
     maxSelect: 2,
     options: [
@@ -85,13 +84,13 @@ const allSteps: Step[] = [
     id: "q4a",
     branch: "First Generation",
     title: "Decision Drivers",
-    question: "When you’ve made major financial decisions, what usually guides you most? (Rank top 2)",
+    question: "When you’ve made major decisions, what usually guides you most? (Rank top 2)",
     type: "multi-select",
     maxSelect: 2,
     options: [
-      { id: "preservation", label: "Capital preservation and stability" },
+      { id: "preservation", label: "Stability and preservation" },
       { id: "growth", label: "Long-term growth potential" },
-      { id: "control", label: "Maintaining family control and privacy" },
+      { id: "control", label: "Maintaining control and privacy" },
       { id: "harmony", label: "Family harmony and unity" },
       { id: "impact", label: "Creating positive impact" }
     ]
@@ -124,9 +123,9 @@ const allSteps: Step[] = [
     question: "What has been the most challenging part of your role between generations?",
     type: "multi-select",
     options: [
-      { id: "balancing", label: "Balancing respect for your parents’ views with your own" },
+      { id: "balancing", label: "Respecting heritage while forging a new path" },
       { id: "visibility", label: "Getting sufficient visibility into family assets" },
-      { id: "aligning", label: "Aligning with siblings" },
+      { id: "aligning", label: "Aligning with siblings or other family nodes" },
       { id: "identity", label: "Defining your own financial identity" }
     ]
   },
@@ -134,7 +133,7 @@ const allSteps: Step[] = [
     id: "q4b",
     branch: "Second Generation",
     title: "Historical Context",
-    question: "Thinking about past family financial decisions, what felt right and what felt difficult?",
+    question: "Thinking about past family decisions, what felt right and what felt difficult?",
     type: "textarea",
     placeholder: "Reflect on a decision that impacted family alignment..."
   },
@@ -143,7 +142,7 @@ const allSteps: Step[] = [
     id: "q3c",
     branch: "Third Generation or Later",
     title: "Legacy Visibility",
-    question: "How much visibility do you currently have into the full family wealth?",
+    question: "How much visibility do you currently have into the family legacy?",
     type: "radio",
     options: [
       { id: "Very limited", label: "Very limited / Almost none" },
@@ -162,14 +161,14 @@ const allSteps: Step[] = [
       { id: "frustration", label: "Frustration with lack of transparency" },
       { id: "divergence", label: "Different investment views from parents" },
       { id: "desire", label: "Desire for more involvement in decisions" },
-      { id: "concerns", label: "Concerns about how inheritance will be handled" }
+      { id: "concerns", label: "Concerns about how heritage will be handled" }
     ]
   },
   {
     id: "q5c",
     branch: "Third Generation or Later",
     title: "Future Objectives",
-    question: "In the last few years, what have you personally wanted to do with family wealth that hasn’t fully happened yet?",
+    question: "What is something you personally want to achieve with the family's support?",
     type: "textarea",
     placeholder: "e.g. buy a home, invest in a cause, relocate, etc."
   },
@@ -177,7 +176,7 @@ const allSteps: Step[] = [
   {
     id: "q6",
     title: "Decision Architecture",
-    question: "How are major wealth decisions typically made in your family?",
+    question: "How are major decisions typically made in your family?",
     type: "radio",
     options: [
       { id: "One person", label: "One person decides most things" },
@@ -189,10 +188,10 @@ const allSteps: Step[] = [
   {
     id: "q7",
     title: "Risk Appetite",
-    question: "How would you describe your comfort with investment risk?",
+    question: "How would you describe your comfort with risk?",
     type: "radio",
     options: [
-      { id: "Stability", label: "Prefer stability and sleep-well-at-night" },
+      { id: "Stability", label: "Prefer stability and preservation" },
       { id: "Balanced", label: "Balanced – some growth with caution" },
       { id: "High Risk", label: "Comfortable with higher risk for higher returns" }
     ]
@@ -281,7 +280,7 @@ export default function OnboardingPage() {
             const familyRef = doc(collection(db, "families"));
             targetFamilyId = familyRef.id;
             batch.set(familyRef, {
-              name: `${dnaResult.familyProfile.familyName || 'Hartmann'} Heritage`,
+              name: `${dnaResult.familyProfile.familyName || 'Family'} Heritage`,
               inviteCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
               members: [user.uid],
               createdAt: new Date().toISOString()
@@ -340,7 +339,7 @@ export default function OnboardingPage() {
   const progress = ((currentStepIndex + 1) / allSteps.length) * 100;
 
   return (
-    <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6 selection:bg-primary/30 antialiased">
+    <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6 selection:bg-primary/30 antialiased font-body">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-[120px]" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-[120px]" />
@@ -352,7 +351,7 @@ export default function OnboardingPage() {
             <BrainCircuit className="h-8 w-8 text-primary" />
           </div>
           <h1 className="text-3xl font-headline font-bold text-white tracking-tight">Legacy Discovery</h1>
-          <p className="text-slate-400 max-w-sm text-sm">Aivaz is synthesizing the human architecture behind your heritage.</p>
+          <p className="text-slate-400 max-w-sm text-sm">Let's get to know your family's unique architecture.</p>
         </div>
 
         <div className="space-y-4">
@@ -363,7 +362,7 @@ export default function OnboardingPage() {
           <Progress value={progress} className="h-1 bg-white/5" />
         </div>
 
-        <Card className="bg-white/[0.02] border-white/5 shadow-2xl backdrop-blur-xl rounded-3xl overflow-hidden">
+        <Card className="bg-white/[0.02] border-white/5 shadow-2xl backdrop-blur-xl rounded-3xl overflow-hidden relative">
           <CardHeader className="space-y-1 p-8">
             <div className="flex items-center gap-2 mb-2">
               <Sparkles className="h-4 w-4 text-primary" />
@@ -398,7 +397,7 @@ export default function OnboardingPage() {
                     <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Family Invite Code</Label>
                     <Input 
                       placeholder="e.g. HART-7A"
-                      className="mt-2 bg-white/[0.03] border-white/10 text-white rounded-xl h-12 text-center font-mono text-lg tracking-widest uppercase"
+                      className="mt-2 bg-white/[0.03] border-white/10 text-white rounded-xl h-12 text-center font-mono text-lg tracking-widest uppercase placeholder:text-slate-700"
                       value={familyCode}
                       onChange={(e) => setFamilyCode(e.target.value.toUpperCase())}
                     />
@@ -454,15 +453,15 @@ export default function OnboardingPage() {
             )}
           </CardContent>
           <CardFooter className="flex justify-between border-t border-white/5 pt-6 pb-6 px-8 bg-white/[0.01]">
-            <Button variant="ghost" onClick={handlePrev} disabled={currentStepIndex === 0 || loading} className="text-slate-500 hover:text-white hover:bg-white/5">
+            <Button variant="ghost" onClick={handlePrev} disabled={currentStepIndex === 0 || loading} className="text-slate-500 hover:text-white hover:bg-white/5 rounded-xl font-bold uppercase text-[11px] tracking-widest">
               Previous
             </Button>
             <Button 
               onClick={handleNext} 
               disabled={(currentStep.id === 'gateway' && answers.gateway === 'join' && !familyCode) || (!answers[currentStep.id] && currentStep.type !== 'input') || (currentStep.maxSelect && (answers[currentStep.id] || []).length < currentStep.maxSelect) || loading}
-              className="px-8 rounded-xl shadow-lg bg-primary hover:bg-primary/90 text-white font-bold"
+              className="px-8 rounded-xl shadow-lg bg-primary hover:bg-primary/90 text-white font-bold uppercase text-[11px] tracking-widest h-11"
             >
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <> {currentStepIndex === allSteps.length - 1 ? "Complete Synthesis" : "Continue"} <ArrowRight className="ml-2 h-4 w-4" /> </>}
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <> {currentStepIndex === allSteps.length - 1 ? "Complete Discovery" : "Continue"} <ArrowRight className="ml-2 h-4 w-4" /> </>}
             </Button>
           </CardFooter>
         </Card>
