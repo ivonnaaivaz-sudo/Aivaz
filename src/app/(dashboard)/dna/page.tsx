@@ -66,7 +66,7 @@ const HARTMANN_DNA = {
     relationalDynamics: {
       keyFrictionPoints: ["Geographic relocation (Munich vs. Singapore/London)", "Investment risk tolerance (Dr. Markus vs. Alexander)"],
       alignmentLevel: "Medium-Low",
-      succession readinessScore: 42
+      successionReadinessScore: 42
     },
     familyLegacyNarrative: "The Hartmann family represents the quintessential European industrial legacy facing the complexity of the 21st century. Their DNA is a blend of traditional German precision and emerging global impacts."
   }
