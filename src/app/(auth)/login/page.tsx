@@ -61,7 +61,7 @@ export default function LoginPage() {
             <ShieldCheck className="h-8 w-8 text-primary" />
           </div>
           <div>
-            <CardTitle className="text-3xl font-headline font-bold tracking-tighter">Hartmann Heritage</CardTitle>
+            <CardTitle className="text-3xl font-headline font-bold tracking-tighter text-primary">Aivaz Heritage</CardTitle>
             <CardDescription className="text-muted-foreground uppercase tracking-widest text-[10px] font-bold">Secure Node Access Protocol</CardDescription>
           </div>
         </CardHeader>
@@ -72,7 +72,7 @@ export default function LoginPage() {
               <Input 
                 id="email" 
                 type="email" 
-                placeholder="principal@hartmann.com" 
+                placeholder="principal@heritage.com" 
                 className="bg-white/5 border-white/10 rounded-xl focus-visible:ring-primary/20 h-11"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}

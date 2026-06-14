@@ -1,10 +1,9 @@
-
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { useUser } from "@/firebase";
+import { useUser, useDoc } from "@/firebase";
 import { 
   Compass,
   Map,
@@ -21,6 +20,9 @@ export function Sidebar() {
   const pathname = usePathname();
   const { user } = useUser();
   const brandLogo = PlaceHolderImages.find(img => img.id === 'brand-logo');
+  const { data: dna } = useDoc(user ? `users/${user.uid}/dna/current` : null);
+
+  const familyName = dna?.familyProfile?.familyName?.split(' ')[0] || "Legacy";
 
   const mainNav = [
     { name: "Bridge", href: "/bridge", icon: Compass },
@@ -76,7 +78,7 @@ export function Sidebar() {
             )}
           </div>
           <span className="font-headline font-bold text-xl tracking-tighter text-foreground leading-none uppercase">
-            HARTMANN
+            {familyName}
           </span>
           <span className="text-[8px] font-bold tracking-[0.4em] text-primary uppercase mt-2 opacity-60">
             Heritage
@@ -103,8 +105,8 @@ export function Sidebar() {
         >
           <div className="relative">
             <Avatar className="h-9 w-9 border border-white/10 group-hover:border-primary/30 transition-all">
-              <AvatarImage src="https://picsum.photos/seed/markus/100/100" />
-              <AvatarFallback>MH</AvatarFallback>
+              <AvatarImage src={user?.photoURL || "https://picsum.photos/seed/markus/100/100"} />
+              <AvatarFallback>{user?.displayName ? user.displayName[0] : "P"}</AvatarFallback>
             </Avatar>
             {pathname === "/house" && (
               <div className="absolute -top-1 -right-1">
@@ -114,10 +116,10 @@ export function Sidebar() {
           </div>
           <div className="flex-1 overflow-hidden">
             <p className="text-xs font-semibold truncate text-foreground group-hover:text-primary transition-colors">
-              Dr. Markus Hartmann
+              {user?.displayName || "Principal"}
             </p>
             <p className="text-[9px] text-muted-foreground truncate uppercase font-bold tracking-widest opacity-60">
-              Principal
+              {dna?.personalProfile?.roleInFamily || "Principal"}
             </p>
           </div>
         </Link>
