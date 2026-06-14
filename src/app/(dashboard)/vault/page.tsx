@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -45,19 +46,19 @@ const bedrockDocs = [
   {
     title: "Family Mission Statement",
     icon: Anchor,
-    content: "To preserve the Hartmann industrial precision while transitioning to a global institutional legacy, fostering unity through generational transparency and Swiss-influenced governance.",
+    content: "To preserve the Hartmann industrial precision while transitioning to a global institutional legacy, fostering unity through generational transparency.",
     footer: "Finalized Oct 2024 • Immutable"
   },
   {
     title: "Investment Philosophy",
     icon: Scale,
-    content: "We prioritize industrial stability and multi-jurisdictional resilience. Our core mandate is to rebalance concentrated real estate into liquid global tech infrastructure while maintaining a €42M stability reserve.",
+    content: "We prioritize industrial stability and multi-jurisdictional resilience. Our core mandate is to rebalance concentrated holdings while maintaining a €42M stability reserve.",
     footer: "Revised Jun 2026 • Primary Source"
   },
   {
     title: "Core Heritage Values",
     icon: Scroll,
-    content: "Precision as security. Industrial heritage as identity. Unified decision-making through the Hartmann Family Council. We view our €380M AUM as the infrastructure for future generations.",
+    content: "Precision as security. Industrial heritage as identity. Unified decision-making through the Hartmann Family Council.",
     footer: "Signed by G1 & G3 • Governance Bedrock"
   }
 ];
@@ -102,7 +103,7 @@ export default function VaultPage() {
             <span className="text-[10px] font-bold tracking-widest uppercase text-primary">Strongroom Level 4</span>
           </div>
           <h1 className="font-headline text-4xl font-bold tracking-tight text-slate-900">Strongroom</h1>
-          <p className="text-muted-foreground italic text-sm">The encrypted bedrock of Hartmann governance and industrial documentation.</p>
+          <p className="text-muted-foreground italic text-sm">The encrypted bedrock of Hartmann governance and documentation.</p>
         </div>
         <div className="flex gap-3">
           <Button variant="outline" size="sm" className="bg-white border-slate-200 h-10 rounded-xl px-4 text-[11px] font-bold uppercase tracking-widest">
@@ -119,10 +120,10 @@ export default function VaultPage() {
           <div className="flex items-center justify-between border-b border-slate-200 pb-4">
             <div className="flex items-center gap-3">
               <BarChart3 className="h-5 w-5 text-primary" />
-              <h2 className="text-sm font-bold uppercase tracking-widest text-slate-800">Advanced Analytics Terminal</h2>
+              <h2 className="text-sm font-bold uppercase tracking-widest text-slate-800">Advanced Analytics</h2>
             </div>
             <Badge className="bg-primary/10 text-primary border-primary/20 uppercase tracking-widest text-[9px] px-3 py-1 font-bold">
-              Principal Access Active
+              Principal Oversight
             </Badge>
           </div>
 
@@ -140,7 +141,6 @@ export default function VaultPage() {
                           <p className="text-sm font-bold truncate text-slate-800">{report.name}</p>
                           <div className="flex items-center gap-2 mt-1">
                             <span className="text-[9px] font-bold uppercase tracking-widest text-primary">{report.category}</span>
-                            <span className="text-slate-300">•</span>
                             <span className="text-[9px] text-slate-400 font-mono">{report.size}</span>
                           </div>
                         </div>
@@ -159,39 +159,41 @@ export default function VaultPage() {
                     <div>
                       <CardTitle className="text-lg flex items-center gap-2">
                         <History className="h-5 w-5 text-primary" />
-                        Strategic Reasoning Downloader
+                        Strategic Logic Package
                       </CardTitle>
-                      <CardDescription className="text-slate-400 text-xs">Download the AI-synthesized logic for all historical pairings.</CardDescription>
+                      <CardDescription className="text-slate-400 text-xs">Download the AI-synthesized reasoning for historical plans.</CardDescription>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent className="p-6">
                   <div className="flex flex-col md:flex-row items-end gap-6">
-                    <div className="space-y-2 flex-1 w-full">
-                      <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">From Date</label>
-                      <div className="relative">
-                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                        <Input 
-                          type="date" 
-                          value={dateFrom} 
-                          onChange={(e) => setDateFrom(e.target.value)}
-                          className="bg-white/5 border-white/10 text-white pl-10 focus:ring-primary/40 rounded-xl h-11" 
-                        />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 w-full">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">From Date</label>
+                        <div className="relative">
+                          <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                          <Input 
+                            type="date" 
+                            value={dateFrom} 
+                            onChange={(e) => setDateFrom(e.target.value)}
+                            className="bg-white/5 border-white/10 text-white pl-10 focus:ring-primary/40 rounded-xl h-10 text-sm" 
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">To Date</label>
+                        <div className="relative">
+                          <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                          <Input 
+                            type="date" 
+                            value={dateTo} 
+                            onChange={(e) => setDateTo(e.target.value)}
+                            className="bg-white/5 border-white/10 text-white pl-10 focus:ring-primary/40 rounded-xl h-10 text-sm" 
+                          />
+                        </div>
                       </div>
                     </div>
-                    <div className="space-y-2 flex-1 w-full">
-                      <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">To Date</label>
-                      <div className="relative">
-                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                        <Input 
-                          type="date" 
-                          value={dateTo} 
-                          onChange={(e) => setDateTo(e.target.value)}
-                          className="bg-white/5 border-white/10 text-white pl-10 focus:ring-primary/40 rounded-xl h-11" 
-                        />
-                      </div>
-                    </div>
-                    <Button onClick={handleDownloadReasoning} className="bg-primary hover:bg-primary/90 text-white px-8 rounded-xl h-11 shadow-lg font-bold text-[10px] uppercase tracking-widest w-full md:w-auto">
+                    <Button onClick={handleDownloadReasoning} className="bg-primary hover:bg-primary/90 text-white px-8 rounded-xl h-10 shadow-lg font-bold text-[10px] uppercase tracking-widest w-full md:w-auto shrink-0">
                       <Download className="mr-2 h-4 w-4" /> Package Logic
                     </Button>
                   </div>
@@ -208,9 +210,8 @@ export default function VaultPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {[
-                    { label: "Portfolio VaR (95%)", val: "€11.2M", desc: "Estimated monthly potential drawdown." },
-                    { label: "Beta vs. MSCI World", val: "0.82", desc: "Low correlation to global volatility." },
-                    { label: "Hedging Efficiency", val: "34%", desc: "Currency coverage remains low." },
+                    { label: "Portfolio Risk (VaR)", val: "€11.2M", desc: "Estimated monthly potential drawdown." },
+                    { label: "Stability Index", val: "0.82", desc: "Low correlation to global volatility." },
                   ].map((stat, i) => (
                     <div key={i} className="p-3 rounded-xl bg-slate-50 border border-slate-100 space-y-1">
                       <div className="flex justify-between items-center">
@@ -221,7 +222,7 @@ export default function VaultPage() {
                     </div>
                   ))}
                   <Button variant="outline" className="w-full text-[10px] font-bold uppercase tracking-widest border-slate-200 h-10 rounded-xl hover:bg-slate-50 transition-colors">
-                    Open Stress-Test Simulator <ChevronRight className="ml-2 h-3 w-3" />
+                    Stress-Test Matrix <ChevronRight className="ml-2 h-3 w-3" />
                   </Button>
                 </CardContent>
               </Card>
@@ -244,104 +245,18 @@ export default function VaultPage() {
                   <doc.icon className="h-5 w-5 text-slate-400 group-hover:text-primary transition-colors" />
                 </div>
                 <CardTitle className="text-lg font-headline font-bold text-slate-800">{doc.title}</CardTitle>
-                <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Edit3 className="h-4 w-4 text-primary" />
-                </div>
               </CardHeader>
               <CardContent className="flex-1">
-                <p className="font-serif italic text-lg leading-relaxed text-slate-500">
+                <p className="font-serif italic text-base leading-relaxed text-slate-500">
                   "{doc.content}"
                 </p>
               </CardContent>
-              <div className="p-6 border-t border-slate-100 flex items-center justify-between bg-slate-50/30">
+              <div className="p-5 border-t border-slate-100 flex items-center justify-between bg-slate-50/30">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-slate-300">{doc.footer}</span>
                 <Lock className="h-3 w-3 text-slate-200" />
               </div>
             </Card>
           ))}
-        </div>
-      </section>
-
-      <section className="space-y-6">
-        <div className="flex items-center gap-3 border-b border-slate-200 pb-4">
-          <Book className="h-5 w-5 text-primary" />
-          <h2 className="text-sm font-bold uppercase tracking-widest text-slate-800">Digital Vault</h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div className="md:col-span-1 space-y-2">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 mb-4 px-4">Categories</p>
-            {[
-              { label: "All Documents", count: 58, active: true },
-              { label: "Industrial Trusts", count: 14, active: false },
-              { label: "Identity Docs", count: 18, active: false },
-              { label: "Munich Property", count: 22, active: false },
-              { label: "Advisor Notes", count: 12, active: false },
-            ].map((cat, i) => (
-              <Button 
-                key={i} 
-                variant="ghost" 
-                className={`w-full justify-between text-[11px] font-bold py-6 px-4 uppercase tracking-widest rounded-xl transition-all h-auto ${cat.active ? 'bg-primary/5 text-primary border border-primary/20' : 'text-slate-500 hover:bg-slate-50'}`}
-              >
-                {cat.label}
-                <Badge variant="secondary" className="ml-auto text-[9px] font-mono bg-slate-100">{cat.count}</Badge>
-              </Button>
-            ))}
-          </div>
-
-          <Card className="md:col-span-3 border-slate-200 overflow-hidden flex flex-col bg-white shadow-sm rounded-2xl">
-            <div className="p-4 border-b border-slate-100 flex items-center justify-between gap-4 bg-slate-50/50">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <Input placeholder="Search secure vault..." className="bg-white border-slate-200 pl-10 text-sm h-11 rounded-xl focus-visible:ring-primary/20" />
-              </div>
-              <div className="flex border border-slate-200 rounded-xl overflow-hidden bg-white">
-                <Button variant="ghost" size="icon" className="h-11 w-11 rounded-none bg-slate-50 text-primary border-r">
-                  <List className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-11 w-11 rounded-none hover:bg-slate-50 text-slate-400">
-                  <Grid className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            
-            <CardContent className="p-0">
-              <div className="divide-y divide-slate-100">
-                {documents.map((doc, i) => (
-                  <div key={i} className="flex items-center justify-between p-5 hover:bg-slate-50 transition-colors group cursor-pointer">
-                    <div className="flex items-center gap-4 min-w-0">
-                      <div className="w-11 h-11 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center group-hover:border-primary/30 group-hover:bg-primary/5 transition-all">
-                        <FileText className="h-5 w-5 text-slate-400 group-hover:text-primary transition-colors" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-bold truncate text-slate-800 group-hover:text-primary transition-colors">{doc.name}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">{doc.type}</span>
-                          <span className="text-slate-200 opacity-20">•</span>
-                          <span className="text-[10px] text-slate-400">{doc.date}</span>
-                          <span className="text-slate-200 opacity-20">•</span>
-                          <span className="text-[10px] text-slate-400 font-mono">{doc.size}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-6">
-                      <Badge variant="outline" className={`text-[9px] uppercase tracking-tighter h-6 px-2 flex items-center gap-1.5 font-bold ${doc.security === 'Military' ? 'border-primary/50 text-primary bg-primary/5' : 'border-slate-100 text-slate-400'}`}>
-                        <Lock className="h-3 w-3" /> {doc.security}
-                      </Badge>
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity translate-x-2 group-hover:translate-x-0">
-                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-primary/5 hover:text-primary" onClick={() => handleDownload(doc.name)}>
-                          <Download className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-slate-50">
-                          <MoreHorizontal className="h-4 w-4 text-slate-400" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </section>
 
@@ -351,10 +266,10 @@ export default function VaultPage() {
         </div>
         <div className="flex-1">
           <p className="text-sm font-bold text-slate-900">Immutable Charter Protocol Active</p>
-          <p className="text-xs text-slate-500 mt-1">These documents and files serve as the immutable source of truth for the Hartmann recommendation engine and generational governance audits.</p>
+          <p className="text-xs text-slate-500 mt-1">These files serve as the source of truth for the Hartmann engine and governance audits.</p>
         </div>
         <Button variant="outline" size="sm" className="bg-white border-slate-200 text-[10px] font-bold uppercase tracking-widest hover:text-primary hover:border-primary/30 transition-all rounded-xl h-11 px-8 shadow-sm">
-          Audit Vault History
+          Audit History
         </Button>
       </div>
     </div>

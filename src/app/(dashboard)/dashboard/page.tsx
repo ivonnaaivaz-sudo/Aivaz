@@ -40,9 +40,9 @@ const MOCK_EVENTS: FamilyEvent[] = [
 const HARTMANN_TIMELINE = [
   { id: "h-1", title: "Foundation", date: "1992", type: "financial", status: "completed" },
   { id: "h-2", title: "Singapore Pivot", date: "2008", type: "vision", status: "completed" },
-  { id: "h-3", title: "G2 Trust Capitalization", date: "2024", type: "succession", status: "completed" },
-  { id: "h-4", title: "Institutional Governance", date: "2026", type: "succession", status: "in-progress" },
-  { id: "h-5", title: "Family Foundation", date: "2027", type: "philanthropy", status: "target" }
+  { id: "h-3", title: "Trust Setup", date: "2024", type: "succession", status: "completed" },
+  { id: "h-4", title: "Governance", date: "2026", type: "succession", status: "in-progress" },
+  { id: "h-5", title: "Foundation", date: "2027", type: "philanthropy", status: "target" }
 ];
 
 export default function DashboardPage() {
@@ -79,7 +79,8 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-12 max-w-7xl mx-auto pb-32">
-      <div className="relative overflow-hidden rounded-3xl border border-slate-200 shadow-lg min-h-[340px] flex items-end">
+      {/* Welcome Header with Image */}
+      <div className="relative overflow-hidden rounded-3xl border border-slate-200 shadow-lg min-h-[300px] flex items-end">
         {heroImage && (
           <Image 
             src={heroImage.imageUrl}
@@ -90,38 +91,35 @@ export default function DashboardPage() {
             data-ai-hint="heritage family"
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/40 to-transparent" />
         
         <div className="relative z-10 w-full p-10 flex flex-col md:flex-row md:items-end justify-between gap-8">
-          <div className="space-y-6">
+          <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center">
-                <ShieldCheck className="h-5 w-5 text-white" />
+              <div className="w-8 h-8 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center">
+                <ShieldCheck className="h-4 w-4 text-white" />
               </div>
-              <div className="flex flex-col">
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/90">Identity Secure</span>
-                <span className="text-[9px] text-white/60 uppercase font-bold tracking-widest">Hartmann Heritage Protocol</span>
-              </div>
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/90">Identity Secure</span>
             </div>
             
-            <div className="space-y-2">
-              <h1 className="font-headline text-5xl font-bold tracking-tighter text-white">
+            <div className="space-y-1">
+              <h1 className="font-headline text-4xl font-bold tracking-tighter text-white">
                 Welcome back, {firstName}
               </h1>
-              <p className="text-lg text-white/80 font-headline max-w-2xl leading-relaxed">
-                The Aivaz engine has synthesized your latest portfolio alignment data. Governance remains stable at 84.2%.
+              <p className="text-base text-white/80 font-medium max-w-xl">
+                The Aivaz engine has synchronized your latest portfolio and alignment data.
               </p>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="px-6 py-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-center">
-              <p className="text-[9px] text-white/70 uppercase font-bold tracking-widest mb-1">AUM Sync</p>
-              <p className="text-2xl font-headline font-bold text-white tracking-tighter">€380M</p>
+          <div className="flex gap-4">
+            <div className="px-5 py-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-center min-w-[100px]">
+              <p className="text-[8px] text-white/70 uppercase font-bold tracking-widest mb-1">AUM Sync</p>
+              <p className="text-xl font-headline font-bold text-white tracking-tighter">€380M</p>
             </div>
-            <div className="px-6 py-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-center">
-              <p className="text-[9px] text-white/70 uppercase font-bold tracking-widest mb-1">Alignment</p>
-              <p className="text-2xl font-headline font-bold text-emerald-400 tracking-tighter">84.2%</p>
+            <div className="px-5 py-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-center min-w-[100px]">
+              <p className="text-[8px] text-white/70 uppercase font-bold tracking-widest mb-1">Alignment</p>
+              <p className="text-xl font-headline font-bold text-emerald-400 tracking-tighter">84.2%</p>
             </div>
           </div>
         </div>
@@ -129,47 +127,49 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
         <div className="lg:col-span-8 space-y-12">
+          {/* Timeline Section */}
           <section className="space-y-4">
             <div className="flex items-center justify-between px-1">
               <div className="flex items-center gap-2">
                 <History className="h-4 w-4 text-primary" />
-                <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Heritage Journey Timeline</h2>
+                <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500">Journey Progress</h2>
               </div>
               <Link href="/heritage-timeline">
-                <Button variant="ghost" size="sm" className="text-[10px] font-bold uppercase tracking-widest">Full Journey <ChevronRight className="ml-1 h-3 w-3" /></Button>
+                <Button variant="ghost" size="sm" className="text-[10px] font-bold uppercase tracking-widest h-7">View Full <ChevronRight className="ml-1 h-3 w-3" /></Button>
               </Link>
             </div>
-            <Card className="border-slate-200 shadow-sm bg-white overflow-hidden rounded-3xl">
+            <Card className="border-slate-200 shadow-sm bg-white rounded-3xl overflow-hidden">
               <CardContent className="p-8">
-                <ScrollArea className="w-full whitespace-nowrap pb-4">
-                  <div className="flex gap-6">
-                    {timelineEvents.map((event: any, i: number) => (
-                      <div key={i} className="flex flex-col gap-3 min-w-[180px] group">
-                        <div className={cn(
-                          "text-[9px] font-bold uppercase tracking-widest",
-                          event.status === 'completed' ? 'text-primary' : event.status === 'in-progress' ? 'text-amber-500' : 'text-slate-400'
-                        )}>
-                          {event.date}
-                        </div>
-                        <div className="flex items-center gap-3">
+                <ScrollArea className="w-full pb-4">
+                  <div className="flex relative">
+                    {/* Visual Line */}
+                    <div className="absolute top-[23px] left-4 right-4 h-0.5 bg-slate-100" />
+                    <div className="flex gap-4 min-w-full">
+                      {timelineEvents.map((event: any, i: number) => (
+                        <div key={i} className="flex flex-col gap-2 min-w-[140px] relative z-10 group">
                           <div className={cn(
-                            "w-8 h-8 rounded-full border flex items-center justify-center shrink-0 transition-all group-hover:scale-110",
-                            event.status === 'completed' ? 'bg-primary/5 border-primary/20 text-primary' : 
-                            event.status === 'in-progress' ? 'bg-amber-50 border-amber-200 text-amber-500' : 
-                            'bg-slate-50 border-slate-100 text-slate-300'
+                            "text-[8px] font-bold uppercase tracking-widest mb-1",
+                            event.status === 'completed' ? 'text-primary' : event.status === 'in-progress' ? 'text-amber-500' : 'text-slate-400'
+                          )}>
+                            {event.date}
+                          </div>
+                          <div className={cn(
+                            "w-8 h-8 rounded-full border-2 flex items-center justify-center shrink-0 transition-all bg-white",
+                            event.status === 'completed' ? 'border-primary text-primary' : 
+                            event.status === 'in-progress' ? 'border-amber-500 text-amber-500' : 
+                            'border-slate-200 text-slate-200'
                           )}>
                             {event.status === 'completed' ? <CheckCircle2 className="h-4 w-4" /> : 
                              event.status === 'in-progress' ? <Clock className="h-4 w-4 animate-pulse" /> : 
                              <Flag className="h-4 w-4" />}
                           </div>
-                          <div className="h-px w-full bg-slate-100 last:hidden" />
+                          <div className="pt-1">
+                            <p className="text-[11px] font-bold text-slate-900 leading-tight">{event.title}</p>
+                            <p className="text-[9px] text-slate-400 font-bold uppercase mt-0.5 tracking-tight">{event.type}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-xs font-bold text-slate-900 group-hover:text-primary transition-colors">{event.title}</p>
-                          <p className="text-[10px] text-slate-400 font-medium uppercase tracking-tighter mt-0.5">{event.type}</p>
-                        </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                   <ScrollBar orientation="horizontal" />
                 </ScrollArea>
@@ -178,40 +178,38 @@ export default function DashboardPage() {
           </section>
 
           <section className="space-y-4">
-            <div className="flex items-center justify-between px-1">
-              <div className="flex items-center gap-2">
-                <Compass className="h-4 w-4 text-primary" />
-                <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Priority Strategic Tracks</h2>
-              </div>
+            <div className="flex items-center gap-2 px-1">
+              <Compass className="h-4 w-4 text-primary" />
+              <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500">Active Strategic Tracks</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Link href="/chart-room" className="group">
-                <Card className="border-none shadow-md hover:shadow-xl hover:ring-2 hover:ring-primary/20 transition-all h-full bg-white rounded-3xl overflow-hidden">
-                  <CardContent className="p-8 space-y-5">
-                    <div className="p-3 w-12 h-12 rounded-2xl bg-primary/5 border border-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <AlertTriangle className="h-6 w-6 text-primary" />
+                <Card className="border-slate-200 shadow-sm hover:shadow-md hover:border-primary/30 transition-all h-full bg-white rounded-3xl">
+                  <CardContent className="p-8 space-y-4">
+                    <div className="p-2 w-10 h-10 rounded-xl bg-primary/5 border border-primary/10 flex items-center justify-center">
+                      <AlertTriangle className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-xl leading-tight text-slate-900">Stress-Test G3 Exposure</h3>
-                      <p className="text-sm text-slate-500 mt-3 leading-relaxed">Simulate a €12M downside scenario on Alexander's tech-growth holdings to protect core legacy capital.</p>
+                      <h3 className="font-bold text-lg text-slate-900">Stress-Test G3 Exposure</h3>
+                      <p className="text-sm text-slate-500 mt-2 leading-relaxed">Simulate a downside scenario on tech-growth holdings to protect core legacy capital.</p>
                     </div>
-                    <div className="flex items-center text-[10px] font-bold text-primary uppercase tracking-widest gap-2 pt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center text-[10px] font-bold text-primary uppercase tracking-widest gap-2 pt-2">
                       Enter Chart Room <ChevronRight className="h-3 w-3" />
                     </div>
                   </CardContent>
                 </Card>
               </Link>
               <Link href="/vault" className="group">
-                <Card className="border-none shadow-md hover:shadow-xl hover:ring-2 hover:ring-blue-600/20 transition-all h-full bg-white rounded-3xl overflow-hidden">
-                  <CardContent className="p-8 space-y-5">
-                    <div className="p-3 w-12 h-12 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <FileText className="h-6 w-6 text-blue-600" />
+                <Card className="border-slate-200 shadow-sm hover:shadow-md hover:border-blue-600/30 transition-all h-full bg-white rounded-3xl">
+                  <CardContent className="p-8 space-y-4">
+                    <div className="p-2 w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center">
+                      <FileText className="h-5 w-5 text-blue-600" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-xl leading-tight text-slate-900">Governance Charter</h3>
-                      <p className="text-sm text-slate-500 mt-3 leading-relaxed">Formalize Hartmann industrial norms to resolve authority rifts between generations.</p>
+                      <h3 className="font-bold text-lg text-slate-900">Governance Charter</h3>
+                      <p className="text-sm text-slate-500 mt-2 leading-relaxed">Formalize Hartmann industrial norms to resolve authority rifts between generations.</p>
                     </div>
-                    <div className="flex items-center text-[10px] font-bold text-blue-600 uppercase tracking-widest gap-2 pt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center text-[10px] font-bold text-blue-600 uppercase tracking-widest gap-2 pt-2">
                       Open Strongroom <ChevronRight className="h-3 w-3" />
                     </div>
                   </CardContent>
@@ -224,29 +222,28 @@ export default function DashboardPage() {
         </div>
 
         <div className="lg:col-span-4 space-y-10">
-          <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
-            <CardHeader className="border-b bg-slate-50/50 p-6">
+          <Card className="border-slate-200 shadow-sm bg-white rounded-3xl overflow-hidden">
+            <CardHeader className="bg-slate-50/50 p-6 border-b border-slate-100">
               <div className="flex items-center gap-3">
-                <Zap className="h-5 w-5 text-primary" />
-                <CardTitle className="text-sm font-bold uppercase tracking-[0.2em] text-slate-900">Aivaz Intelligence</CardTitle>
+                <Zap className="h-4 w-4 text-primary" />
+                <CardTitle className="text-xs font-bold uppercase tracking-[0.2em] text-slate-900">AI Intelligence</CardTitle>
               </div>
             </CardHeader>
             <CardContent className="p-6 space-y-6">
-              <div className="p-5 rounded-2xl bg-primary/5 border border-primary/10">
-                <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-2">Relational Alert</p>
-                <p className="text-sm font-medium leading-relaxed text-slate-700">12% Alignment gap detected: Alexander's growth mindset vs your preservation mandate.</p>
+              <div className="p-4 rounded-xl bg-primary/5 border border-primary/10">
+                <p className="text-[9px] font-bold text-primary uppercase tracking-widest mb-1">Relational Alert</p>
+                <p className="text-xs font-semibold leading-relaxed text-slate-700">12% Alignment gap detected: Risk tolerance variance between generations.</p>
               </div>
-
-              <div className="p-5 rounded-2xl bg-amber-500/[0.03] border border-amber-500/10">
-                <p className="text-[10px] font-bold text-amber-600 uppercase tracking-widest mb-2">Capital Efficiency</p>
-                <p className="text-sm font-medium leading-relaxed text-slate-700">€42M Cash idle in the MS Trust. Opportunity cost of €1.8M/year detected.</p>
+              <div className="p-4 rounded-xl bg-amber-500/[0.03] border border-amber-500/10">
+                <p className="text-[9px] font-bold text-amber-600 uppercase tracking-widest mb-1">Capital Efficiency</p>
+                <p className="text-xs font-semibold leading-relaxed text-slate-700">€42M Cash idle in the MS Trust. Opportunity cost detected.</p>
               </div>
             </CardContent>
           </Card>
 
           <Card className="border-none shadow-xl bg-slate-900 text-white rounded-3xl overflow-hidden">
             <CardHeader className="p-6 pb-2">
-              <CardTitle className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Total Heritage Pulse</CardTitle>
+              <CardTitle className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Total Heritage Pulse</CardTitle>
             </CardHeader>
             <CardContent className="p-6 space-y-6">
               <div className="flex justify-between items-end border-b border-white/5 pb-4">
@@ -256,7 +253,7 @@ export default function DashboardPage() {
                 </div>
                 <Badge variant="outline" className="text-[8px] border-white/10 text-slate-400 font-bold uppercase tracking-widest">Aggregated</Badge>
               </div>
-              <div className="pt-2">
+              <div>
                 <Link href="/bridge">
                   <Button className="w-full bg-white text-slate-900 hover:bg-slate-200 text-[10px] font-bold uppercase tracking-widest rounded-xl h-11">
                     Manage Portfolio Axis
@@ -267,35 +264,32 @@ export default function DashboardPage() {
           </Card>
 
           {/* AI Captain Component */}
-          <Card className="border-none shadow-lg bg-white rounded-3xl overflow-hidden group">
-            <CardHeader className="bg-slate-50/50 p-6 pb-4">
+          <Card className="border-slate-200 shadow-lg bg-white rounded-3xl overflow-hidden">
+            <CardHeader className="bg-slate-50/50 p-6 pb-4 border-b border-slate-100">
               <div className="flex items-center gap-4">
-                <div className="relative">
-                  <Avatar className="h-12 w-12 border-2 border-primary/20">
-                    <AvatarImage src={captainAvatar?.imageUrl} />
-                    <AvatarFallback>AI</AvatarFallback>
-                  </Avatar>
-                  <div className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 bg-emerald-500 rounded-full border-2 border-white shadow-sm" />
-                </div>
+                <Avatar className="h-10 w-10 border border-primary/20">
+                  <AvatarImage src={captainAvatar?.imageUrl} />
+                  <AvatarFallback>AI</AvatarFallback>
+                </Avatar>
                 <div>
-                  <CardTitle className="text-sm font-bold uppercase tracking-[0.2em] text-slate-900">Talk to the Captain</CardTitle>
-                  <p className="text-[10px] text-muted-foreground font-bold uppercase mt-0.5 tracking-tighter">Always Online • Strategic Advisor</p>
+                  <CardTitle className="text-xs font-bold uppercase tracking-[0.2em] text-slate-900">Talk to the Captain</CardTitle>
+                  <p className="text-[9px] text-muted-foreground font-bold uppercase mt-0.5">Always Online • Strategic Advisor</p>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="p-6 pt-2 space-y-4">
-              <p className="text-sm text-slate-600 italic leading-relaxed font-medium">
-                "Anything on your mind today, {firstName}? I'm here to incorporate your latest thoughts into our heritage strategy."
+            <CardContent className="p-6 space-y-4">
+              <p className="text-xs text-slate-600 italic leading-relaxed font-medium">
+                "Anything on your mind today, {firstName}? Share your thoughts to update our strategy."
               </p>
               <div className="space-y-3">
                 <Textarea 
-                  placeholder="Share a vision, a worry, or a new goal..."
-                  className="bg-slate-50 border-slate-100 min-h-[100px] resize-none focus-visible:ring-primary/20 rounded-2xl text-sm"
+                  placeholder="Share a vision, worry, or new goal..."
+                  className="bg-slate-50 border-slate-100 min-h-[80px] resize-none focus-visible:ring-primary/20 rounded-xl text-xs"
                   value={captainInput}
                   onChange={(e) => setCaptainInput(e.target.value)}
                 />
                 <Button 
-                  className="w-full bg-slate-900 text-white hover:bg-slate-800 rounded-xl h-11 text-[10px] font-bold uppercase tracking-widest shadow-md group-hover:shadow-lg transition-all"
+                  className="w-full bg-slate-900 text-white hover:bg-slate-800 rounded-xl h-10 text-[10px] font-bold uppercase tracking-widest shadow-md"
                   onClick={handleSendToCaptain}
                   disabled={!captainInput.trim()}
                 >

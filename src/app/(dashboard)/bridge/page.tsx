@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -177,18 +178,18 @@ export default function BridgeHub() {
   return (
     <div className="space-y-10 max-w-7xl mx-auto pb-32 animate-in fade-in duration-500">
       {/* Header Advisor Topline */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-white/10 pb-10">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-slate-200 pb-10">
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-widest border-primary/40 text-primary bg-primary/10">Aivaz Heritage Hub</Badge>
-            <span className="text-white/20">|</span>
-            <span className="text-[10px] text-white/60 font-bold uppercase tracking-widest">Protocol: Hartmann-Global</span>
+            <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-widest border-primary/40 text-primary bg-primary/10">Heritage Hub</Badge>
+            <span className="text-slate-300">|</span>
+            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Protocol: Hartmann-Global</span>
           </div>
           <div className="space-y-1">
-            <p className="text-sm font-bold text-white/40 uppercase tracking-[0.2em]">Hartmann Family Total Wealth</p>
+            <p className="text-sm font-bold text-slate-400 uppercase tracking-[0.2em]">Hartmann Family Total Wealth</p>
             <div className="flex items-baseline gap-4">
-              <h1 className="text-5xl font-headline font-bold text-white tracking-tighter">€380M</h1>
-              <span className="text-xl font-headline font-bold text-emerald-400">+4.2% <span className="text-sm opacity-60">this year</span></span>
+              <h1 className="text-5xl font-headline font-bold text-slate-900 tracking-tighter">€380M</h1>
+              <span className="text-xl font-headline font-bold text-emerald-600">+4.2% <span className="text-sm opacity-60">annual growth</span></span>
             </div>
           </div>
         </div>
@@ -213,26 +214,25 @@ export default function BridgeHub() {
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex items-center justify-center">
-                <Layers className="h-4 w-4 text-white/20" />
+                <Layers className="h-4 w-4 text-slate-300" />
               </div>
             </div>
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-primary" />
-                <span className="text-xs font-bold text-white/80">Strategic (76%)</span>
+                <span className="text-xs font-bold text-slate-700">Strategic (76%)</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-slate-300" />
-                <span className="text-xs font-bold text-white/80">Tactical (24%)</span>
+                <span className="text-xs font-bold text-slate-700">Tactical (24%)</span>
               </div>
-              <p className="text-[10px] text-white/40 italic max-w-[140px]">Balanced for multi-generational stability.</p>
             </div>
           </div>
 
-          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)} className="bg-white/10 p-1 rounded-xl">
+          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)} className="bg-slate-100 p-1 rounded-xl">
             <TabsList className="bg-transparent">
-              <TabsTrigger value="individual" className="text-[10px] font-bold uppercase data-[state=active]:bg-white data-[state=active]:text-slate-900"><User className="mr-2 h-3.5 w-3.5" /> Dr. Markus</TabsTrigger>
-              <TabsTrigger value="aggregated" className="text-[10px] font-bold uppercase data-[state=active]:bg-white data-[state=active]:text-slate-900"><Users className="mr-2 h-3.5 w-3.5" /> Aggregated</TabsTrigger>
+              <TabsTrigger value="individual" className="text-[10px] font-bold uppercase data-[state=active]:bg-white data-[state=active]:text-slate-900 shadow-none"><User className="mr-2 h-3.5 w-3.5" /> Markus</TabsTrigger>
+              <TabsTrigger value="aggregated" className="text-[10px] font-bold uppercase data-[state=active]:bg-white data-[state=active]:text-slate-900 shadow-none"><Users className="mr-2 h-3.5 w-3.5" /> Aggregated</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
@@ -240,13 +240,13 @@ export default function BridgeHub() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         {[
-          { title: "Biggest Risk", icon: AlertTriangle, val: "55%", label: "Real Estate Concentration", desc: "Mostly Markus industrial + Sophie's SG assets.", color: "text-red-500", members: ["Markus", "Sophie"] },
-          { title: "Liquidity", icon: Coins, val: "€42M", label: "Cash Sitting Idle (11%)", desc: "Estimated opportunity cost of ~€1.8M/year.", color: "text-amber-500", members: ["Markus"] },
-          { title: "Generational", icon: Zap, val: "78%", label: "Control & Alignment", desc: "G1 control vs G3 growth pressure tension.", color: "text-primary", members: [] },
-          { title: "Geography", icon: Globe, val: "47%", label: "Asia Exposure", desc: "Vital pillar for G3 succession strategy.", color: "text-slate-400", members: ["Sophie"] },
-          { title: "Top Holdings", icon: BarChart3, val: "55%", label: "RE & Industrial", desc: "Foundational asset class of the legacy.", color: "text-emerald-500", members: ["Markus", "Sophie"] }
+          { title: "Biggest Risk", icon: AlertTriangle, val: "55%", label: "Property Concentration", desc: "Foundational industrial exposure.", color: "text-red-600", members: ["Markus", "Sophie"] },
+          { title: "Liquidity", icon: Coins, val: "€42M", label: "Cash Idle", desc: "Opportunity cost identified.", color: "text-amber-600", members: ["Markus"] },
+          { title: "Generational", icon: Zap, val: "78%", label: "DNA Alignment", desc: "Governance stability score.", color: "text-primary", members: [] },
+          { title: "Geography", icon: Globe, val: "47%", label: "Asia Exposure", desc: "Strategic Singapore node.", color: "text-slate-500", members: ["Sophie"] },
+          { title: "Efficiency", icon: BarChart3, val: "94%", label: "Tax Yield", desc: "Estate planning grade.", color: "text-emerald-600", members: ["Markus", "Sophie"] }
         ].map((card, i) => (
-          <Card key={i} className="glass-panel group overflow-hidden">
+          <Card key={i} className="border-slate-200 shadow-sm bg-white overflow-hidden rounded-2xl">
             <CardHeader className="pb-2">
               <CardTitle className={cn("text-[10px] font-bold uppercase tracking-widest flex items-center gap-2", card.color)}>
                 <card.icon className="h-3.5 w-3.5" /> {card.title}
@@ -257,16 +257,16 @@ export default function BridgeHub() {
                 <p className="text-xl font-headline font-bold text-slate-900">{card.val}</p>
                 {card.members.length > 0 && <MemberIndicators members={card.members} />}
               </div>
-              <p className="text-[10px] font-bold text-slate-900 uppercase">{card.label}</p>
-              <p className="text-[10px] text-muted-foreground leading-relaxed italic">"{card.desc}"</p>
+              <p className="text-[10px] font-bold text-slate-800 uppercase">{card.label}</p>
+              <p className="text-[10px] text-slate-400 italic leading-tight">{card.desc}</p>
             </CardContent>
           </Card>
         ))}
       </div>
 
       {/* Action Strategy Terminal */}
-      <Card className="border-none shadow-2xl bg-slate-900 text-white overflow-hidden rounded-3xl">
-        <div className="absolute top-0 right-0 p-10 opacity-10 pointer-events-none">
+      <Card className="border-none shadow-xl bg-slate-900 text-white overflow-hidden rounded-3xl relative">
+        <div className="absolute top-0 right-0 p-10 opacity-5 pointer-events-none">
           <ShieldCheck className="h-40 w-40" />
         </div>
         <CardHeader className="border-b border-white/10 p-8">
@@ -274,13 +274,13 @@ export default function BridgeHub() {
             <div>
               <CardTitle className="text-2xl font-headline font-bold flex items-center gap-3">
                 <Zap className="h-6 w-6 text-primary fill-primary" />
-                Top 3 Things to Address
+                Top Strategic Moves
               </CardTitle>
-              <CardDescription className="text-slate-400 mt-1">Stabilize the Hartmann legacy through immediate council action.</CardDescription>
+              <CardDescription className="text-slate-400 mt-1">Direct council actions to stabilize the Hartmann legacy.</CardDescription>
             </div>
             <Link href="/chart-room">
               <Button className="bg-primary hover:bg-primary/90 text-white border-none px-6 rounded-xl shadow-lg h-11 text-[11px] font-bold uppercase tracking-widest">
-                Launch Chart Room <ArrowRight className="ml-2 h-4 w-4" />
+                Chart Room <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
           </div>
@@ -288,18 +288,18 @@ export default function BridgeHub() {
         <CardContent className="p-0">
           <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-white/10">
             {[
-              { title: "Reduce RE Concentration", desc: "Rebalance 8% of industrial holdings into liquid ESG technology to neutralize risk.", icon: Home, link: "/chart-room" },
-              { title: "Plan Inheritance Inflow", desc: "Structure the upcoming €8.4M G1 settlement into G2/G3 trust for tax efficiency.", icon: Landmark, link: "/heritage-timeline" },
-              { title: "Secure G3 Housing", desc: "Execute the Sophie London mandate using idle tactical reserves to protect capital.", icon: MapPin, link: "/simulator" },
+              { title: "Reduce RE Concentration", desc: "Rebalance industrial holdings into liquid growth technology.", icon: Home, link: "/chart-room" },
+              { title: "Plan Inheritance Inflow", desc: "Structure the upcoming settlement for generational tax efficiency.", icon: Landmark, link: "/heritage-timeline" },
+              { title: "Secure G3 Mandate", desc: "Execute the primary relocation strategy using idle tactical reserves.", icon: MapPin, link: "/simulator" },
             ].map((action, i) => (
               <Link href={action.link} key={i} className="group p-8 hover:bg-white/[0.03] transition-colors cursor-pointer block">
-                <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-all border border-white/10 group-hover:border-primary/40">
+                <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center mb-6 border border-white/10 group-hover:border-primary/40 transition-all">
                   <action.icon className="h-5 w-5 text-primary" />
                 </div>
                 <h4 className="font-bold text-lg mb-2 group-hover:text-primary transition-colors">{action.title}</h4>
                 <p className="text-sm text-slate-400 leading-relaxed">{action.desc}</p>
                 <div className="mt-6 flex items-center text-[10px] font-bold uppercase tracking-widest text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                  Start Workflow <ArrowRight className="ml-2 h-3 w-3" />
+                  View Track <ArrowRight className="ml-2 h-3 w-3" />
                 </div>
               </Link>
             ))}
@@ -307,18 +307,18 @@ export default function BridgeHub() {
         </CardContent>
       </Card>
 
-      {/* Portfolio Visualization */}
-      <div className="space-y-6">
-        <div className="flex items-center gap-2">
+      {/* Portfolio Breakdown Section */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-2 px-1">
           <BarChart3 className="h-4 w-4 text-primary" />
-          <h2 className="text-xs font-bold uppercase tracking-widest text-white/60">Family Portfolio Breakdown</h2>
+          <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500">Family Portfolio Breakdown</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {PORTFOLIO_BREAKDOWN.map((item) => (
             <TooltipProvider key={item.name}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Card className="glass-panel hover:ring-2 hover:ring-primary/20 transition-all cursor-default overflow-hidden group">
+                  <Card className="border-slate-200 shadow-sm bg-white hover:border-primary/20 transition-all cursor-default overflow-hidden group rounded-2xl">
                     <CardHeader className="pb-2 flex flex-row items-center justify-between">
                       <div className="space-y-1">
                         <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{item.name}</p>
@@ -331,7 +331,7 @@ export default function BridgeHub() {
                     <CardContent className="pt-2">
                       <div className="flex items-center justify-between">
                          <MemberAvatars members={item.members} />
-                         <Badge variant="ghost" className="text-[9px] text-slate-400 font-bold uppercase opacity-0 group-hover:opacity-100 transition-opacity">View Detail</Badge>
+                         <span className="text-[9px] text-slate-400 font-bold uppercase opacity-0 group-hover:opacity-100 transition-opacity">Details</span>
                       </div>
                       <div className="mt-4 flex gap-1 h-1 w-full rounded-full overflow-hidden bg-slate-100">
                          {item.contributions.map((c, i) => (
@@ -346,8 +346,8 @@ export default function BridgeHub() {
                   </Card>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="p-4 bg-white border-slate-200 shadow-2xl rounded-2xl min-w-[200px] z-[100]">
-                  <div className="space-y-3">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">{item.name} Contribution</p>
+                  <div className="space-y-3 text-slate-900">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">{item.name} Split</p>
                     {item.contributions.map((c, i) => (
                       <div key={i} className="flex items-center justify-between gap-4">
                         <div className="flex items-center gap-2">
@@ -363,22 +363,22 @@ export default function BridgeHub() {
             </TooltipProvider>
           ))}
         </div>
-      </div>
+      </section>
 
       {/* Ledger Section */}
       <Tabs defaultValue="linked" className="space-y-6">
-        <div className="flex items-center justify-between border-b border-white/10 pb-4">
-          <TabsList className="bg-white/10 p-1 rounded-xl">
-            <TabsTrigger value="linked" className="data-[state=active]:bg-white data-[state=active]:text-slate-900 text-[10px] font-bold uppercase px-6">
+        <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+          <TabsList className="bg-slate-100 p-1 rounded-xl">
+            <TabsTrigger value="linked" className="data-[state=active]:bg-white data-[state=active]:text-slate-900 text-[10px] font-bold uppercase px-6 shadow-none">
               Financial Ledger
             </TabsTrigger>
-            <TabsTrigger value="physical" className="data-[state=active]:bg-white data-[state=active]:text-slate-900 text-[10px] font-bold uppercase px-6">
+            <TabsTrigger value="physical" className="data-[state=active]:bg-white data-[state=active]:text-slate-900 text-[10px] font-bold uppercase px-6 shadow-none">
               Generational Assets
             </TabsTrigger>
           </TabsList>
           
           <div className="flex gap-2">
-             <Button variant="outline" size="sm" className="rounded-xl border-white/10 bg-white/5 text-white h-10 px-4 text-[10px] uppercase font-bold tracking-widest">
+             <Button variant="outline" size="sm" className="rounded-xl border-slate-200 bg-white text-slate-600 h-10 px-4 text-[10px] uppercase font-bold tracking-widest">
               <LinkIcon className="mr-2 h-4 w-4" /> Link API
             </Button>
             <Button size="sm" className="rounded-xl shadow-lg h-10 px-6 text-[10px] uppercase font-bold tracking-widest">
@@ -388,12 +388,12 @@ export default function BridgeHub() {
         </div>
 
         <TabsContent value="linked">
-          <Card className="glass-panel overflow-hidden">
+          <Card className="border-slate-200 shadow-sm bg-white overflow-hidden rounded-2xl">
             <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-8">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-lg">Ledger Integration</CardTitle>
-                  <CardDescription>Real-time banking feeds and private trust holdings.</CardDescription>
+                  <CardTitle className="text-lg text-slate-900">Ledger Integration</CardTitle>
+                  <CardDescription>Real-time banking feeds and private holdings.</CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
                   <RefreshCw className="h-3.5 w-3.5 text-slate-400" />
@@ -444,7 +444,7 @@ export default function BridgeHub() {
         <TabsContent value="physical">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {manualAssets.map((asset: any) => (
-              <Card key={asset.id} className="glass-panel hover:ring-2 hover:ring-primary/20 transition-all group rounded-2xl overflow-hidden">
+              <Card key={asset.id} className="border-slate-200 shadow-sm bg-white hover:border-primary/20 transition-all group rounded-2xl overflow-hidden">
                 <CardHeader className="pb-2 px-6 pt-6">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
@@ -468,10 +468,6 @@ export default function BridgeHub() {
                   <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
                     <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em]">Latest Appraisal</p>
                     <p className="text-3xl font-headline font-bold text-slate-900">€{asset.appraisalValue?.toLocaleString()}</p>
-                    <div className="flex items-center gap-2 text-[10px] text-slate-400 mt-2">
-                      <Calendar className="h-3.5 w-3.5" />
-                      <span>{asset.appraisalDate}</span>
-                    </div>
                   </div>
                   <div className="flex items-center justify-between pt-4 border-t border-slate-100">
                     <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
