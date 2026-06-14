@@ -29,7 +29,6 @@ import {
   Palmtree,
   Gem,
   FileText,
-  Calendar,
   Layers,
   BarChart3
 } from "lucide-react";
@@ -39,7 +38,6 @@ import {
   Cell, 
   ResponsiveContainer, 
 } from "recharts";
-import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
@@ -124,7 +122,7 @@ export default function BridgeHub() {
 
   const filteredAccounts = useMemo(() => {
     if (viewMode === 'individual') {
-      return HARTMANN_ACCOUNTS.filter(acc => acc.owner === 'Markus');
+      return HARTMANN_ACCOUNTS.filter(acc => acc.owner === 'Markus' || acc.breakdown?.some(b => b.member === 'Markus'));
     }
     return HARTMANN_ACCOUNTS;
   }, [viewMode]);
@@ -177,11 +175,11 @@ export default function BridgeHub() {
 
   return (
     <div className="space-y-10 max-w-7xl mx-auto pb-32 animate-in fade-in duration-500">
-      {/* Header Advisor Topline */}
+      {/* Header Topline */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-slate-200 pb-10">
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-widest border-primary/40 text-primary bg-primary/10">Heritage Hub</Badge>
+            <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-widest border-primary/40 text-primary bg-primary/10 px-3">Heritage Hub</Badge>
             <span className="text-slate-300">|</span>
             <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Protocol: Hartmann-Global</span>
           </div>
@@ -231,7 +229,7 @@ export default function BridgeHub() {
 
           <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)} className="bg-slate-100 p-1 rounded-xl">
             <TabsList className="bg-transparent">
-              <TabsTrigger value="individual" className="text-[10px] font-bold uppercase data-[state=active]:bg-white data-[state=active]:text-slate-900 shadow-none"><User className="mr-2 h-3.5 w-3.5" /> Markus</TabsTrigger>
+              <TabsTrigger value="individual" className="text-[10px] font-bold uppercase data-[state=active]:bg-white data-[state=active]:text-slate-900 shadow-none"><User className="mr-2 h-3.5 w-3.5" /> Individual</TabsTrigger>
               <TabsTrigger value="aggregated" className="text-[10px] font-bold uppercase data-[state=active]:bg-white data-[state=active]:text-slate-900 shadow-none"><Users className="mr-2 h-3.5 w-3.5" /> Aggregated</TabsTrigger>
             </TabsList>
           </Tabs>
@@ -274,13 +272,13 @@ export default function BridgeHub() {
             <div>
               <CardTitle className="text-2xl font-headline font-bold flex items-center gap-3">
                 <Zap className="h-6 w-6 text-primary fill-primary" />
-                Top Strategic Moves
+                Strategic Council Tracks
               </CardTitle>
-              <CardDescription className="text-slate-400 mt-1">Direct council actions to stabilize the Hartmann legacy.</CardDescription>
+              <CardDescription className="text-slate-400 mt-1">Direct board actions to stabilize the Hartmann legacy.</CardDescription>
             </div>
             <Link href="/chart-room">
               <Button className="bg-primary hover:bg-primary/90 text-white border-none px-6 rounded-xl shadow-lg h-11 text-[11px] font-bold uppercase tracking-widest">
-                Chart Room <ArrowRight className="ml-2 h-4 w-4" />
+                Enter Chart Room <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
           </div>
@@ -299,7 +297,7 @@ export default function BridgeHub() {
                 <h4 className="font-bold text-lg mb-2 group-hover:text-primary transition-colors">{action.title}</h4>
                 <p className="text-sm text-slate-400 leading-relaxed">{action.desc}</p>
                 <div className="mt-6 flex items-center text-[10px] font-bold uppercase tracking-widest text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                  View Track <ArrowRight className="ml-2 h-3 w-3" />
+                  Open Action Track <ArrowRight className="ml-2 h-3 w-3" />
                 </div>
               </Link>
             ))}
@@ -311,7 +309,7 @@ export default function BridgeHub() {
       <section className="space-y-6">
         <div className="flex items-center gap-2 px-1">
           <BarChart3 className="h-4 w-4 text-primary" />
-          <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500">Family Portfolio Breakdown</h2>
+          <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500">Capital Segmentation</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {PORTFOLIO_BREAKDOWN.map((item) => (
@@ -331,7 +329,6 @@ export default function BridgeHub() {
                     <CardContent className="pt-2">
                       <div className="flex items-center justify-between">
                          <MemberAvatars members={item.members} />
-                         <span className="text-[9px] text-slate-400 font-bold uppercase opacity-0 group-hover:opacity-100 transition-opacity">Details</span>
                       </div>
                       <div className="mt-4 flex gap-1 h-1 w-full rounded-full overflow-hidden bg-slate-100">
                          {item.contributions.map((c, i) => (
@@ -347,7 +344,7 @@ export default function BridgeHub() {
                 </TooltipTrigger>
                 <TooltipContent side="top" className="p-4 bg-white border-slate-200 shadow-2xl rounded-2xl min-w-[200px] z-[100]">
                   <div className="space-y-3 text-slate-900">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">{item.name} Split</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">{item.name} Allocation</p>
                     {item.contributions.map((c, i) => (
                       <div key={i} className="flex items-center justify-between gap-4">
                         <div className="flex items-center gap-2">
@@ -367,7 +364,7 @@ export default function BridgeHub() {
 
       {/* Ledger Section */}
       <Tabs defaultValue="linked" className="space-y-6">
-        <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+        <div className="flex items-center justify-between border-b border-slate-200 pb-4 px-1">
           <TabsList className="bg-slate-100 p-1 rounded-xl">
             <TabsTrigger value="linked" className="data-[state=active]:bg-white data-[state=active]:text-slate-900 text-[10px] font-bold uppercase px-6 shadow-none">
               Financial Ledger
@@ -379,7 +376,7 @@ export default function BridgeHub() {
           
           <div className="flex gap-2">
              <Button variant="outline" size="sm" className="rounded-xl border-slate-200 bg-white text-slate-600 h-10 px-4 text-[10px] uppercase font-bold tracking-widest">
-              <LinkIcon className="mr-2 h-4 w-4" /> Link API
+              <LinkIcon className="mr-2 h-4 w-4" /> Sync API
             </Button>
             <Button size="sm" className="rounded-xl shadow-lg h-10 px-6 text-[10px] uppercase font-bold tracking-widest">
               <Plus className="mr-2 h-4 w-4" /> Register Asset
@@ -392,8 +389,8 @@ export default function BridgeHub() {
             <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-8">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-lg text-slate-900">Ledger Integration</CardTitle>
-                  <CardDescription>Real-time banking feeds and private holdings.</CardDescription>
+                  <CardTitle className="text-lg text-slate-900">Institutional Feed</CardTitle>
+                  <CardDescription>Live banking and private wealth integrations.</CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
                   <RefreshCw className="h-3.5 w-3.5 text-slate-400" />
@@ -408,7 +405,7 @@ export default function BridgeHub() {
                     <TableHead className="text-slate-400 font-bold uppercase text-[10px] tracking-widest pl-8 py-5">Account</TableHead>
                     <TableHead className="text-slate-400 font-bold uppercase text-[10px] tracking-widest py-5">Institution</TableHead>
                     <TableHead className="text-slate-400 font-bold uppercase text-[10px] tracking-widest py-5">Status</TableHead>
-                    <TableHead className="text-right text-slate-400 font-bold uppercase text-[10px] tracking-widest pr-8 py-5">Balance</TableHead>
+                    <TableHead className="text-right text-slate-400 font-bold uppercase text-[10px] tracking-widest pr-8 py-5">Current Balance</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -442,46 +439,53 @@ export default function BridgeHub() {
         </TabsContent>
 
         <TabsContent value="physical">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {manualAssets.map((asset: any) => (
-              <Card key={asset.id} className="border-slate-200 shadow-sm bg-white hover:border-primary/20 transition-all group rounded-2xl overflow-hidden">
-                <CardHeader className="pb-2 px-6 pt-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="bg-primary/5 border-primary/20 text-primary text-[9px] font-bold uppercase px-3 py-1">
-                        {asset.type}
-                      </Badge>
-                      {viewMode === 'aggregated' && <MemberIndicators members={asset.breakdown?.map((b: any) => b.member) || ["Markus"]} />}
+          {manualAssets.length === 0 ? (
+            <div className="py-20 flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50/50">
+              <Home className="h-10 w-10 text-slate-300 mb-4" />
+              <p className="text-sm font-medium text-slate-500">No physical assets registered.</p>
+              <Button variant="link" className="text-primary text-xs font-bold uppercase tracking-widest mt-2">Add First Asset</Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {manualAssets.map((asset: any) => (
+                <Card key={asset.id} className="border-slate-200 shadow-sm bg-white hover:border-primary/20 transition-all group rounded-2xl overflow-hidden">
+                  <CardHeader className="pb-2 px-6 pt-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="bg-primary/5 border-primary/20 text-primary text-[9px] font-bold uppercase px-3 py-1">
+                          {asset.type}
+                        </Badge>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-slate-50 group-hover:bg-primary/5 transition-colors border border-slate-100">
+                        {asset.type === 'Real Estate' ? <Home className="h-5 w-5 text-slate-500 group-hover:text-primary" /> : 
+                        asset.type === 'Art' ? <Palmtree className="h-5 w-5 text-slate-500 group-hover:text-primary" /> : <Gem className="h-5 w-5 text-slate-500 group-hover:text-primary" />}
+                      </div>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-slate-50 group-hover:bg-primary/5 transition-colors border border-slate-100">
-                      {asset.type === 'Real Estate' ? <Home className="h-5 w-5 text-slate-500 group-hover:text-primary" /> : 
-                       asset.type === 'Art' ? <Palmtree className="h-5 w-5 text-slate-500 group-hover:text-primary" /> : <Gem className="h-5 w-5 text-slate-500 group-hover:text-primary" />}
+                    <CardTitle className="text-xl group-hover:text-primary transition-colors font-headline font-bold text-slate-900">{asset.name}</CardTitle>
+                    <div className="flex items-center gap-2 text-slate-400 mt-1">
+                      <MapPin className="h-3.5 w-3.5" />
+                      <span className="text-[10px] uppercase font-bold tracking-widest">{asset.location}</span>
                     </div>
-                  </div>
-                  <CardTitle className="text-xl group-hover:text-primary transition-colors font-headline font-bold text-slate-900">{asset.name}</CardTitle>
-                  <div className="flex items-center gap-2 text-slate-400 mt-1">
-                    <MapPin className="h-3.5 w-3.5" />
-                    <span className="text-[10px] uppercase font-bold tracking-widest">{asset.location}</span>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-6 px-6 pb-6">
-                  <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
-                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em]">Latest Appraisal</p>
-                    <p className="text-3xl font-headline font-bold text-slate-900">€{asset.appraisalValue?.toLocaleString()}</p>
-                  </div>
-                  <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-                    <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                      <FileText className="h-4 w-4" />
-                      <span>{asset.documentCount} Doc(s)</span>
+                  </CardHeader>
+                  <CardContent className="space-y-6 px-6 pb-6">
+                    <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
+                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em]">Latest Valuation</p>
+                      <p className="text-3xl font-headline font-bold text-slate-900">€{asset.appraisalValue?.toLocaleString()}</p>
                     </div>
-                    <Button variant="ghost" size="sm" className="h-8 text-[10px] font-bold uppercase tracking-widest group-hover:text-primary rounded-xl">
-                      Manage
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                    <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                      <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                        <FileText className="h-4 w-4" />
+                        <span>{asset.documentCount || 0} Doc(s)</span>
+                      </div>
+                      <Button variant="ghost" size="sm" className="h-8 text-[10px] font-bold uppercase tracking-widest group-hover:text-primary rounded-xl">
+                        View Records
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </div>

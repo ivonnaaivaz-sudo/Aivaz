@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useUser, useDoc, useCollection, useFirestore } from "@/firebase";
@@ -40,7 +41,7 @@ const HARTMANN_TIMELINE = [
   { id: "h-2", title: "Singapore Pivot", date: "2008", type: "vision", status: "completed" },
   { id: "h-3", title: "Trust Setup", date: "2024", type: "succession", status: "completed" },
   { id: "h-4", title: "Governance", date: "2026", type: "succession", status: "in-progress" },
-  { id: "h-5", title: "Foundation", date: "2027", type: "philanthropy", status: "target" }
+  { id: "h-5", title: "Legacy Target", date: "2027", type: "philanthropy", status: "target" }
 ];
 
 export default function DashboardPage() {
@@ -78,7 +79,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-12 max-w-7xl mx-auto pb-32">
       {/* Welcome Header with Image */}
-      <div className="relative overflow-hidden rounded-3xl border border-slate-200 shadow-lg min-h-[300px] flex items-end">
+      <div className="relative overflow-hidden rounded-3xl border border-slate-200 shadow-lg min-h-[350px] flex items-end">
         {heroImage && (
           <Image 
             src={heroImage.imageUrl}
@@ -89,7 +90,7 @@ export default function DashboardPage() {
             data-ai-hint="heritage family"
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/40 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent" />
         
         <div className="relative z-10 w-full p-10 flex flex-col md:flex-row md:items-end justify-between gap-8">
           <div className="space-y-4">
@@ -97,7 +98,7 @@ export default function DashboardPage() {
               <div className="w-8 h-8 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center">
                 <ShieldCheck className="h-4 w-4 text-white" />
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/90">Identity Secure</span>
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/90">Heritage Node Secure</span>
             </div>
             
             <div className="space-y-1">
@@ -111,11 +112,11 @@ export default function DashboardPage() {
           </div>
 
           <div className="flex gap-4">
-            <div className="px-5 py-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-center min-w-[100px]">
+            <div className="px-5 py-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-center min-w-[120px]">
               <p className="text-[8px] text-white/70 uppercase font-bold tracking-widest mb-1">AUM Sync</p>
               <p className="text-xl font-headline font-bold text-white tracking-tighter">€380M</p>
             </div>
-            <div className="px-5 py-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-center min-w-[100px]">
+            <div className="px-5 py-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-center min-w-[120px]">
               <p className="text-[8px] text-white/70 uppercase font-bold tracking-widest mb-1">Alignment</p>
               <p className="text-xl font-headline font-bold text-emerald-400 tracking-tighter">84.2%</p>
             </div>
@@ -130,21 +131,20 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between px-1">
               <div className="flex items-center gap-2">
                 <History className="h-4 w-4 text-primary" />
-                <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500">Journey Progress</h2>
+                <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500">Generational Trajectory</h2>
               </div>
               <Link href="/heritage-timeline">
-                <Button variant="ghost" size="sm" className="text-[10px] font-bold uppercase tracking-widest h-7">View Full <ChevronRight className="ml-1 h-3 w-3" /></Button>
+                <Button variant="ghost" size="sm" className="text-[10px] font-bold uppercase tracking-widest h-7">Full Archive <ChevronRight className="ml-1 h-3 w-3" /></Button>
               </Link>
             </div>
-            <Card className="border-slate-200 shadow-sm bg-white rounded-3xl overflow-hidden">
+            <Card className="glass-panel border-white/5 shadow-sm bg-white rounded-3xl overflow-hidden">
               <CardContent className="p-8">
                 <ScrollArea className="w-full pb-4">
                   <div className="flex relative">
-                    {/* Visual Line */}
                     <div className="absolute top-[23px] left-4 right-4 h-0.5 bg-slate-100" />
-                    <div className="flex gap-4 min-w-full">
+                    <div className="flex gap-8 min-w-full">
                       {timelineEvents.map((event: any, i: number) => (
-                        <div key={i} className="flex flex-col gap-2 min-w-[140px] relative z-10 group">
+                        <div key={i} className="flex flex-col gap-2 min-w-[150px] relative z-10 group">
                           <div className={cn(
                             "text-[8px] font-bold uppercase tracking-widest mb-1",
                             event.status === 'completed' ? 'text-primary' : event.status === 'in-progress' ? 'text-amber-500' : 'text-slate-400'
@@ -178,7 +178,7 @@ export default function DashboardPage() {
           <section className="space-y-4">
             <div className="flex items-center gap-2 px-1">
               <Compass className="h-4 w-4 text-primary" />
-              <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500">Active Strategic Tracks</h2>
+              <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500">Strategic Council Tracks</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Link href="/chart-room" className="group">
@@ -189,7 +189,7 @@ export default function DashboardPage() {
                     </div>
                     <div>
                       <h3 className="font-bold text-lg text-slate-900">Stress-Test G3 Exposure</h3>
-                      <p className="text-sm text-slate-500 mt-2 leading-relaxed">Simulate a downside scenario on tech-growth holdings to protect core legacy capital.</p>
+                      <p className="text-sm text-slate-500 mt-2 leading-relaxed">Analyze a downside scenario on tech-growth holdings to protect core legacy capital.</p>
                     </div>
                     <div className="flex items-center text-[10px] font-bold text-primary uppercase tracking-widest gap-2 pt-2">
                       Enter Chart Room <ChevronRight className="h-3 w-3" />
@@ -220,25 +220,6 @@ export default function DashboardPage() {
         </div>
 
         <div className="lg:col-span-4 space-y-10">
-          <Card className="border-slate-200 shadow-sm bg-white rounded-3xl overflow-hidden">
-            <CardHeader className="bg-slate-50/50 p-6 border-b border-slate-100">
-              <div className="flex items-center gap-3">
-                <Zap className="h-4 w-4 text-primary" />
-                <CardTitle className="text-xs font-bold uppercase tracking-[0.2em] text-slate-900">AI Intelligence</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent className="p-6 space-y-6">
-              <div className="p-4 rounded-xl bg-primary/5 border border-primary/10">
-                <p className="text-[9px] font-bold text-primary uppercase tracking-widest mb-1">Relational Alert</p>
-                <p className="text-xs font-semibold leading-relaxed text-slate-700">12% Alignment gap detected: Risk tolerance variance between generations.</p>
-              </div>
-              <div className="p-4 rounded-xl bg-amber-500/[0.03] border border-amber-500/10">
-                <p className="text-[9px] font-bold text-amber-600 uppercase tracking-widest mb-1">Capital Efficiency</p>
-                <p className="text-xs font-semibold leading-relaxed text-slate-700">€42M Cash idle in the MS Trust. Opportunity cost detected.</p>
-              </div>
-            </CardContent>
-          </Card>
-
           <Card className="border-none shadow-xl bg-slate-900 text-white rounded-3xl overflow-hidden">
             <CardHeader className="p-6 pb-2">
               <CardTitle className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Total Heritage Pulse</CardTitle>
@@ -253,7 +234,7 @@ export default function DashboardPage() {
               </div>
               <div>
                 <Link href="/bridge">
-                  <Button className="w-full bg-white text-slate-900 hover:bg-slate-200 text-[10px] font-bold uppercase tracking-widest rounded-xl h-11">
+                  <Button className="w-full bg-white text-slate-900 hover:bg-slate-200 text-[10px] font-bold uppercase tracking-widest rounded-xl h-11 shadow-lg">
                     Manage Portfolio Axis
                   </Button>
                 </Link>
@@ -271,18 +252,18 @@ export default function DashboardPage() {
                 </Avatar>
                 <div>
                   <CardTitle className="text-xs font-bold uppercase tracking-[0.2em] text-slate-900">Talk to the Captain</CardTitle>
-                  <p className="text-[9px] text-muted-foreground font-bold uppercase mt-0.5">Always Online • Strategic Advisor</p>
+                  <p className="text-[9px] text-muted-foreground font-bold uppercase mt-0.5">Strategic Advisor Active</p>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="p-6 space-y-4">
               <p className="text-xs text-slate-600 italic leading-relaxed font-medium">
-                Anything on your mind today, {firstName}? Share your thoughts to update our strategy.
+                Anything on your mind today, {firstName}? Share a thought to update our legacy strategy.
               </p>
               <div className="space-y-3">
                 <Textarea 
                   placeholder="Share a vision, worry, or new goal..."
-                  className="bg-slate-50 border-slate-100 min-h-[80px] resize-none focus-visible:ring-primary/20 rounded-xl text-xs"
+                  className="bg-slate-50 border-slate-100 min-h-[100px] resize-none focus-visible:ring-primary/20 rounded-xl text-xs"
                   value={captainInput}
                   onChange={(e) => setCaptainInput(e.target.value)}
                 />
@@ -293,6 +274,25 @@ export default function DashboardPage() {
                 >
                   Discuss with Aivaz <ChevronRight className="ml-2 h-4 w-4" />
                 </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-slate-200 shadow-sm bg-white rounded-3xl overflow-hidden">
+            <CardHeader className="bg-slate-50/50 p-6 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <Zap className="h-4 w-4 text-primary" />
+                <CardTitle className="text-xs font-bold uppercase tracking-[0.2em] text-slate-900">AI Intelligence</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="p-6 space-y-6">
+              <div className="p-4 rounded-xl bg-primary/5 border border-primary/10">
+                <p className="text-[9px] font-bold text-primary uppercase tracking-widest mb-1">Relational Alert</p>
+                <p className="text-xs font-semibold leading-relaxed text-slate-700">12% Alignment gap: Risk tolerance variance between G1 and G3.</p>
+              </div>
+              <div className="p-4 rounded-xl bg-amber-500/[0.03] border border-amber-500/10">
+                <p className="text-[9px] font-bold text-amber-600 uppercase tracking-widest mb-1">Capital Efficiency</p>
+                <p className="text-xs font-semibold leading-relaxed text-slate-700">€42M Cash idle in MS Trust. Opportunity cost identified.</p>
               </div>
             </CardContent>
           </Card>

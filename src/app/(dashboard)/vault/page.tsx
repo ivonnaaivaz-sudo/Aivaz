@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -8,20 +9,15 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { 
   Shield, 
-  Search, 
   FileText, 
   Lock, 
-  MoreHorizontal, 
   Download, 
   Upload, 
-  Grid, 
-  List, 
   FolderPlus,
   Gavel,
   Anchor,
   Scale,
   Scroll,
-  Edit3,
   BarChart3,
   FileSpreadsheet,
   Activity,
@@ -164,34 +160,32 @@ export default function VaultPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="p-6">
-                  <div className="flex flex-col md:flex-row items-end gap-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 w-full">
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">From Date</label>
-                        <div className="relative">
-                          <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                          <Input 
-                            type="date" 
-                            value={dateFrom} 
-                            onChange={(e) => setDateFrom(e.target.value)}
-                            className="bg-white/5 border-white/10 text-white pl-10 focus:ring-primary/40 rounded-xl h-10 text-sm" 
-                          />
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">To Date</label>
-                        <div className="relative">
-                          <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                          <Input 
-                            type="date" 
-                            value={dateTo} 
-                            onChange={(e) => setDateTo(e.target.value)}
-                            className="bg-white/5 border-white/10 text-white pl-10 focus:ring-primary/40 rounded-xl h-10 text-sm" 
-                          />
-                        </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">From Date</label>
+                      <div className="relative">
+                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                        <Input 
+                          type="date" 
+                          value={dateFrom} 
+                          onChange={(e) => setDateFrom(e.target.value)}
+                          className="bg-white/5 border-white/10 text-white pl-10 focus:ring-primary/40 rounded-xl h-10 text-sm w-full" 
+                        />
                       </div>
                     </div>
-                    <Button onClick={handleDownloadReasoning} className="bg-primary hover:bg-primary/90 text-white px-8 rounded-xl h-10 shadow-lg font-bold text-[10px] uppercase tracking-widest w-full md:w-auto shrink-0">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">To Date</label>
+                      <div className="relative">
+                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                        <Input 
+                          type="date" 
+                          value={dateTo} 
+                          onChange={(e) => setDateTo(e.target.value)}
+                          className="bg-white/5 border-white/10 text-white pl-10 focus:ring-primary/40 rounded-xl h-10 text-sm w-full" 
+                        />
+                      </div>
+                    </div>
+                    <Button onClick={handleDownloadReasoning} className="bg-primary hover:bg-primary/90 text-white px-8 rounded-xl h-10 shadow-lg font-bold text-[10px] uppercase tracking-widest w-full shrink-0">
                       <Download className="mr-2 h-4 w-4" /> Package Logic
                     </Button>
                   </div>
@@ -208,7 +202,7 @@ export default function VaultPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {[
-                    { label: "Portfolio Risk (VaR)", val: "€11.2M", desc: "Estimated monthly potential drawdown." },
+                    { label: "Portfolio Risk (VaR)", val: "€11.2M", desc: "Estimated monthly drawdown risk." },
                     { label: "Stability Index", val: "0.82", desc: "Low correlation to global volatility." },
                   ].map((stat, i) => (
                     <div key={i} className="p-3 rounded-xl bg-slate-50 border border-slate-100 space-y-1">
@@ -263,11 +257,11 @@ export default function VaultPage() {
           <Shield className="h-6 w-6 text-primary" />
         </div>
         <div className="flex-1">
-          <p className="text-sm font-bold text-slate-900">Immutable Charter Protocol Active</p>
-          <p className="text-xs text-slate-500 mt-1">These files serve as the source of truth for the Hartmann engine and governance audits.</p>
+          <p className="text-sm font-bold text-slate-900">Charter Integrity Active</p>
+          <p className="text-xs text-slate-500 mt-1">Immutable records serving as the single source of truth for the Hartmann council.</p>
         </div>
         <Button variant="outline" size="sm" className="bg-white border-slate-200 text-[10px] font-bold uppercase tracking-widest hover:text-primary hover:border-primary/30 transition-all rounded-xl h-11 px-8 shadow-sm">
-          Audit History
+          Audit Ledger
         </Button>
       </div>
     </div>

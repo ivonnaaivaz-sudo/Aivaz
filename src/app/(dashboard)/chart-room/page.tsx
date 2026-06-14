@@ -24,7 +24,6 @@ import {
   ShieldAlert,
   Plus,
   TrendingUp,
-  Info,
   ChevronDown,
   LayoutGrid,
   Users,
@@ -78,7 +77,7 @@ const INITIAL_INPUTS: InputItem[] = [
   { id: 'o-2', type: 'opportunity', title: 'Industrial Dividends', value: 3200000, description: 'Surplus distribution from business operations.', relatedMembers: ['Markus', 'Elena'] },
   { id: 'n-1', type: 'need', title: 'Sophie London Residence', value: 6000000, description: 'Primary relocation and housing mandate.', relatedMembers: ['Sophie'] },
   { id: 'n-2', type: 'need', title: 'Next Gen Venture Fund', value: 4500000, description: 'Early-stage tech allocation for growth.', relatedMembers: ['Alexander'] },
-  { id: 'b-1', type: 'blindspot', title: 'Upcoming Tax Risk', description: 'Detected €8.4M potential tax bill in transition path.', severity: 'Critical', relatedMembers: ['Markus', 'Sophie'] },
+  { id: 'b-1', type: 'blindspot', title: 'Future Tax Risk', description: 'Detected €8.4M potential tax bill in transition path.', severity: 'Critical', relatedMembers: ['Markus', 'Sophie'] },
   { id: 'b-2', type: 'blindspot', title: 'Property Concentration', description: 'Real estate represents 55% of the total legacy.', severity: 'High', relatedMembers: ['Markus', 'Alexander'] },
 ];
 
@@ -129,7 +128,7 @@ export default function StrategicPairingsPage() {
   const { toast } = useToast();
   const { data: profile } = useDoc(user ? `users/${user.uid}` : null);
   
-  const [inputs] = useState<InputItem[]>(INITIAL_INPUTS);
+  const [inputs, setInputs] = useState<InputItem[]>(INITIAL_INPUTS);
   const [activePairingId, setActivePairingId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -194,9 +193,16 @@ export default function StrategicPairingsPage() {
       setActivePairingId(matchingPairing.id);
       toast({
         title: "AI Strategy Drafted",
-        description: `Drafting "${matchingPairing.title}" to neutralizing the alert.`,
+        description: `Drafting "${matchingPairing.title}" to neutralize the alert.`,
       });
     }
+  };
+
+  const registerNewInput = () => {
+    toast({
+      title: "Input Terminal Active",
+      description: "Ready to register manual opportunity or liability data.",
+    });
   };
 
   return (
@@ -207,7 +213,7 @@ export default function StrategicPairingsPage() {
             <ShieldCheck className="h-4 w-4 text-primary" />
             <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary">Strategic Pairings Engine</span>
           </div>
-          <Badge variant="outline" className="text-[8px] border-primary/20 text-primary uppercase">Protocol Access: {userRole}</Badge>
+          <Badge variant="outline" className="text-[8px] border-primary/20 text-primary uppercase">Protocol: {userRole}</Badge>
         </div>
         <Button 
           disabled={!activePairing || isSubmitting}
@@ -220,9 +226,14 @@ export default function StrategicPairingsPage() {
 
       <div className="flex-1 overflow-hidden flex">
         <aside className="w-80 border-r border-slate-200 bg-white flex flex-col shrink-0 shadow-sm">
-          <div className="p-6 border-b border-slate-200">
-            <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-900 mb-1">Inputs</h2>
-            <p className="text-[10px] text-muted-foreground italic">Legacy data points.</p>
+          <div className="p-6 border-b border-slate-200 flex items-center justify-between">
+            <div>
+              <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-900 mb-1">Inputs</h2>
+              <p className="text-[10px] text-muted-foreground italic">Legacy data points.</p>
+            </div>
+            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={registerNewInput}>
+              <Plus className="h-4 w-4" />
+            </Button>
           </div>
           
           <div className="flex-1 overflow-y-auto p-4 space-y-8 pb-20">
@@ -290,8 +301,8 @@ export default function StrategicPairingsPage() {
               <div className="flex items-center gap-3">
                 <Sparkles className="h-6 w-6 text-primary" />
                 <div>
-                  <h1 className="text-2xl font-headline font-bold text-slate-900">Strategic Balancing</h1>
-                  <p className="text-xs text-muted-foreground italic">Matching capital opportunities with legacy risks and family needs.</p>
+                  <h1 className="text-2xl font-headline font-bold text-slate-900">Capital Balancing</h1>
+                  <p className="text-xs text-muted-foreground italic">Matching strategic opportunities with legacy risks and family needs.</p>
                 </div>
               </div>
               <Badge className="bg-primary/10 text-primary border-primary/20 uppercase tracking-widest text-[9px] py-1 px-3">
@@ -306,44 +317,44 @@ export default function StrategicPairingsPage() {
                 <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Drafting Canvas</h3>
               </div>
               
-              <div className="p-8 rounded-3xl border-2 border-dashed border-slate-200 bg-white space-y-8 shadow-inner min-h-[300px]">
+              <div className="p-8 rounded-3xl border-2 border-dashed border-slate-200 bg-white space-y-8 shadow-inner min-h-[350px] flex flex-col justify-center">
                 {activePairing ? (
-                  <>
+                  <div className="animate-in fade-in duration-500">
                     <div className="space-y-4">
-                      <p className="text-[9px] font-bold uppercase text-emerald-600 text-center tracking-widest">Inflows (Capital Matching)</p>
+                      <p className="text-[9px] font-bold uppercase text-emerald-600 text-center tracking-widest">Strategic Inflows</p>
                       <div className="flex flex-wrap justify-center gap-3">
                         {activePairing.components.opportunities.map(id => (
-                          <div key={id} className="px-4 py-2 rounded-xl bg-emerald-50 border border-emerald-100 text-[10px] font-bold text-emerald-700 flex items-center gap-2 animate-in zoom-in-95">
+                          <div key={id} className="px-4 py-3 rounded-2xl bg-emerald-50 border border-emerald-100 text-[10px] font-bold text-emerald-700 flex items-center gap-2 shadow-sm">
                             <TrendingUp className="h-3 w-3" /> {inputs.find(i => i.id === id)?.title}
                           </div>
                         ))}
                       </div>
                     </div>
 
-                    <div className="flex flex-col items-center gap-2">
+                    <div className="flex flex-col items-center gap-2 my-8">
                       <ArrowDown className="h-5 w-5 text-slate-300 animate-bounce" />
                     </div>
 
                     <div className="space-y-4">
-                      <p className="text-[9px] font-bold uppercase text-amber-600 text-center tracking-widest">Outflows (Actions & Risk Neutralization)</p>
+                      <p className="text-[9px] font-bold uppercase text-amber-600 text-center tracking-widest">Proposed Outflows & Actions</p>
                       <div className="flex flex-wrap justify-center gap-3">
                         {activePairing.components.needs.map(id => (
-                          <div key={id} className="px-4 py-2 rounded-xl bg-amber-50 border border-amber-100 text-[10px] font-bold text-amber-700 flex items-center gap-2 animate-in zoom-in-95">
+                          <div key={id} className="px-4 py-3 rounded-2xl bg-amber-50 border border-amber-100 text-[10px] font-bold text-amber-700 flex items-center gap-2 shadow-sm">
                             <Users className="h-3 w-3" /> {inputs.find(i => i.id === id)?.title}
                           </div>
                         ))}
                         {activePairing.components.blindspots.map(id => (
-                          <div key={id} className="px-4 py-2 rounded-xl bg-red-50 border border-red-100 text-[10px] font-bold text-red-700 flex items-center gap-2 animate-in zoom-in-95">
+                          <div key={id} className="px-4 py-3 rounded-2xl bg-red-50 border border-red-100 text-[10px] font-bold text-red-700 flex items-center gap-2 shadow-sm">
                             <ShieldAlert className="h-3 w-3" /> {inputs.find(i => i.id === id)?.title}
                           </div>
                         ))}
                       </div>
                     </div>
-                  </>
+                  </div>
                 ) : (
                   <div className="py-20 text-center space-y-4 opacity-40">
                     <RefreshCw className="h-8 w-8 mx-auto text-slate-300" />
-                    <p className="text-sm font-medium text-slate-500">Select a plan below to begin balancing.</p>
+                    <p className="text-sm font-medium text-slate-500">Select a ranked plan below or use Solve on an Alert to begin.</p>
                   </div>
                 )}
               </div>
@@ -389,15 +400,15 @@ export default function StrategicPairingsPage() {
                     <Accordion type="single" collapsible className="w-full border-t border-slate-100 pt-4">
                       <AccordionItem value="details" className="border-none">
                         <AccordionTrigger className="text-[10px] font-bold uppercase tracking-widest text-primary hover:no-underline py-2">
-                          View Detailed Diagnostic
+                          View Strategic Diagnostic
                         </AccordionTrigger>
                         <AccordionContent className="pt-6 space-y-8">
                           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                             {[
                               { label: "Net Inflow", val: `+€${(pairing.analysis.liquidityDelta / 1000000).toFixed(1)}M`, color: "text-emerald-600", progress: 85 },
-                              { label: "Risk Solved", val: `${pairing.analysis.riskReduction}%`, color: "text-primary", progress: pairing.analysis.riskReduction },
+                              { label: "Risk Reduction", val: `${pairing.analysis.riskReduction}%`, color: "text-primary", progress: pairing.analysis.riskReduction },
                               { label: "Tax Efficiency", val: `${pairing.analysis.taxEfficiency}%`, color: "text-blue-600", progress: pairing.analysis.taxEfficiency },
-                              { label: "Alignment", val: `${pairing.analysis.familyAlignment}%`, color: "text-purple-600", progress: pairing.analysis.familyAlignment },
+                              { label: "Family Alignment", val: `${pairing.analysis.familyAlignment}%`, color: "text-purple-600", progress: pairing.analysis.familyAlignment },
                             ].map((stat, i) => (
                               <div key={i} className="space-y-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
                                 <p className="text-[9px] font-bold uppercase text-slate-400 tracking-widest">{stat.label}</p>
@@ -409,7 +420,7 @@ export default function StrategicPairingsPage() {
                             ))}
                           </div>
                           <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 italic text-sm text-slate-700">
-                            <strong>Logic:</strong> {pairing.analysis.logic}
+                            <strong>Strategic Logic:</strong> {pairing.analysis.logic}
                           </div>
                         </AccordionContent>
                       </AccordionItem>
@@ -428,7 +439,7 @@ export default function StrategicPairingsPage() {
       )}>
         <div className="flex items-center gap-12">
           <div className="flex flex-col">
-            <p className="text-[9px] font-bold uppercase text-slate-400 mb-1">Active Plan</p>
+            <p className="text-[9px] font-bold uppercase text-slate-400 mb-1">Active Scenario</p>
             <p className="text-sm font-bold flex items-center gap-2 text-primary">
               <Package className="h-4 w-4" /> {activePairing?.title || "None Selected"}
             </p>
@@ -441,7 +452,7 @@ export default function StrategicPairingsPage() {
             disabled={!activePairing || isSubmitting}
             className="h-10 px-8 rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-xl"
           >
-            {isSubmitting ? "Transmitting..." : "Execute Plan"}
+            {isSubmitting ? "Transmitting..." : "Execute Strategic Move"}
           </Button>
         </div>
       </div>
