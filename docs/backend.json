@@ -10,12 +10,25 @@
         "displayName": { "type": "string" },
         "email": { "type": "string" },
         "hasCompletedProfiling": { "type": "boolean" },
+        "familyId": { "type": "string", "description": "Reference to the shared Family document." },
         "role": { "type": "string", "enum": ["Principal", "Co-Principal", "Active Member", "Limited Member", "Advisor/Guest"] },
         "generationalStage": { "type": "string" },
         "onboardingData": { "type": "object" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["uid", "hasCompletedProfiling"]
+    },
+    "Family": {
+      "title": "Family",
+      "description": "Shared family entity for multi-user collaboration.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "inviteCode": { "type": "string" },
+        "members": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "inviteCode", "members"]
     },
     "FamilyDNA": {
       "title": "Family DNA",
@@ -114,6 +127,10 @@
     "/users/{userId}": {
       "schema": "UserProfile",
       "description": "Root user document"
+    },
+    "/families/{familyId}": {
+      "schema": "Family",
+      "description": "Shared family document"
     },
     "/users/{userId}/dna/current": {
       "schema": "FamilyDNA",
