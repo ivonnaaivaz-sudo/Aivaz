@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useUser, useFirestore, useCollection, useDoc } from "@/firebase";
-import { collection, doc, setDoc, query } from "firebase/firestore";
+import { collection, query } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Progress } from "@/components/ui/progress";
 import { 
   Landmark, 
   Plus, 
@@ -20,19 +19,17 @@ import {
   AlertTriangle,
   Globe,
   RefreshCw,
-  TrendingUp,
   Zap,
   ArrowRight,
   ShieldCheck,
   Coins,
   MapPin,
   Home,
-  Gem,
   Palmtree,
+  Gem,
   FileText,
   Calendar,
   Layers,
-  Activity,
   BarChart3
 } from "lucide-react";
 import { 
@@ -54,7 +51,7 @@ const MEMBERS = [
 
 const STRATEGIC_DATA = [
   { name: 'Strategic', value: 76, color: 'hsl(var(--primary))' },
-  { name: 'Tactical', value: 24, color: '#94a3b8' },
+  { name: 'Tactical', value: 24, color: '#CBD5E1' },
 ];
 
 const PORTFOLIO_BREAKDOWN = [
@@ -111,7 +108,6 @@ const HARTMANN_ACCOUNTS = [
 export default function BridgeHub() {
   const { user } = useUser();
   const db = useFirestore();
-  const { toast } = useToast();
   const { data: profile } = useDoc(user ? `users/${user.uid}` : null);
   const [viewMode, setViewMode] = useState<"individual" | "aggregated">("aggregated");
   
@@ -143,7 +139,7 @@ export default function BridgeHub() {
             <TooltipProvider key={name}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div className={cn(dotSize, "rounded-full border border-white", m?.color)} />
+                  <div className={cn(dotSize, "rounded-full border border-white shadow-sm", m?.color)} />
                 </TooltipTrigger>
                 <TooltipContent className="p-1 text-[8px] font-bold uppercase">{name}</TooltipContent>
               </Tooltip>
@@ -164,7 +160,7 @@ export default function BridgeHub() {
             <TooltipProvider key={name}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Avatar className="h-5 w-5 border-2 border-white">
+                  <Avatar className="h-5 w-5 border-2 border-white shadow-sm">
                     <AvatarImage src={m?.avatar} />
                     <AvatarFallback className="text-[6px]">{name[0]}</AvatarFallback>
                   </Avatar>
@@ -179,20 +175,20 @@ export default function BridgeHub() {
   };
 
   return (
-    <div className="space-y-10 max-w-7xl mx-auto pb-32">
+    <div className="space-y-10 max-w-7xl mx-auto pb-32 animate-in fade-in duration-500">
       {/* Header Advisor Topline */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-slate-200 pb-10">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-white/10 pb-10">
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-widest border-primary/20 text-primary bg-primary/5">Aivaz Heritage Hub</Badge>
-            <span className="text-slate-300 opacity-50">|</span>
-            <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Protocol: Hartmann-Global</span>
+            <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-widest border-primary/40 text-primary bg-primary/10">Aivaz Heritage Hub</Badge>
+            <span className="text-white/20">|</span>
+            <span className="text-[10px] text-white/60 font-bold uppercase tracking-widest">Protocol: Hartmann-Global</span>
           </div>
           <div className="space-y-1">
-            <p className="text-sm font-bold text-slate-400 uppercase tracking-[0.2em]">Hartmann Family Total Wealth</p>
+            <p className="text-sm font-bold text-white/40 uppercase tracking-[0.2em]">Hartmann Family Total Wealth</p>
             <div className="flex items-baseline gap-4">
-              <h1 className="text-5xl font-headline font-bold text-slate-900 tracking-tighter">€380M</h1>
-              <span className="text-xl font-headline font-bold text-emerald-500">+4.2% <span className="text-sm opacity-60">this year</span></span>
+              <h1 className="text-5xl font-headline font-bold text-white tracking-tighter">€380M</h1>
+              <span className="text-xl font-headline font-bold text-emerald-400">+4.2% <span className="text-sm opacity-60">this year</span></span>
             </div>
           </div>
         </div>
@@ -217,314 +213,182 @@ export default function BridgeHub() {
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex items-center justify-center">
-                <Layers className="h-4 w-4 text-slate-300" />
+                <Layers className="h-4 w-4 text-white/20" />
               </div>
             </div>
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-primary" />
-                <span className="text-xs font-bold text-slate-700">Strategic (76%)</span>
+                <span className="text-xs font-bold text-white/80">Strategic (76%)</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-slate-400" />
-                <span className="text-xs font-bold text-slate-700">Tactical (24%)</span>
+                <div className="w-2 h-2 rounded-full bg-slate-300" />
+                <span className="text-xs font-bold text-white/80">Tactical (24%)</span>
               </div>
-              <p className="text-[10px] text-muted-foreground italic max-w-[140px]">Balanced for multi-generational stability.</p>
+              <p className="text-[10px] text-white/40 italic max-w-[140px]">Balanced for multi-generational stability.</p>
             </div>
           </div>
 
-          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)} className="bg-slate-100 p-1 rounded-xl">
+          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)} className="bg-white/10 p-1 rounded-xl">
             <TabsList className="bg-transparent">
-              <TabsTrigger value="individual" className="text-[10px] font-bold uppercase data-[state=active]:bg-white"><User className="mr-2 h-3.5 w-3.5" /> Dr. Markus</TabsTrigger>
-              <TabsTrigger value="aggregated" className="text-[10px] font-bold uppercase data-[state=active]:bg-white"><Users className="mr-2 h-3.5 w-3.5" /> Aggregated</TabsTrigger>
+              <TabsTrigger value="individual" className="text-[10px] font-bold uppercase data-[state=active]:bg-white data-[state=active]:text-slate-900"><User className="mr-2 h-3.5 w-3.5" /> Dr. Markus</TabsTrigger>
+              <TabsTrigger value="aggregated" className="text-[10px] font-bold uppercase data-[state=active]:bg-white data-[state=active]:text-slate-900"><Users className="mr-2 h-3.5 w-3.5" /> Aggregated</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
       </div>
 
-      {viewMode === 'aggregated' ? (
-        <div className="space-y-12 animate-in fade-in duration-500">
-          {/* Smart Advisor Insight Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-            <Card className="bg-white border-slate-200 shadow-sm col-span-1 lg:col-span-1">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-red-500 flex items-center gap-2">
-                  <AlertTriangle className="h-3.5 w-3.5" /> Biggest Risk
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <p className="text-xl font-headline font-bold">55%</p>
-                  <MemberIndicators members={["Markus", "Sophie"]} />
-                </div>
-                <p className="text-[10px] font-bold text-slate-900 uppercase">Real Estate Concentration</p>
-                <p className="text-[10px] text-muted-foreground leading-relaxed italic">
-                  "Mostly Markus's industrial properties in Munich + Sophie's Singapore assets. High sensitivity to EU/Asia corridor."
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-white border-slate-200 shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-amber-600 flex items-center gap-2">
-                  <Coins className="h-3.5 w-3.5" /> Liquidity
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <p className="text-xl font-headline font-bold text-amber-600">€42M</p>
-                  <MemberIndicators members={["Markus"]} />
-                </div>
-                <p className="text-[10px] font-bold text-slate-900 uppercase">Cash Sitting Idle (11%)</p>
-                <p className="text-[10px] text-muted-foreground leading-relaxed italic">
-                  "Significant dry powder. Estimated opportunity cost of ~€1.8M/year compared to fixed-income benchmarks."
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-white border-slate-200 shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-primary flex items-center gap-2">
-                  <Zap className="h-3.5 w-3.5" /> Generational
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <p className="text-xl font-headline font-bold text-primary">78%</p>
-                <p className="text-[10px] font-bold text-slate-900 uppercase">Control & Alignment</p>
-                <p className="text-[10px] text-muted-foreground leading-relaxed italic">
-                  "G1 holds majority control. G3 (Sophie & Alexander) pushing for growth & ESG impact. Strategic tension detected."
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-white border-slate-200 shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-slate-500 flex items-center gap-2">
-                  <Globe className="h-3.5 w-3.5" /> Geography
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <p className="text-xl font-headline font-bold text-slate-900">47%</p>
-                <p className="text-[10px] font-bold text-slate-900 uppercase">Asia Exposure</p>
-                <p className="text-[10px] text-muted-foreground leading-relaxed italic">
-                  "Concentrated in Singapore growth equities and premium residential holdings. Vital pillar for G3 succession."
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-slate-50 border-slate-200 shadow-sm border-l-4 border-l-primary">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Top Holdings</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="space-y-2">
-                  {[
-                    { label: "RE & Industrial", val: "55%", members: ["Markus", "Sophie"] },
-                    { label: "Tech / Growth", val: "9%", members: ["Alexander"] },
-                    { label: "Cash & Liquid", val: "11%", members: ["Markus"] },
-                  ].map((h, i) => (
-                    <div key={i} className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold text-slate-600 truncate mr-2">{h.label}</span>
-                      <div className="flex items-center gap-2">
-                        <MemberIndicators members={h.members} />
-                        <span className="text-[10px] font-bold text-slate-900">{h.val}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Action Strategy Terminal */}
-          <Card className="border-none shadow-xl bg-slate-900 text-white overflow-hidden">
-            <div className="absolute top-0 right-0 p-10 opacity-10 pointer-events-none">
-              <ShieldCheck className="h-40 w-40" />
-            </div>
-            <CardHeader className="border-b border-white/10 p-8">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-2xl font-headline font-bold flex items-center gap-3">
-                    <Zap className="h-6 w-6 text-primary fill-primary" />
-                    Top 3 Things to Address
-                  </CardTitle>
-                  <CardDescription className="text-slate-400 mt-1">Stabilize the Hartmann legacy through immediate council action.</CardDescription>
-                </div>
-                <Link href="/chart-room">
-                  <Button className="bg-primary hover:bg-primary/90 text-white border-none px-6 rounded-xl shadow-lg">
-                    Launch Chart Room <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
-              </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+        {[
+          { title: "Biggest Risk", icon: AlertTriangle, val: "55%", label: "Real Estate Concentration", desc: "Mostly Markus industrial + Sophie's SG assets.", color: "text-red-500", members: ["Markus", "Sophie"] },
+          { title: "Liquidity", icon: Coins, val: "€42M", label: "Cash Sitting Idle (11%)", desc: "Estimated opportunity cost of ~€1.8M/year.", color: "text-amber-500", members: ["Markus"] },
+          { title: "Generational", icon: Zap, val: "78%", label: "Control & Alignment", desc: "G1 control vs G3 growth pressure tension.", color: "text-primary", members: [] },
+          { title: "Geography", icon: Globe, val: "47%", label: "Asia Exposure", desc: "Vital pillar for G3 succession strategy.", color: "text-slate-400", members: ["Sophie"] },
+          { title: "Top Holdings", icon: BarChart3, val: "55%", label: "RE & Industrial", desc: "Foundational asset class of the legacy.", color: "text-emerald-500", members: ["Markus", "Sophie"] }
+        ].map((card, i) => (
+          <Card key={i} className="glass-panel group overflow-hidden">
+            <CardHeader className="pb-2">
+              <CardTitle className={cn("text-[10px] font-bold uppercase tracking-widest flex items-center gap-2", card.color)}>
+                <card.icon className="h-3.5 w-3.5" /> {card.title}
+              </CardTitle>
             </CardHeader>
-            <CardContent className="p-0">
-              <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-white/10">
-                {[
-                  { title: "Reduce RE Concentration", desc: "Rebalance 8% of Munich industrial holdings into liquid ESG technology to neutralize geopolitical risk.", icon: Home, link: "/chart-room" },
-                  { title: "Plan Inheritance Inflow", desc: "Structure the upcoming €8.4M G1 settlement into the G2/G3 trust to optimize for inheritance tax gap.", icon: Landmark, link: "/heritage-timeline" },
-                  { title: "Secure G3 Housing", desc: "Execute the Sophie London Residence mandate using idle tactical reserves to protect core family capital.", icon: MapPin, link: "/simulator" },
-                ].map((action, i) => (
-                  <Link href={action.link} key={i} className="group p-8 hover:bg-white/[0.03] transition-colors cursor-pointer block">
-                    <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-all border border-white/10 group-hover:border-primary/40">
-                      <action.icon className="h-5 w-5 text-primary" />
-                    </div>
-                    <h4 className="font-bold text-lg mb-2 group-hover:text-primary transition-colors">{action.title}</h4>
-                    <p className="text-sm text-slate-400 leading-relaxed">{action.desc}</p>
-                    <div className="mt-6 flex items-center text-[10px] font-bold uppercase tracking-widest text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                      Start Workflow <ArrowRight className="ml-2 h-3 w-3" />
-                    </div>
-                  </Link>
-                ))}
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-xl font-headline font-bold text-slate-900">{card.val}</p>
+                {card.members.length > 0 && <MemberIndicators members={card.members} />}
               </div>
+              <p className="text-[10px] font-bold text-slate-900 uppercase">{card.label}</p>
+              <p className="text-[10px] text-muted-foreground leading-relaxed italic">"{card.desc}"</p>
             </CardContent>
           </Card>
+        ))}
+      </div>
 
-          {/* Family Portfolio Breakdown */}
-          <div className="space-y-6">
-            <div className="flex items-center gap-2">
-              <BarChart3 className="h-4 w-4 text-primary" />
-              <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Family Portfolio Breakdown</h2>
+      {/* Action Strategy Terminal */}
+      <Card className="border-none shadow-2xl bg-slate-900 text-white overflow-hidden rounded-3xl">
+        <div className="absolute top-0 right-0 p-10 opacity-10 pointer-events-none">
+          <ShieldCheck className="h-40 w-40" />
+        </div>
+        <CardHeader className="border-b border-white/10 p-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-2xl font-headline font-bold flex items-center gap-3">
+                <Zap className="h-6 w-6 text-primary fill-primary" />
+                Top 3 Things to Address
+              </CardTitle>
+              <CardDescription className="text-slate-400 mt-1">Stabilize the Hartmann legacy through immediate council action.</CardDescription>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {PORTFOLIO_BREAKDOWN.map((item) => (
-                <TooltipProvider key={item.name}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Card className="bg-white border-slate-200 shadow-sm hover:border-primary/40 transition-all cursor-default overflow-hidden group">
-                        <CardHeader className="pb-2 flex flex-row items-center justify-between">
-                          <div className="space-y-1">
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{item.name}</p>
-                            <p className="text-2xl font-headline font-bold text-slate-900">{item.pct}%</p>
-                          </div>
-                          <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center group-hover:bg-primary/5 transition-colors">
-                            <item.icon className="h-5 w-5 text-slate-400 group-hover:text-primary transition-colors" />
-                          </div>
-                        </CardHeader>
-                        <CardContent className="pt-2">
-                          <div className="flex items-center justify-between">
-                             <MemberAvatars members={item.members} />
-                             <Badge variant="ghost" className="text-[9px] text-slate-400 font-bold uppercase opacity-0 group-hover:opacity-100 transition-opacity">View Detail</Badge>
-                          </div>
-                          <div className="mt-4 flex gap-1 h-1 w-full rounded-full overflow-hidden bg-slate-100">
-                             {item.contributions.map((c, i) => (
-                                <div 
-                                  key={i} 
-                                  className={cn("h-full", MEMBERS.find(m => m.name === c.name)?.color)} 
-                                  style={{ width: `${c.share}%` }} 
-                                />
-                             ))}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </TooltipTrigger>
-                    <TooltipContent side="top" className="p-4 bg-white border-slate-200 shadow-xl rounded-2xl min-w-[200px] z-[100]">
-                      <div className="space-y-3">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">{item.name} Breakdown</p>
-                        {item.contributions.map((c, i) => (
-                          <div key={i} className="flex items-center justify-between gap-4">
-                            <div className="flex items-center gap-2">
-                              <div className={cn("w-2 h-2 rounded-full", MEMBERS.find(m => m.name === c.name)?.color)} />
-                              <span className="text-xs font-bold text-slate-700">{c.name}</span>
-                            </div>
-                            <span className="text-xs font-bold text-primary">{c.share}%</span>
-                          </div>
-                        ))}
+            <Link href="/chart-room">
+              <Button className="bg-primary hover:bg-primary/90 text-white border-none px-6 rounded-xl shadow-lg h-11 text-[11px] font-bold uppercase tracking-widest">
+                Launch Chart Room <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-white/10">
+            {[
+              { title: "Reduce RE Concentration", desc: "Rebalance 8% of industrial holdings into liquid ESG technology to neutralize risk.", icon: Home, link: "/chart-room" },
+              { title: "Plan Inheritance Inflow", desc: "Structure the upcoming €8.4M G1 settlement into G2/G3 trust for tax efficiency.", icon: Landmark, link: "/heritage-timeline" },
+              { title: "Secure G3 Housing", desc: "Execute the Sophie London mandate using idle tactical reserves to protect capital.", icon: MapPin, link: "/simulator" },
+            ].map((action, i) => (
+              <Link href={action.link} key={i} className="group p-8 hover:bg-white/[0.03] transition-colors cursor-pointer block">
+                <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-all border border-white/10 group-hover:border-primary/40">
+                  <action.icon className="h-5 w-5 text-primary" />
+                </div>
+                <h4 className="font-bold text-lg mb-2 group-hover:text-primary transition-colors">{action.title}</h4>
+                <p className="text-sm text-slate-400 leading-relaxed">{action.desc}</p>
+                <div className="mt-6 flex items-center text-[10px] font-bold uppercase tracking-widest text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                  Start Workflow <ArrowRight className="ml-2 h-3 w-3" />
+                </div>
+              </Link>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Portfolio Visualization */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-2">
+          <BarChart3 className="h-4 w-4 text-primary" />
+          <h2 className="text-xs font-bold uppercase tracking-widest text-white/60">Family Portfolio Breakdown</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {PORTFOLIO_BREAKDOWN.map((item) => (
+            <TooltipProvider key={item.name}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Card className="glass-panel hover:ring-2 hover:ring-primary/20 transition-all cursor-default overflow-hidden group">
+                    <CardHeader className="pb-2 flex flex-row items-center justify-between">
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{item.name}</p>
+                        <p className="text-2xl font-headline font-bold text-slate-900">{item.pct}%</p>
                       </div>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              ))}
-            </div>
-          </div>
-        </div>
-      ) : (
-        /* Individual View for Markus */
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in duration-500">
-          <div className="lg:col-span-1 space-y-6">
-            <Card className="border-slate-200 shadow-md bg-white">
-              <CardHeader className="bg-slate-50/50 border-b">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <User className="h-5 w-5 text-primary" />
-                  Principal Snapshot
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-6 space-y-6">
-                <div className="text-center pb-6 border-b border-slate-100">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 mb-2">My Total Assets</p>
-                  <p className="text-4xl font-headline font-bold text-slate-900">€247,000,000</p>
-                </div>
-                <div className="space-y-4 pt-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Linked Accounts</span>
-                    <span className="font-bold">€85.7M</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Manual Assets</span>
-                    <span className="font-bold">€161.3M</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="lg:col-span-2 space-y-6">
-            <Card className="border-slate-200 shadow-sm bg-white">
-              <CardHeader className="border-b border-slate-100">
-                <CardTitle className="text-lg">My Managed Accounts</CardTitle>
-                <CardDescription>Accounts where Dr. Markus Hartmann is the primary principal.</CardDescription>
-              </CardHeader>
-              <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="hover:bg-transparent border-slate-100">
-                      <TableHead className="text-[10px] font-bold uppercase tracking-widest text-slate-400 pl-6 py-4">Account</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase tracking-widest text-slate-400 py-4">Institution</TableHead>
-                      <TableHead className="text-right text-[10px] font-bold uppercase tracking-widest text-slate-400 pr-6 py-4">Balance</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredAccounts.map((acc) => (
-                      <TableRow key={acc.id} className="hover:bg-slate-50 transition-colors border-slate-100">
-                        <TableCell className="pl-6 font-medium py-4">
-                          <p className="text-slate-900">{acc.name}</p>
-                          <p className="text-[10px] text-muted-foreground uppercase">{acc.type}</p>
-                        </TableCell>
-                        <TableCell className="text-sm text-slate-600 py-4">{acc.institution}</TableCell>
-                        <TableCell className="text-right font-headline font-bold text-primary pr-6 py-4">{acc.balance}</TableCell>
-                      </TableRow>
+                      <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center group-hover:bg-primary/5 transition-colors">
+                        <item.icon className="h-5 w-5 text-slate-400 group-hover:text-primary transition-colors" />
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-2">
+                      <div className="flex items-center justify-between">
+                         <MemberAvatars members={item.members} />
+                         <Badge variant="ghost" className="text-[9px] text-slate-400 font-bold uppercase opacity-0 group-hover:opacity-100 transition-opacity">View Detail</Badge>
+                      </div>
+                      <div className="mt-4 flex gap-1 h-1 w-full rounded-full overflow-hidden bg-slate-100">
+                         {item.contributions.map((c, i) => (
+                            <div 
+                              key={i} 
+                              className={cn("h-full", MEMBERS.find(m => m.name === c.name)?.color)} 
+                              style={{ width: `${c.share}%` }} 
+                            />
+                         ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="p-4 bg-white border-slate-200 shadow-2xl rounded-2xl min-w-[200px] z-[100]">
+                  <div className="space-y-3">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">{item.name} Contribution</p>
+                    {item.contributions.map((c, i) => (
+                      <div key={i} className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-2">
+                          <div className={cn("w-2 h-2 rounded-full", MEMBERS.find(m => m.name === c.name)?.color)} />
+                          <span className="text-xs font-bold text-slate-700">{c.name}</span>
+                        </div>
+                        <span className="text-xs font-bold text-primary">{c.share}%</span>
+                      </div>
                     ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </div>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ))}
         </div>
-      )}
+      </div>
 
       {/* Ledger Section */}
       <Tabs defaultValue="linked" className="space-y-6">
-        <div className="flex items-center justify-between border-b border-slate-200 pb-4">
-          <TabsList className="bg-slate-100 p-1 rounded-xl">
-            <TabsTrigger value="linked" className="data-[state=active]:bg-white data-[state=active]:shadow-sm text-[10px] font-bold uppercase px-6">
+        <div className="flex items-center justify-between border-b border-white/10 pb-4">
+          <TabsList className="bg-white/10 p-1 rounded-xl">
+            <TabsTrigger value="linked" className="data-[state=active]:bg-white data-[state=active]:text-slate-900 text-[10px] font-bold uppercase px-6">
               Financial Ledger
             </TabsTrigger>
-            <TabsTrigger value="physical" className="data-[state=active]:bg-white data-[state=active]:shadow-sm text-[10px] font-bold uppercase px-6">
+            <TabsTrigger value="physical" className="data-[state=active]:bg-white data-[state=active]:text-slate-900 text-[10px] font-bold uppercase px-6">
               Generational Assets
             </TabsTrigger>
           </TabsList>
           
           <div className="flex gap-2">
-             <Button variant="outline" size="sm" className="rounded-xl border-slate-200 h-9">
-              <LinkIcon className="mr-2 h-4 w-4" /> Link External API
+             <Button variant="outline" size="sm" className="rounded-xl border-white/10 bg-white/5 text-white h-10 px-4 text-[10px] uppercase font-bold tracking-widest">
+              <LinkIcon className="mr-2 h-4 w-4" /> Link API
             </Button>
-            <Button size="sm" className="rounded-xl shadow-lg h-9">
+            <Button size="sm" className="rounded-xl shadow-lg h-10 px-6 text-[10px] uppercase font-bold tracking-widest">
               <Plus className="mr-2 h-4 w-4" /> Register Asset
             </Button>
           </div>
         </div>
 
         <TabsContent value="linked">
-          <Card className="border-slate-200 shadow-md bg-white overflow-hidden rounded-2xl">
+          <Card className="glass-panel overflow-hidden">
             <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-8">
               <div className="flex items-center justify-between">
                 <div>
@@ -533,7 +397,7 @@ export default function BridgeHub() {
                 </div>
                 <div className="flex items-center gap-2">
                   <RefreshCw className="h-3.5 w-3.5 text-slate-400" />
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Last synced 2m ago</span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Synced 2m ago</span>
                 </div>
               </div>
             </CardHeader>
@@ -580,7 +444,7 @@ export default function BridgeHub() {
         <TabsContent value="physical">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {manualAssets.map((asset: any) => (
-              <Card key={asset.id} className="border-slate-200 shadow-md bg-white hover:ring-2 hover:ring-primary/20 transition-all group rounded-2xl overflow-hidden">
+              <Card key={asset.id} className="glass-panel hover:ring-2 hover:ring-primary/20 transition-all group rounded-2xl overflow-hidden">
                 <CardHeader className="pb-2 px-6 pt-6">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
@@ -612,7 +476,7 @@ export default function BridgeHub() {
                   <div className="flex items-center justify-between pt-4 border-t border-slate-100">
                     <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
                       <FileText className="h-4 w-4" />
-                      <span>{asset.documentCount} Secure Doc(s)</span>
+                      <span>{asset.documentCount} Doc(s)</span>
                     </div>
                     <Button variant="ghost" size="sm" className="h-8 text-[10px] font-bold uppercase tracking-widest group-hover:text-primary rounded-xl">
                       Manage
