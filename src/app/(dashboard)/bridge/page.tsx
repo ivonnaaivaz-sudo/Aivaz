@@ -20,14 +20,12 @@ import {
   Globe,
   RefreshCw,
   Zap,
-  ShieldCheck,
   Coins,
   MapPin,
   Home,
   Palmtree,
   Gem,
   FileText,
-  Layers,
   BarChart3
 } from "lucide-react";
 import { 
@@ -35,7 +33,6 @@ import {
   Pie, 
   Cell, 
   ResponsiveContainer,
-  Legend,
   Tooltip as ChartTooltip
 } from "recharts";
 import { cn } from "@/lib/utils";
@@ -54,10 +51,43 @@ const INDIVIDUAL_ALLOCATION = [
 ];
 
 const AGGREGATED_ALLOCATION = [
-  { name: 'Real Estate & Industrial', value: 55, color: '#3b82f6' },
-  { name: 'Industrial Chemicals', value: 25, color: '#64748b' },
-  { name: 'Tech / Growth Equity', value: 9, color: '#f59e0b' },
-  { name: 'Cash & Liquid', value: 11, color: '#10b981' },
+  { 
+    name: 'Real Estate & Industrial', 
+    value: 55, 
+    color: '#3b82f6',
+    stakeholders: [
+      { name: "Markus", pct: 60 },
+      { name: "Elena", pct: 20 },
+      { name: "Sophie", pct: 20 }
+    ]
+  },
+  { 
+    name: 'Industrial Chemicals', 
+    value: 25, 
+    color: '#64748b',
+    stakeholders: [
+      { name: "Markus", pct: 90 },
+      { name: "Alexander", pct: 10 }
+    ]
+  },
+  { 
+    name: 'Tech / Growth Equity', 
+    value: 9, 
+    color: '#f59e0b',
+    stakeholders: [
+      { name: "Alexander", pct: 100 }
+    ]
+  },
+  { 
+    name: 'Cash & Liquid', 
+    value: 11, 
+    color: '#10b981',
+    stakeholders: [
+      { name: "Markus", pct: 50 },
+      { name: "Sophie", pct: 30 },
+      { name: "Alexander", pct: 20 }
+    ]
+  },
 ];
 
 const HARTMANN_ACCOUNTS = [
@@ -75,7 +105,6 @@ export default function BridgeHub() {
   const [viewMode, setViewMode] = useState<"individual" | "aggregated">("aggregated");
   
   const userRole = profile?.role || "Principal";
-  const isLimited = userRole === "Limited Member" || userRole === "Advisor/Guest";
 
   const assetsQuery = useMemo(() => {
     if (!user || !db) return null;
@@ -161,7 +190,7 @@ export default function BridgeHub() {
         ))}
       </div>
 
-      {/* Main Portfolio Breakdown: Circular for Individual */}
+      {/* Main Portfolio Breakdown */}
       <Card className="border-slate-200 shadow-sm bg-white rounded-3xl overflow-hidden">
         <CardHeader className="border-b border-slate-50 p-8">
           <div className="flex items-center justify-between">
@@ -203,16 +232,43 @@ export default function BridgeHub() {
             </div>
 
             <div className="lg:col-span-7 space-y-4">
-              {(viewMode === 'individual' ? INDIVIDUAL_ALLOCATION : AGGREGATED_ALLOCATION).map((item) => (
+              {(viewMode === 'individual' ? INDIVIDUAL_ALLOCATION : AGGREGATED_ALLOCATION).map((item: any) => (
                 <div key={item.name} className="flex items-center justify-between p-4 rounded-2xl border border-slate-100 bg-slate-50/30 group hover:border-primary/20 transition-all">
-                  <div className="flex items-center gap-4">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                    <div>
+                  <div className="flex items-center gap-4 flex-1">
+                    <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                    <div className="flex-1">
                       <p className="text-sm font-bold text-slate-800">{item.name}</p>
-                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{viewMode === 'individual' ? 'Personal Ownership' : 'Family Aggregate'}</p>
+                      {viewMode === 'aggregated' && item.stakeholders && (
+                        <div className="flex items-center gap-2 mt-2">
+                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mr-2">Stakeholders</p>
+                          <div className="flex -space-x-1.5 overflow-hidden">
+                            {item.stakeholders.map((sh: any) => {
+                              const member = MEMBERS.find(m => m.name === sh.name);
+                              return (
+                                <TooltipProvider key={sh.name}>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Avatar className="h-5 w-5 border-2 border-white ring-1 ring-slate-100">
+                                        <AvatarImage src={member?.avatar} />
+                                        <AvatarFallback className="text-[6px] font-bold">{sh.name[0]}</AvatarFallback>
+                                      </Avatar>
+                                    </TooltipTrigger>
+                                    <TooltipContent className="p-2 text-[10px] font-bold">
+                                      {sh.name} {sh.pct}%
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                      {viewMode === 'individual' && (
+                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Personal Ownership</p>
+                      )}
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right ml-4">
                     <p className="text-lg font-headline font-bold text-slate-900">{item.value}%</p>
                     <p className="text-[10px] text-primary font-bold uppercase">€{(viewMode === 'individual' ? (242 * item.value / 100) : (380 * item.value / 100)).toFixed(1)}M</p>
                   </div>
@@ -277,6 +333,28 @@ export default function BridgeHub() {
                           <div>
                             <p className="text-slate-900 font-bold">{acc.name}</p>
                             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{acc.type}</p>
+                            {viewMode === 'aggregated' && acc.breakdown && (
+                               <div className="flex -space-x-1 mt-2">
+                                 {acc.breakdown.map((b: any) => {
+                                   const member = MEMBERS.find(m => m.name === b.member);
+                                   return (
+                                     <TooltipProvider key={b.member}>
+                                       <Tooltip>
+                                         <TooltipTrigger asChild>
+                                           <Avatar className="h-4 w-4 border-2 border-white">
+                                             <AvatarImage src={member?.avatar} />
+                                             <AvatarFallback className="text-[4px]">{b.member[0]}</AvatarFallback>
+                                           </Avatar>
+                                         </TooltipTrigger>
+                                         <TooltipContent className="p-1 text-[8px] font-bold">
+                                           {b.member} {b.pct}%
+                                         </TooltipContent>
+                                       </Tooltip>
+                                     </TooltipProvider>
+                                   );
+                                 })}
+                               </div>
+                            )}
                           </div>
                         </div>
                       </TableCell>
