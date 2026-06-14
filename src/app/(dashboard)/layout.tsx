@@ -49,6 +49,25 @@ export default function DashboardLayout({
           {children}
         </div>
       </main>
+
+      {/* TEMPORARY DIAGNOSTIC OVERLAY */}
+      <div style={{ 
+        position: 'fixed', 
+        bottom: 0, 
+        left: 0, 
+        right: 0, 
+        background: 'rgba(0,0,0,0.9)', 
+        color: '#00ff00', 
+        zIndex: 9999, 
+        fontSize: '10px', 
+        padding: '8px', 
+        fontFamily: 'monospace',
+        maxHeight: '100px',
+        overflow: 'auto',
+        borderTop: '1px solid #333'
+      }}>
+        <strong>DEBUG PROFILE:</strong> {JSON.stringify(profile)}
+      </div>
     </div>
   );
 }
