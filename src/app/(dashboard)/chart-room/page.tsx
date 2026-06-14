@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useUser, useFirestore, useDoc } from "@/firebase";
 import { collection, addDoc } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -22,29 +23,49 @@ import {
   Package,
   Trophy,
   ShieldAlert,
-  ChevronUp,
+  ChevronRight,
+  Plus,
+  TrendingUp,
+  Landmark,
+  ArrowUpRight,
+  Info,
   ChevronDown,
+  ChevronUp,
   LayoutGrid,
-  ArrowUpRight
+  Users
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import Link from "next/link";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
-type CardType = 'action' | 'offset';
-
-interface DecisionCard {
+interface InputItem {
   id: string;
-  type: CardType;
+  type: 'opportunity' | 'need' | 'blindspot';
   title: string;
+  value?: number;
   description: string;
-  impactMetric: string;
-  liquidityValue: number; 
-  riskDelta: number; 
-  logic: string;
-  category: string;
   relatedMembers: string[];
-  isAI?: boolean;
+  severity?: 'Critical' | 'High' | 'Medium';
+}
+
+interface StrategicPairing {
+  id: string;
+  rank: number;
+  title: string;
+  summary: string;
+  utilityScore: number;
+  components: {
+    opportunities: string[];
+    needs: string[];
+    blindspots: string[];
+  };
+  analysis: {
+    liquidityDelta: number;
+    riskReduction: number;
+    taxEfficiency: number;
+    familyAlignment: number;
+    logic: string;
+  };
 }
 
 const MEMBERS = [
@@ -54,174 +75,95 @@ const MEMBERS = [
   { name: "Alexander", color: "bg-amber-500", avatar: "https://picsum.photos/seed/alexander/100/100" },
 ];
 
-const KEY_BLINDSPOTS = [
+const INITIAL_INPUTS: InputItem[] = [
+  { id: 'o-1', type: 'opportunity', title: 'Markus Inheritance', value: 8400000, description: 'Incoming liquidity from G1 estate settlement.', relatedMembers: ['Markus'] },
+  { id: 'o-2', type: 'opportunity', title: 'Specialty Chem Dividend', value: 3200000, description: 'Surplus Q2 industrial distribution.', relatedMembers: ['Markus', 'Elena'] },
+  { id: 'n-1', type: 'need', title: 'Sophie London Residence', value: 6000000, description: 'G3 primary relocation and stability mandate.', relatedMembers: ['Sophie'] },
+  { id: 'n-2', type: 'need', title: 'Alexander Venture Fund', value: 4500000, description: 'Early-stage tech allocation for G3 growth.', relatedMembers: ['Alexander'] },
+  { id: 'b-1', type: 'blindspot', title: 'Inheritance Tax Gap (G1-G3)', description: 'Detected €8.4M exposure in transition path.', severity: 'Critical', relatedMembers: ['Markus', 'Sophie'] },
+  { id: 'b-2', type: 'blindspot', title: 'Real Estate Concentration', description: 'Munich holdings represent 55% of legacy.', severity: 'High', relatedMembers: ['Markus', 'Alexander'] },
+];
+
+const GENERATED_PAIRINGS: StrategicPairing[] = [
   {
-    id: 'bs-1',
-    title: "Inheritance Tax Gap (G1-G3)",
-    severity: "Critical",
-    description: "Detected €8.4M exposure in the G1 -> G3 transition path.",
-    impact: "-€8.4M Asset Value",
-    relatedMembers: ["Markus", "Sophie"],
-    suggestedPair: {
-      action: { title: "G1-G3 Trust Transfer", val: -8400000, risk: 2, desc: "Mandatory tax exposure resolution." },
-      offset: { title: "Dynasty Trust Recap", val: 8400000, risk: -5, desc: "Strategic buffer for trust consolidation." }
+    id: 'p-1',
+    rank: 1,
+    title: "The Succession Bridge",
+    summary: "Leverages Markus's Inheritance to fund Sophie's London mandate while fully neutralizing the G1-G3 Tax Gap.",
+    utilityScore: 96,
+    components: {
+      opportunities: ['o-1'],
+      needs: ['n-1'],
+      blindspots: ['b-1']
+    },
+    analysis: {
+      liquidityDelta: 2400000,
+      riskReduction: 85,
+      taxEfficiency: 98,
+      familyAlignment: 94,
+      logic: "Primary utility driver: Solves high-priority G3 relocation and the most critical tax risk simultaneously."
     }
   },
   {
-    id: 'bs-2',
-    title: "Real Estate Concentration",
-    severity: "High",
-    description: "Munich and Singapore properties represent 55% of legacy.",
-    impact: "+18% Beta Sensitivity",
-    relatedMembers: ["Markus", "Alexander"],
-    suggestedPair: {
-      action: { title: "Asia Exposure Re-Weight", val: -12000000, risk: 18, desc: "Reducing geographic sensitivity." },
-      offset: { title: "PE Tech Infrastructure Swap", val: 15000000, risk: -25, desc: "Liquidity offset via industrial re-allocation." }
+    id: 'p-2',
+    rank: 2,
+    title: "G3 Growth Hybrid",
+    summary: "Combines industrial dividends with remaining inheritance to scale Alexander's tech fund and diversify Munich real estate.",
+    utilityScore: 88,
+    components: {
+      opportunities: ['o-1', 'o-2'],
+      needs: ['n-2'],
+      blindspots: ['b-2']
+    },
+    analysis: {
+      liquidityDelta: 7100000,
+      riskReduction: 62,
+      taxEfficiency: 75,
+      familyAlignment: 82,
+      logic: "Utility driver: Shifts capital from industrial concentration into high-growth tech, satisfying G3 risk appetite."
+    }
+  },
+  {
+    id: 'p-3',
+    rank: 3,
+    title: "The Stability Reserve",
+    summary: "Allocates all incoming liquidity to the Hartmann Stability Reserve, prioritizing cash drag reduction over immediate G3 expansion.",
+    utilityScore: 74,
+    components: {
+      opportunities: ['o-1', 'o-2'],
+      needs: [],
+      blindspots: ['b-2']
+    },
+    analysis: {
+      liquidityDelta: 11600000,
+      riskReduction: 40,
+      taxEfficiency: 50,
+      familyAlignment: 65,
+      logic: "Utility driver: Maximum liquidity retention, but lower family alignment due to deferred G3 needs."
     }
   }
 ];
 
-const INITIAL_PROPOSED_ACTIONS: DecisionCard[] = [
-  {
-    id: 'a-1',
-    type: 'action',
-    title: "G3 London Property",
-    description: "Capital expenditure for Sophie's primary residence.",
-    impactMetric: "-€6.0M Liquidity",
-    liquidityValue: -6000000,
-    riskDelta: 5,
-    logic: "Sophie's relocation mandate.",
-    category: "Real Estate",
-    relatedMembers: ["Sophie"]
-  }
-];
-
-const INITIAL_STRATEGIC_OFFSETS: DecisionCard[] = [
-  {
-    id: 'o-1',
-    type: 'offset',
-    title: "Dividend-Backed Mortgage",
-    description: "Finance property via interest-only loan.",
-    impactMetric: "+€5.4M Liquidity Retention",
-    liquidityValue: 5400000,
-    riskDelta: -5,
-    logic: "Preserves dry powder.",
-    category: "Strategy",
-    relatedMembers: ["Sophie", "Markus"]
-  }
-];
-
-export default function DecisionSandboxPage() {
+export default function StrategicPairingsPage() {
   const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
   const { data: profile } = useDoc(user ? `users/${user.uid}` : null);
   
-  const [proposedActions, setProposedActions] = useState<DecisionCard[]>(INITIAL_PROPOSED_ACTIONS);
-  const [strategicOffsets, setStrategicOffsets] = useState<DecisionCard[]>(INITIAL_STRATEGIC_OFFSETS);
-  const [pairedIds, setPairedIds] = useState<Record<string, string>>({}); 
+  const [inputs, setInputs] = useState<InputItem[]>(INITIAL_INPUTS);
+  const [activePairingId, setActivePairingId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isAnalysisExpanded, setIsAnalysisExpanded] = useState(false);
   
   const userRole = profile?.role || "Principal";
   const hasDetailedAccess = userRole === "Principal" || userRole === "Co-Principal";
 
-  const activeSynergies = useMemo(() => {
-    return Object.entries(pairedIds).map(([actionId, offsetId]) => {
-      const action = proposedActions.find(c => c.id === actionId);
-      const offset = strategicOffsets.find(c => c.id === offsetId);
-      return { action, offset };
-    });
-  }, [pairedIds, proposedActions, strategicOffsets]);
+  const opportunities = useMemo(() => inputs.filter(i => i.type === 'opportunity'), [inputs]);
+  const needs = useMemo(() => inputs.filter(i => i.type === 'need'), [inputs]);
+  const blindspots = useMemo(() => inputs.filter(i => i.type === 'blindspot'), [inputs]);
 
-  const netImpact = useMemo(() => {
-    let liquidity = 0;
-    let risk = 0;
-    activeSynergies.forEach(({ action, offset }) => {
-      if (action) { liquidity += action.liquidityValue; risk += action.riskDelta; }
-      if (offset) { liquidity += offset.liquidityValue; risk += offset.riskDelta; }
-    });
-    return { liquidity, risk };
-  }, [activeSynergies]);
-
-  const utilityRanking = useMemo(() => {
-    return activeSynergies.map(({ action, offset }) => {
-      if (!action || !offset) return null;
-      const riskImpact = (action.riskDelta + offset.riskDelta);
-      const liqImpact = (action.liquidityValue + offset.liquidityValue) / 1000000;
-      const score = 85 - (riskImpact * 0.4) + (liqImpact * 0.5);
-      return {
-        title: `${action.title} / ${offset.title}`,
-        score: Math.max(0, Math.min(100, score)),
-        id: `${action.id}-${offset.id}`,
-        driver: action.category
-      };
-    }).filter((r): r is NonNullable<typeof r> => r !== null).sort((a, b) => b.score - a.score);
-  }, [activeSynergies]);
-
-  const analysisBreakdown = useMemo(() => {
-    const baselineLiquidity = 42; 
-    const baselineVaR = 12.4; 
-    const projectLiquidity = baselineLiquidity + (netImpact.liquidity / 1000000);
-    const projectedVaR = Math.max(0, baselineVaR + (netImpact.risk * 0.15) + (netImpact.liquidity / 20000000));
-    const dnaUtility = utilityRanking.length > 0 ? utilityRanking.reduce((sum, r) => sum + r.score, 0) / utilityRanking.length : 85;
-
-    return [
-      { name: 'Liquidity Matrix', baseline: baselineLiquidity, projected: projectLiquidity, unit: '€M', logic: "Aggregated liquidity penalty applied." },
-      { name: 'Monte Carlo VaR', baseline: baselineVaR, projected: projectedVaR, unit: '€M', logic: "Projected 95% CI loss across pairs." },
-      { name: 'DNA Utility Alignment', baseline: 85, projected: dnaUtility, unit: '%', logic: "Human architecture alignment." },
-    ];
-  }, [netImpact, utilityRanking]);
-
-  const handlePairing = (actionId: string, offsetId: string) => {
-    setPairedIds(prev => {
-      if (prev[actionId] === offsetId) {
-        const next = { ...prev };
-        delete next[actionId];
-        return next;
-      }
-      setIsAnalysisExpanded(true);
-      return { ...prev, [actionId]: offsetId };
-    });
-  };
-
-  const handleCreatePairingFromBlindspot = (bs: typeof KEY_BLINDSPOTS[0]) => {
-    const actionId = `ai-a-${Date.now()}`;
-    const offsetId = `ai-o-${Date.now()}`;
-    
-    const newActionCard: DecisionCard = {
-      id: actionId,
-      type: 'action',
-      title: bs.suggestedPair.action.title,
-      description: bs.suggestedPair.action.desc,
-      impactMetric: `€${(bs.suggestedPair.action.val / 1000000).toFixed(1)}M`,
-      liquidityValue: bs.suggestedPair.action.val,
-      riskDelta: bs.suggestedPair.action.risk,
-      logic: "AI exposure resolution.",
-      category: "Exposure",
-      isAI: true,
-      relatedMembers: bs.relatedMembers
-    };
-
-    const newOffsetCard: DecisionCard = {
-      id: offsetId,
-      type: 'offset',
-      title: bs.suggestedPair.offset.title,
-      description: bs.suggestedPair.offset.desc,
-      impactMetric: `+€${(bs.suggestedPair.offset.val / 1000000).toFixed(1)}M`,
-      liquidityValue: bs.suggestedPair.offset.val,
-      riskDelta: bs.suggestedPair.offset.risk,
-      logic: "Stabilization offset.",
-      category: "Risk Management",
-      isAI: true,
-      relatedMembers: bs.relatedMembers
-    };
-
-    setProposedActions(prev => [newActionCard, ...prev]);
-    setStrategicOffsets(prev => [newOffsetCard, ...prev]);
-    setPairedIds(prev => ({ ...prev, [actionId]: offsetId }));
-    setIsAnalysisExpanded(true);
-  };
+  const activePairing = useMemo(() => 
+    GENERATED_PAIRINGS.find(p => p.id === activePairingId)
+  , [activePairingId]);
 
   const MemberTags = ({ members }: { members: string[] }) => {
     if (userRole === "Limited Member") return null;
@@ -237,7 +179,7 @@ export default function DecisionSandboxPage() {
                 </Avatar>
               </TooltipTrigger>
               <TooltipContent className="p-2 text-[10px] font-bold">
-                {hasDetailedAccess ? `Primarily ${m}'s exposure` : "Member Exposure"}
+                {hasDetailedAccess ? `Relates to ${m}` : "Member Exposure"}
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -247,19 +189,19 @@ export default function DecisionSandboxPage() {
   };
 
   const handleCommit = async () => {
-    if (!user || !db || activeSynergies.length === 0) return;
+    if (!user || !db || !activePairing) return;
     setIsSubmitting(true);
     try {
       const msgRef = collection(db, "users", user.uid, "messages");
       await addDoc(msgRef, {
         senderId: user.uid,
         senderName: "Dr. Markus Hartmann",
-        text: `Transmitted a strategic TPA package with ${activeSynergies.length} pairings. Top Utility Alignment: ${utilityRanking[0]?.title}.`,
+        text: `Transmitted Ranked Strategy: ${activePairing.title} (Utility: ${activePairing.utilityScore}/100). Summary: ${activePairing.summary}`,
         type: "recommendation",
         track: "governance",
         timestamp: new Date().toISOString()
       });
-      toast({ title: "Strategy Transmitted", description: "The TPA package has been sent to the Council Wardroom." });
+      toast({ title: "Strategy Transmitted", description: "The pairing has been sent to the Council Wardroom for final approval." });
     } catch (e) {
       console.error(e);
     } finally {
@@ -273,12 +215,12 @@ export default function DecisionSandboxPage() {
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-primary" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary">TPA Decision Sandbox</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary">Strategic Pairings Engine</span>
           </div>
           <Badge variant="outline" className="text-[8px] border-primary/20 text-primary uppercase">Access: {userRole}</Badge>
         </div>
         <Button 
-          disabled={activeSynergies.length === 0 || isSubmitting}
+          disabled={!activePairing || isSubmitting}
           onClick={handleCommit}
           className="h-9 px-6 rounded-xl text-[10px] font-bold uppercase tracking-widest bg-primary text-white shadow-lg"
         >
@@ -286,204 +228,233 @@ export default function DecisionSandboxPage() {
         </Button>
       </header>
 
-      <main className="flex-1 overflow-hidden flex flex-col bg-slate-50/50">
-        {/* Blindspots Section */}
-        <section className="shrink-0 px-12 pt-6 pb-4 bg-white border-b border-slate-200 shadow-sm z-50 overflow-x-auto">
-          <div className="max-w-7xl mx-auto flex items-center gap-6">
-            <div className="flex items-center gap-3 shrink-0">
-              <ShieldAlert className="h-5 w-5 text-red-500" />
-              <h2 className="text-[10px] font-bold uppercase tracking-[0.4em] text-slate-900">Blindspots</h2>
-            </div>
-            <div className="flex gap-4">
-              {KEY_BLINDSPOTS.map((bs) => {
-                const isMemberRelevant = !hasDetailedAccess ? bs.relatedMembers.includes("Sophie") || bs.relatedMembers.includes("Markus") : true;
-                if (!isMemberRelevant && userRole !== "Principal") return null;
-                return (
-                  <Card key={bs.id} className="relative overflow-hidden border border-slate-200 bg-white w-80 shrink-0">
-                    <div className={cn("absolute top-0 left-0 w-1 h-full", bs.severity === 'Critical' ? "bg-red-500" : "bg-amber-500")} />
-                    <CardHeader className="py-3 pb-2">
-                      <div className="flex justify-between items-start">
-                        <Badge className="text-[8px] uppercase font-bold bg-muted text-muted-foreground">{bs.severity}</Badge>
-                        <MemberTags members={bs.relatedMembers} />
-                      </div>
-                      <CardTitle className="text-xs font-bold mt-1">{bs.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="pb-3 flex flex-col gap-2">
-                      <p className="text-[10px] text-slate-500 line-clamp-1 italic">"{bs.description}"</p>
-                      <Button size="sm" className="h-7 text-[8px] font-bold uppercase tracking-widest" onClick={() => handleCreatePairingFromBlindspot(bs)}>
-                        Create a Pairing
-                      </Button>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
+      <div className="flex-1 overflow-hidden flex">
+        {/* Left Sidebar: Library of Inputs */}
+        <aside className="w-80 border-r border-slate-200 bg-slate-50/50 flex flex-col shrink-0">
+          <div className="p-6 border-b border-slate-200 bg-white">
+            <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-900 mb-1">Strategy Inputs</h2>
+            <p className="text-[10px] text-muted-foreground italic">The pieces of the Hartmann puzzle.</p>
           </div>
-        </section>
-
-        {/* Vertical Drafting Area */}
-        <div className="flex-1 overflow-y-auto px-12 pt-8 pb-32">
-          <div className="max-w-4xl mx-auto flex flex-col gap-12">
-            {/* Inflows - Strategic Offsets */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
-                <Zap className="h-4 w-4 text-emerald-500" />
-                <h2 className="text-[10px] font-bold uppercase tracking-widest">Strategic Offsets (Inflows)</h2>
+          
+          <div className="flex-1 overflow-y-auto p-4 space-y-8 pb-20">
+            {/* Opportunities */}
+            <section className="space-y-3">
+              <div className="flex items-center justify-between px-2">
+                <h3 className="text-[9px] font-bold uppercase tracking-widest text-emerald-600 flex items-center gap-2">
+                  <TrendingUp className="h-3 w-3" /> Opportunities
+                </h3>
+                <Button variant="ghost" size="icon" className="h-5 w-5 rounded-full"><Plus className="h-3 w-3" /></Button>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                {strategicOffsets.map((offset) => (
-                  <Card 
-                    key={offset.id} 
-                    onClick={() => {
-                      const targetId = proposedActions.find(a => !pairedIds[a.id])?.id || proposedActions[0]?.id;
-                      if (targetId) handlePairing(targetId, offset.id);
-                    }}
-                    className={cn(
-                      "border cursor-pointer relative shadow-sm transition-all",
-                      Object.values(pairedIds).includes(offset.id) ? "border-primary bg-primary/[0.02] ring-1 ring-primary/20" : "border-slate-200 bg-white"
-                    )}
-                  >
-                    <CardHeader className="py-4 pb-2 flex flex-row justify-between items-start">
-                      <div className="space-y-1">
-                        <Badge variant="outline" className="text-[8px] uppercase">{offset.category}</Badge>
-                        <CardTitle className="text-sm font-bold">{offset.title}</CardTitle>
-                      </div>
-                      <MemberTags members={offset.relatedMembers} />
-                    </CardHeader>
-                    <CardContent className="pb-4">
-                      <p className="text-[10px] text-slate-500 italic">"{offset.description}"</p>
-                      <p className="text-[11px] font-bold text-emerald-600 mt-2">{offset.impactMetric}</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-
-            {/* Outflows - Proposed Actions */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
-                <LayoutGrid className="h-4 w-4 text-slate-400" />
-                <h2 className="text-[10px] font-bold uppercase tracking-widest">Proposed Actions (Outflows)</h2>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                {proposedActions.map((action) => (
-                  <Card 
-                    key={action.id} 
-                    className={cn(
-                      "border relative shadow-sm transition-all",
-                      pairedIds[action.id] ? "border-primary bg-primary/[0.01] ring-1 ring-primary/10" : "border-slate-200 bg-white"
-                    )}
-                  >
-                    <CardHeader className="py-4 pb-2 flex flex-row justify-between items-start">
-                      <div className="space-y-1">
-                        <Badge variant="outline" className="text-[8px] uppercase">{action.category}</Badge>
-                        <CardTitle className="text-sm font-bold">{action.title}</CardTitle>
-                      </div>
-                      <MemberTags members={action.relatedMembers} />
-                    </CardHeader>
-                    <CardContent className="pb-4">
-                      <p className="text-[10px] text-slate-500 italic">"{action.description}"</p>
-                      <div className="flex justify-between items-end mt-2">
-                        <p className="text-[11px] font-bold text-red-600">{action.impactMetric}</p>
-                        {pairedIds[action.id] && <CheckCircle2 className="h-4 w-4 text-primary" />}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </main>
-
-      {/* TPA Diagnostic Hub */}
-      <div className={cn(
-        "sticky bottom-0 bg-white border-t border-slate-200 z-[70] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transition-all duration-500",
-        isAnalysisExpanded ? "h-[450px]" : "h-20"
-      )}>
-        <div className={cn(
-          "absolute top-0 left-0 w-full h-[calc(100%-5rem)] px-12 pt-6 transition-opacity duration-300 overflow-y-auto",
-          isAnalysisExpanded ? "opacity-100 visible" : "opacity-0 invisible"
-        )}>
-          <div className="max-w-7xl mx-auto flex flex-col gap-6">
-            {utilityRanking.length > 0 && (
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <Trophy className="h-4 w-4 text-amber-500" />
-                  <h4 className="text-[10px] font-bold uppercase tracking-widest">Strategy Utility Ranking</h4>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {utilityRanking.map((rank, i) => (
-                    <div key={rank.id} className={cn("p-3 rounded-lg border flex flex-col gap-1", i === 0 ? "bg-amber-50 border-amber-200" : "bg-slate-50 border-slate-200")}>
-                      <p className="text-[8px] font-bold text-slate-400 uppercase">Rank #{i + 1} • {rank.driver}</p>
-                      <p className="text-[11px] font-bold truncate">{rank.title}</p>
-                      <Progress value={rank.score} className="h-1 mt-1" />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-4">
-              {analysisBreakdown.map((item, idx) => (
-                <div key={idx} className="space-y-3">
-                  <div className="flex justify-between items-end border-b border-slate-100 pb-1">
-                    <span className="text-[9px] font-bold uppercase text-slate-400">{item.name}</span>
-                    <span className="text-xs font-bold">{item.projected.toFixed(1)}{item.unit}</span>
+              {opportunities.map(item => (
+                <div key={item.id} className="p-3 rounded-xl bg-white border border-slate-200 shadow-sm space-y-2">
+                  <div className="flex justify-between items-start">
+                    <p className="text-[11px] font-bold">{item.title}</p>
+                    <MemberTags members={item.relatedMembers} />
                   </div>
-                  <Progress value={(item.projected / Math.max(1, item.baseline)) * 50} className="h-1.5" />
-                  <p className="text-[10px] text-slate-500 leading-tight italic">
-                    <span className="font-bold">Key Driver:</span> {activeSynergies[0]?.action?.title || "Baseline"}
-                  </p>
-                  <p className="text-[10px] text-slate-500 leading-tight italic">{item.logic}</p>
+                  <p className="text-[10px] text-emerald-600 font-bold">+€{(item.value! / 1000000).toFixed(1)}M</p>
                 </div>
               ))}
+            </section>
+
+            {/* Needs */}
+            <section className="space-y-3">
+              <div className="flex items-center justify-between px-2">
+                <h3 className="text-[9px] font-bold uppercase tracking-widest text-amber-600 flex items-center gap-2">
+                  <Users className="h-3 w-3" /> Needs & Wants
+                </h3>
+                <Button variant="ghost" size="icon" className="h-5 w-5 rounded-full"><Plus className="h-3 w-3" /></Button>
+              </div>
+              {needs.map(item => (
+                <div key={item.id} className="p-3 rounded-xl bg-white border border-slate-200 shadow-sm space-y-2">
+                  <div className="flex justify-between items-start">
+                    <p className="text-[11px] font-bold">{item.title}</p>
+                    <MemberTags members={item.relatedMembers} />
+                  </div>
+                  <p className="text-[10px] text-red-600 font-bold">-€{(item.value! / 1000000).toFixed(1)}M</p>
+                </div>
+              ))}
+            </section>
+
+            {/* AI Blindspots */}
+            <section className="space-y-3">
+              <div className="flex items-center justify-between px-2">
+                <h3 className="text-[9px] font-bold uppercase tracking-widest text-red-600 flex items-center gap-2">
+                  <ShieldAlert className="h-3 w-3" /> AI Blindspots
+                </h3>
+              </div>
+              {blindspots.map(item => (
+                <div key={item.id} className="p-3 rounded-xl bg-red-50/30 border border-red-100 shadow-sm space-y-2">
+                  <div className="flex justify-between items-start">
+                    <p className="text-[11px] font-bold text-red-900">{item.title}</p>
+                    <Badge className="text-[7px] uppercase bg-red-100 text-red-600 border-none">{item.severity}</Badge>
+                  </div>
+                  <p className="text-[9px] text-red-700/70 italic leading-tight">"{item.description}"</p>
+                  <MemberTags members={item.relatedMembers} />
+                </div>
+              ))}
+            </section>
+          </div>
+        </aside>
+
+        {/* Main Content: AI Strategy Deck */}
+        <main className="flex-1 overflow-y-auto bg-slate-50/30 p-12">
+          <div className="max-w-4xl mx-auto space-y-10">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+              <div className="flex items-center gap-3">
+                <Sparkles className="h-6 w-6 text-primary" />
+                <div>
+                  <h1 className="text-2xl font-headline font-bold text-slate-900">Ranked Strategy Pairings</h1>
+                  <p className="text-xs text-muted-foreground italic">Aivaz matches your capital opportunities with heritage risks and family needs.</p>
+                </div>
+              </div>
+              <Badge className="bg-primary/10 text-primary border-primary/20 uppercase tracking-widest text-[9px] py-1 px-3">
+                {GENERATED_PAIRINGS.length} Optimized Options
+              </Badge>
             </div>
 
-            <div className="grid grid-cols-3 gap-4 pt-6 border-t">
-              {[
-                { step: 2, label: "Factor Exposure", active: true },
-                { step: 3, label: "Strategy Blocks", active: activeSynergies.length > 0 },
-                { step: 4, label: "Execution Balance", active: activeSynergies.length > 1 }
-              ].map((s) => (
-                <div key={s.step} className={cn("flex flex-col gap-1 pl-3 border-l-2", s.active ? "border-primary" : "border-slate-100 opacity-40")}>
-                  <span className="text-[8px] font-bold uppercase text-primary">TPA Step {s.step}</span>
-                  <span className="text-[11px] font-bold">{s.label}</span>
-                </div>
+            <div className="space-y-6">
+              {GENERATED_PAIRINGS.map((pairing) => (
+                <Card 
+                  key={pairing.id} 
+                  className={cn(
+                    "relative overflow-hidden transition-all duration-300 border-2 cursor-pointer group",
+                    activePairingId === pairing.id ? "border-primary shadow-xl ring-4 ring-primary/5" : "border-slate-200 hover:border-primary/40 shadow-sm"
+                  )}
+                  onClick={() => setActivePairingId(pairing.id)}
+                >
+                  <div className={cn(
+                    "absolute top-0 left-0 w-1.5 h-full",
+                    pairing.rank === 1 ? "bg-primary" : pairing.rank === 2 ? "bg-emerald-500" : "bg-slate-300"
+                  )} />
+                  
+                  <CardHeader className="p-8 pb-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex items-center gap-4">
+                        <div className={cn(
+                          "w-10 h-10 rounded-full flex items-center justify-center font-headline font-bold text-lg",
+                          pairing.rank === 1 ? "bg-primary text-white" : "bg-slate-100 text-slate-500"
+                        )}>
+                          #{pairing.rank}
+                        </div>
+                        <div>
+                          <CardTitle className="text-xl font-headline font-bold group-hover:text-primary transition-colors">
+                            {pairing.title}
+                          </CardTitle>
+                          <p className="text-sm text-slate-500 mt-1 leading-relaxed">{pairing.summary}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Utility Score</p>
+                        <div className="flex items-center gap-2">
+                          <Trophy className="h-4 w-4 text-amber-500" />
+                          <span className="text-3xl font-headline font-bold text-slate-900">{pairing.utilityScore}</span>
+                          <span className="text-xs text-slate-400 font-bold">/100</span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardHeader>
+
+                  <CardContent className="p-8 pt-4">
+                    {/* Visual Component Tags */}
+                    <div className="flex flex-wrap gap-2 mb-8">
+                      {pairing.components.opportunities.map(id => (
+                        <Badge key={id} variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px] flex items-center gap-1.5 py-1 px-3">
+                          <Zap className="h-3 w-3" /> {inputs.find(i => i.id === id)?.title}
+                        </Badge>
+                      ))}
+                      {pairing.components.needs.map(id => (
+                        <Badge key={id} variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-[10px] flex items-center gap-1.5 py-1 px-3">
+                          <Users className="h-3 w-3" /> {inputs.find(i => i.id === id)?.title}
+                        </Badge>
+                      ))}
+                      {pairing.components.blindspots.map(id => (
+                        <Badge key={id} variant="outline" className="bg-red-50 text-red-700 border-red-200 text-[10px] flex items-center gap-1.5 py-1 px-3">
+                          <ShieldAlert className="h-3 w-3" /> {inputs.find(i => i.id === id)?.title}
+                        </Badge>
+                      ))}
+                    </div>
+
+                    <Accordion type="single" collapsible className="w-full border-t border-slate-100 pt-4">
+                      <AccordionItem value="details" className="border-none">
+                        <AccordionTrigger className="text-[10px] font-bold uppercase tracking-widest text-primary hover:no-underline py-2">
+                          View Detailed Diagnostic Breakdown
+                        </AccordionTrigger>
+                        <AccordionContent className="pt-6 space-y-8">
+                          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                            {[
+                              { label: "Net Liquidity", val: `+€${(pairing.analysis.liquidityDelta / 1000000).toFixed(1)}M`, unit: "Retention", color: "text-emerald-600", progress: 85 },
+                              { label: "Risk Reduction", val: `${pairing.analysis.riskReduction}%`, unit: "Stabilization", color: "text-primary", progress: pairing.analysis.riskReduction },
+                              { label: "Tax Efficiency", val: `${pairing.analysis.taxEfficiency}%`, unit: "Optimization", color: "text-blue-600", progress: pairing.analysis.taxEfficiency },
+                              { label: "DNA Alignment", val: `${pairing.analysis.familyAlignment}%`, unit: "Harmony", color: "text-purple-600", progress: pairing.analysis.familyAlignment },
+                            ].map((stat, i) => (
+                              <div key={i} className="space-y-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                                <p className="text-[9px] font-bold uppercase text-slate-400 tracking-widest">{stat.label}</p>
+                                <div className="flex items-baseline gap-1">
+                                  <span className={cn("text-xl font-headline font-bold", stat.color)}>{stat.val}</span>
+                                </div>
+                                <Progress value={stat.progress} className="h-1" />
+                                <p className="text-[8px] font-bold uppercase text-slate-400">{stat.unit}</p>
+                              </div>
+                            ))}
+                          </div>
+                          
+                          <div className="p-6 rounded-2xl bg-primary/5 border border-primary/10 italic text-sm leading-relaxed text-slate-700">
+                            <div className="flex gap-3">
+                              <Info className="h-5 w-5 text-primary shrink-0" />
+                              <p><span className="font-bold text-primary">Strategic Logic:</span> {pairing.analysis.logic}</p>
+                            </div>
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
+                  </CardContent>
+                </Card>
               ))}
+            </div>
+          </div>
+        </main>
+      </div>
+
+      {/* Global Impact Bar: Reflects Active Pairing */}
+      <div className={cn(
+        "h-20 border-t border-slate-200 bg-white flex items-center justify-between px-12 z-[70] transition-all",
+        !activePairing && "opacity-50 pointer-events-none"
+      )}>
+        <div className="flex items-center gap-12">
+          <div className="flex flex-col">
+            <p className="text-[9px] font-bold uppercase text-slate-400 mb-1">Active Selection</p>
+            <p className="text-sm font-bold flex items-center gap-2 text-primary">
+              <Package className="h-4 w-4" /> {activePairing?.title || "No Selection"}
+            </p>
+          </div>
+          <div className="h-8 w-px bg-slate-100" />
+          <div className="flex items-center gap-10">
+            <div className="flex flex-col">
+              <p className="text-[9px] font-bold uppercase text-slate-400">Total Portfolio Alpha</p>
+              <span className="text-lg font-bold text-emerald-600">+2.4%</span>
+            </div>
+            <div className="flex flex-col">
+              <p className="text-[9px] font-bold uppercase text-slate-400">Monte Carlo VaR</p>
+              <span className="text-lg font-bold text-slate-900">€11.2M</span>
             </div>
           </div>
         </div>
-
-        <div className="absolute bottom-0 left-0 w-full h-20 flex items-center justify-between px-12 border-t border-slate-50 bg-white">
-          <div className="flex items-center gap-12 cursor-pointer" onClick={() => setIsAnalysisExpanded(!isAnalysisExpanded)}>
-            <div className="flex flex-col">
-              <p className="text-[9px] font-bold uppercase text-slate-400 mb-1">Active Pairs</p>
-              <p className="text-sm font-bold flex items-center gap-2">
-                <Package className="h-4 w-4 text-primary" /> {activeSynergies.length} Bundled Strategies
-                {isAnalysisExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
-              </p>
-            </div>
-            <div className="flex items-center gap-10">
-              <div className="flex flex-col">
-                <p className="text-[9px] font-bold uppercase text-slate-400">Net Liquidity</p>
-                <span className={cn("text-lg font-bold", netImpact.liquidity >= 0 ? "text-emerald-600" : "text-red-600")}>
-                  {netImpact.liquidity >= 0 ? '+' : ''}€{(netImpact.liquidity / 1000000).toFixed(1)}M
-                </span>
-              </div>
-              <div className="flex flex-col">
-                <p className="text-[9px] font-bold uppercase text-slate-400">Risk Shift</p>
-                <span className={cn("text-lg font-bold", netImpact.risk <= 0 ? "text-emerald-600" : "text-amber-600")}>
-                  {netImpact.risk > 0 ? '+' : ''}{netImpact.risk}%
-                </span>
-              </div>
-            </div>
+        
+        <div className="flex items-center gap-4">
+          <div className="text-right">
+             <p className="text-[9px] font-bold uppercase text-slate-400">TPA Phase</p>
+             <p className="text-xs font-bold uppercase text-primary tracking-widest">Execution Balance</p>
           </div>
-          <Button variant="ghost" onClick={() => setIsAnalysisExpanded(!isAnalysisExpanded)} className="text-[10px] font-bold uppercase tracking-widest h-10 px-6">
-            {isAnalysisExpanded ? "Minimize Diagnostics" : "Expand Diagnostics"}
+          <Button 
+            onClick={handleCommit}
+            disabled={!activePairing || isSubmitting}
+            className="h-10 px-8 rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-xl"
+          >
+            {isSubmitting ? "Transmitting..." : "Send Solution to Wardroom"}
           </Button>
         </div>
       </div>
     </div>
   );
 }
+
