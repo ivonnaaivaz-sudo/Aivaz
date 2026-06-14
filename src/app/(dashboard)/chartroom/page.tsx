@@ -29,7 +29,8 @@ import {
   ArrowRight,
   ArrowDown,
   RefreshCw,
-  X
+  X,
+  Send
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -237,10 +238,31 @@ export default function StrategicPairingsPage() {
       }
     };
 
-    setPairings([...pairings, newPair]);
+    setPairings([newPair, ...pairings]);
     setSelectedInputIds([]);
     setActivePairingId(newPair.id);
-    toast({ title: "Strategic Pair Created", description: "Your manual pairing has been ranked and added to the council list." });
+    toast({ title: "Strategic Pair Created", description: "Your manual pairing has been ranked and added to the strategic list." });
+  };
+
+  const handleSendToWardroom = async () => {
+    if (!user || !db || !activePairing) return;
+    setIsSubmitting(true);
+    try {
+      const msgRef = collection(db, "users", user.uid, "messages");
+      await addDoc(msgRef, {
+        senderId: user.uid,
+        senderName: user.displayName || "Dr. Markus Hartmann",
+        text: `Shared Strategic Pairing: ${activePairing.title}. This proposal balances ${activePairing.components.opportunities.length} opportunities against ${activePairing.components.needs.length + activePairing.components.blindspots.length} priorities. View full diagnostic in Chartroom.`,
+        type: "recommendation",
+        track: "governance",
+        timestamp: new Date().toISOString()
+      });
+      toast({ title: "Shared with Wardroom", description: "This pairing has been broadcast to the family group chat." });
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleAddNewInput = () => {
@@ -285,11 +307,11 @@ export default function StrategicPairingsPage() {
         </div>
         <div className="flex items-center gap-4">
           <Button 
-            disabled={selectedInputIds.length === 0}
-            onClick={handleCreatePair}
+            disabled={!activePairing || isSubmitting}
+            onClick={handleSendToWardroom}
             className="h-9 px-6 rounded-xl text-[10px] font-bold uppercase tracking-widest bg-primary text-white shadow-lg"
           >
-            Create a pair
+            {isSubmitting ? "Broadcasting..." : "Send to Wardroom"}
           </Button>
         </div>
       </header>
@@ -552,13 +574,23 @@ export default function StrategicPairingsPage() {
         </div>
         
         <div className="flex items-center gap-4">
-          <Button 
-            onClick={handleCreatePair}
-            disabled={selectedInputIds.length === 0 || isSubmitting}
-            className="h-10 px-8 rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-xl"
-          >
-            Create a pair
-          </Button>
+          {selectedInputIds.length > 0 && !activePairing ? (
+            <Button 
+              onClick={handleCreatePair}
+              className="h-10 px-8 rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-xl"
+            >
+              Create a pair
+            </Button>
+          ) : (
+            <Button 
+              onClick={handleSendToWardroom}
+              disabled={!activePairing || isSubmitting}
+              className="h-10 px-8 rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-xl bg-primary hover:bg-primary/90 text-white"
+            >
+              {isSubmitting ? "Broadcasting..." : "Send to Wardroom"}
+              <Send className="ml-2 h-4 w-4" />
+            </Button>
+          )}
         </div>
       </div>
 
