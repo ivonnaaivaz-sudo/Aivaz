@@ -24,7 +24,7 @@ export function Sidebar() {
 
   const mainNav = [
     { name: "Bridge", href: "/bridge", icon: Compass },
-    { name: "Chart Room", href: "/chart-room", icon: Map },
+    { name: "Chartroom", href: "/chartroom", icon: Map },
     { name: "Wardroom", href: "/wardroom", icon: MessageSquare },
     { name: "Strongroom", href: "/vault", icon: Lock },
   ];

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useUser, useDoc, useCollection, useFirestore } from "@/firebase";
@@ -180,7 +181,7 @@ export default function DashboardPage() {
               <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500">Strategic Council Tracks</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Link href="/chart-room" className="group">
+              <Link href="/chartroom" className="group">
                 <Card className="border-slate-200 shadow-sm hover:shadow-md hover:border-primary/30 transition-all h-full bg-white rounded-3xl">
                   <CardContent className="p-8 space-y-4">
                     <div className="p-2 w-10 h-10 rounded-xl bg-primary/5 border border-primary/10 flex items-center justify-center">
@@ -191,7 +192,7 @@ export default function DashboardPage() {
                       <p className="text-sm text-slate-500 mt-2 leading-relaxed">Analyze a downside scenario on tech-growth holdings to protect core legacy capital.</p>
                     </div>
                     <div className="flex items-center text-[10px] font-bold text-primary uppercase tracking-widest gap-2 pt-2">
-                      Enter Chart Room <ChevronRight className="h-3 w-3" />
+                      Enter Chartroom <ChevronRight className="h-3 w-3" />
                     </div>
                   </CardContent>
                 </Card>
