@@ -381,7 +381,7 @@ export default function OnboardingPage() {
             {brandLogo && (
               <Image 
                 src={brandLogo.imageUrl} 
-                alt="Aivaz Heritage Logo" 
+                alt="Aivaz Logo" 
                 fill
                 className="object-contain p-3"
                 priority

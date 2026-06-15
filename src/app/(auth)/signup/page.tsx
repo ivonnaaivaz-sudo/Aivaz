@@ -71,7 +71,7 @@ export default function SignupPage() {
             {brandLogo && (
               <Image 
                 src={brandLogo.imageUrl} 
-                alt="Aivaz Heritage Logo" 
+                alt="Aivaz Logo" 
                 fill
                 className="object-contain p-3"
                 priority
@@ -79,7 +79,7 @@ export default function SignupPage() {
             )}
           </div>
           <div className="space-y-2">
-            <CardTitle className="text-3xl font-headline font-bold tracking-tighter text-white">Aivaz Heritage</CardTitle>
+            <CardTitle className="text-3xl font-headline font-bold tracking-tighter text-white">Aivaz</CardTitle>
             <CardDescription className="text-slate-400 italic text-sm font-medium">Complex legacies, simplified</CardDescription>
           </div>
         </CardHeader>
