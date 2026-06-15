@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useUser, useFirestore, useCollection } from "@/firebase";
@@ -6,48 +7,53 @@ import { collection, query, orderBy } from "firebase/firestore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { History, Milestone, Flag, Clock, CheckCircle2, Landmark, Globe } from "lucide-react";
+import { 
+  History, 
+  Landmark, 
+  Globe, 
+  ShieldCheck, 
+  Anchor, 
+  Scale, 
+  ScrollText,
+  Quote
+} from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 
-const HARTMANN_TIMELINE = [
+const HARTMANN_ARCHIVE = [
   {
-    id: "h-1",
-    title: "Hartmann Specialty Chem Foundation",
-    date: "1992",
+    year: "1992",
+    milestone: "Foundation of Hartmann Specialty Chem",
+    significance: "We established our independent path in a small Munich workspace. This was more than a business; it was Markus building a stable hearth for Elena and the future of our name.",
     type: "financial",
-    description: "Dr. Markus Hartmann establishes the core industrial entity in Munich, laying the foundation for the family's wealth.",
     status: "completed"
   },
   {
-    id: "h-2",
-    title: "Singapore Expansion Pivot",
-    date: "2008",
+    year: "2008",
+    milestone: "The Singapore Strategic Pivot",
+    significance: "As our horizons broadened, we reached into Asian markets. This period marked our family's transition from a regional German entity to a global heritage node.",
     type: "vision",
-    description: "Successful entry into Asian real estate markets, diversifying the industrial base into multi-jurisdictional holdings.",
     status: "completed"
   },
   {
-    id: "h-3",
-    title: "G2 Educational Trust Funding",
-    date: "Jan 2024",
+    year: "2024",
+    milestone: "Securing the G2 Educational Path",
+    significance: "We formally capitalized the trusts for Sophie and Alexander. Our objective was to ensure they had the freedom to innovate while remaining anchored by our foundational security.",
     type: "succession",
-    description: "Formal capitalization of the Singapore-based educational trust for G2 and G3 members. Ring-fencing capital for growth.",
     status: "completed"
   },
   {
-    id: "h-4",
-    title: "Institutional Governance Pivot",
-    date: "Jun 2026",
+    year: "2026",
+    milestone: "Formalization of the Family Council",
+    significance: "Current Phase: We are moving from a single-pillar leadership to a shared vault of responsibility. This ensures our values outlast any single individual.",
     type: "succession",
-    description: "Current Phase: Moving from founder-led control to a formal Family Council governance structure.",
     status: "in-progress"
   },
   {
-    id: "h-5",
-    title: "Family Foundation Launch",
-    date: "Dec 2026",
+    year: "2027",
+    milestone: "Launch of the Hartmann Heritage Foundation",
+    significance: "Our Target: Establishing a permanent vehicle for our philanthropic values, ensuring our success leaves a meaningful footprint on the world.",
     type: "philanthropy",
-    description: "Formal establishment of the primary Hartmann philanthropic vehicle, aligned with Elena's heritage values.",
     status: "target"
   }
 ];
@@ -63,8 +69,8 @@ export default function HeritageTimelinePage() {
   
   const { data: realEvents, loading } = useCollection(timelineQuery);
 
-  const isDemoMode = !realEvents || realEvents.length === 0;
-  const timelineEvents = isDemoMode ? HARTMANN_TIMELINE : realEvents;
+  // For this high-fidelity view, we prioritize the Archivist's curated narrative
+  const archiveItems = HARTMANN_ARCHIVE;
 
   if (loading) {
     return (
@@ -76,144 +82,98 @@ export default function HeritageTimelinePage() {
   }
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto pb-32">
-      <div className="flex flex-col gap-2">
+    <div className="space-y-12 max-w-6xl mx-auto pb-32 animate-in fade-in duration-700">
+      <header className="flex flex-col gap-4 border-b border-slate-200 pb-10">
         <div className="flex items-center gap-2">
-          <Badge className="bg-primary/20 text-primary border-primary/30">The Hartmann Story</Badge>
-          <div className="h-px flex-1 bg-white/5" />
+          <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 tracking-[0.2em] font-bold uppercase text-[9px] px-3">
+            Archive Node 01
+          </Badge>
+          <span className="text-slate-300">|</span>
+          <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Protocol: The Hartmann Standard</span>
         </div>
-        <h1 className="font-headline text-4xl font-bold tracking-tight">Heritage Journey</h1>
-        <p className="text-muted-foreground italic">Mapping the Hartmann legacy from 1992 industrial roots to 2026 institutional stability.</p>
-      </div>
-
-      <Card className="glass-panel border-white/5 relative overflow-hidden min-h-[550px] bg-black/40">
-        <div className="absolute top-0 right-0 p-10 opacity-5">
-          <History className="h-64 w-64" />
+        <div className="space-y-2">
+          <h1 className="font-headline text-5xl font-bold tracking-tighter text-slate-900">Our Heritage Journey</h1>
+          <p className="text-xl text-slate-500 italic font-serif max-w-3xl leading-relaxed">
+            "We preserve not just the capital, but the character that created it."
+          </p>
         </div>
-        <CardHeader className="border-b border-white/5">
-          <CardTitle className="text-lg">Generational Lifecycle Matrix</CardTitle>
-          <CardDescription>Synthesized milestones from the Hartmann Heritage Repository.</CardDescription>
-        </CardHeader>
-        <CardContent className="pt-24 pb-24 overflow-x-auto">
-          <div className="min-w-[1400px] relative px-10">
-            <div className="absolute top-1/2 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-y-1/2" />
-            
-            <div className="flex justify-between items-center relative z-10">
-              {timelineEvents.map((event: any) => (
-                <div key={event.id} className="flex flex-col items-center gap-4 w-72 group">
-                  <div className={cn(
-                    "text-[10px] font-bold uppercase tracking-[0.25em] transition-colors",
-                    event.status === 'completed' ? 'text-primary' : 
-                    event.status === 'in-progress' ? 'text-amber-500' : 
-                    'text-muted-foreground'
-                  )}>
-                    {event.date}
-                  </div>
-                  
-                  <div className={cn(
-                    "w-16 h-16 rounded-full border-2 flex items-center justify-center transition-all duration-700 group-hover:scale-110",
-                    event.status === 'completed' ? 'bg-primary/20 border-primary shadow-[0_0_30px_rgba(75,163,199,0.3)]' : 
-                    event.status === 'in-progress' ? 'bg-amber-500/10 border-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.2)]' :
-                    'bg-card border-white/10 group-hover:border-primary/50'
-                  )}>
-                    {event.status === 'completed' && <CheckCircle2 className="h-7 w-7 text-primary" />}
-                    {event.status === 'in-progress' && <Clock className="h-7 w-7 text-amber-500 animate-pulse" />}
-                    {event.status === 'target' && <Flag className="h-7 w-7 text-muted-foreground group-hover:text-primary transition-colors" />}
-                  </div>
+      </header>
 
-                  <div className="text-center px-4 space-y-2">
-                    <p className={cn(
-                      "text-sm font-bold leading-tight group-hover:text-primary transition-colors",
-                      event.status === 'completed' ? 'text-foreground' : 
-                      event.status === 'in-progress' ? 'text-foreground' : 
-                      'text-muted-foreground'
-                    )}>
-                      {event.title}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground/80 line-clamp-3 leading-relaxed font-medium">
-                      {event.description}
-                    </p>
-                    <div className="pt-2">
-                      <Badge variant="outline" className="text-[8px] uppercase tracking-tighter opacity-50 px-2 py-0 border-white/10">
-                        {event.type}
+      <section className="space-y-6">
+        <div className="flex items-center gap-3 px-1">
+          <History className="h-5 w-5 text-primary" />
+          <h2 className="text-sm font-bold uppercase tracking-widest text-slate-800">The Hartmann Chronology</h2>
+        </div>
+
+        <Card className="border-slate-200 shadow-sm bg-white overflow-hidden rounded-3xl">
+          <Table>
+            <TableHeader className="bg-slate-50/50">
+              <TableRow className="border-slate-100 hover:bg-transparent">
+                <TableHead className="w-[120px] text-[10px] font-bold uppercase tracking-widest text-slate-400 pl-8 py-6">Year</TableHead>
+                <TableHead className="w-[300px] text-[10px] font-bold uppercase tracking-widest text-slate-400">Milestone</TableHead>
+                <TableHead className="text-[10px] font-bold uppercase tracking-widest text-slate-400 pr-8">Family Significance</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {archiveItems.map((item, i) => (
+                <TableRow key={i} className="border-slate-100 group hover:bg-slate-50/50 transition-colors">
+                  <TableCell className="pl-8 py-8 align-top">
+                    <span className="font-headline font-bold text-xl text-slate-900">{item.year}</span>
+                  </TableCell>
+                  <TableCell className="py-8 align-top">
+                    <div className="space-y-2">
+                      <p className="font-bold text-slate-800 leading-snug">{item.milestone}</p>
+                      <Badge variant="outline" className="text-[8px] uppercase tracking-tighter opacity-50 px-2 py-0 border-slate-200">
+                        {item.type}
                       </Badge>
                     </div>
-                  </div>
-                </div>
+                  </TableCell>
+                  <TableCell className="pr-8 py-8 align-top">
+                    <p className="font-serif text-base leading-relaxed text-slate-600 italic">
+                      {item.significance}
+                    </p>
+                  </TableCell>
+                </TableRow>
               ))}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+            </TableBody>
+          </Table>
+        </Card>
+      </section>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <Card className="glass-panel border-white/10 bg-primary/5">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Milestone className="h-5 w-5 text-primary" />
-              Strategic Path: Next 12 Months
-            </CardTitle>
-            <CardDescription>High-priority milestones required for institutional stability.</CardDescription>
+        <Card className="bg-slate-900 text-white rounded-3xl overflow-hidden relative group">
+          <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+            <ScrollText className="h-24 w-24" />
+          </div>
+          <CardHeader className="p-8 pb-4">
+            <CardTitle className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Legacy Note: Risk Philosophy</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {timelineEvents.filter((e: any) => e.status !== 'completed').slice(0, 3).map((event: any) => (
-              <div key={event.id} className="flex gap-4 p-5 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-primary/30 transition-all group">
-                <div className={cn(
-                  "w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110",
-                  event.status === 'in-progress' ? 'bg-amber-500/10' : 'bg-primary/10'
-                )}>
-                  {event.status === 'in-progress' ? <Clock className="h-6 w-6 text-amber-500" /> : <Flag className="h-6 w-6 text-primary" />}
-                </div>
-                <div className="flex-1">
-                  <div className="flex justify-between items-start mb-1">
-                    <p className="font-bold text-sm group-hover:text-primary transition-colors">{event.title}</p>
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase">{event.date}</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{event.description}</p>
-                  <div className="mt-3 flex gap-2">
-                    <Badge variant="outline" className="bg-white/5 text-[9px] uppercase tracking-tighter">{event.type}</Badge>
-                    {event.status === 'in-progress' && (
-                      <Badge className="bg-amber-500/20 text-amber-500 border-amber-500/30 text-[9px] uppercase font-bold">Priority Target</Badge>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
+          <CardContent className="p-8 pt-0 space-y-4">
+            <p className="text-lg font-serif italic leading-relaxed text-slate-300">
+              "The stability we cultivated in the 1990s was a response to the fragmentation we witnessed elsewhere. This history is why we maintain a Low/Preservation appetite today—we build for centuries, not quarters."
+            </p>
+            <div className="flex items-center gap-3 pt-4 border-t border-white/10">
+              <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Informs: Psychological Architecture</p>
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="glass-panel bg-black/40">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Landmark className="h-5 w-5 text-primary" />
-              Legacy Milestone Aggregator
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="p-6 rounded-2xl bg-primary/5 border border-primary/20 flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-primary">Succession Grade</p>
-                <p className="text-2xl font-headline font-bold">Institutional Pivot Phase</p>
-              </div>
-              <Landmark className="h-10 w-10 text-primary opacity-30" />
-            </div>
-            
-            <div className="space-y-4">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Strategic Objectives</p>
-              <div className="grid grid-cols-2 gap-4">
-                {[
-                  { label: "Munich-Singapore Axis", icon: Globe },
-                  { label: "G2 Trust Liquidity", icon: Landmark },
-                  { label: "Charter Formalization", icon: Milestone }
-                ].map((goal, i) => (
-                  <div key={i} className="flex items-center gap-3 p-4 rounded-xl border border-white/5 bg-white/[0.01] text-xs font-bold group hover:border-primary/30 transition-all">
-                    <goal.icon className="h-4 w-4 text-primary opacity-50 group-hover:opacity-100 transition-opacity" />
-                    {goal.label}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </CardContent>
+        <Card className="border-slate-200 shadow-sm bg-white rounded-3xl flex flex-col justify-center p-8 text-center space-y-6">
+          <div className="w-16 h-16 rounded-2xl bg-primary/5 border border-primary/10 flex items-center justify-center mx-auto">
+            <Anchor className="h-8 w-8 text-primary" />
+          </div>
+          <div className="space-y-2">
+            <h3 className="font-headline font-bold text-xl text-slate-900">Archival Integrity</h3>
+            <p className="text-sm text-slate-500 leading-relaxed px-6">
+              Our history is synchronized across all Hartmann nodes. These records serve as the single source of truth for our Family Council.
+            </p>
+          </div>
+          <div className="flex items-center justify-center gap-6 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-300">
+            <ShieldCheck className="h-4 w-4" />
+            <span>Immutable Ledger</span>
+            <ShieldCheck className="h-4 w-4" />
+          </div>
         </Card>
       </div>
     </div>
