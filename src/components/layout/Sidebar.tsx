@@ -68,7 +68,7 @@ export function Sidebar() {
                 src={brandLogo.imageUrl} 
                 alt={brandLogo.description} 
                 fill
-                className="object-contain p-2"
+                className="object-cover"
                 priority
                 data-ai-hint={brandLogo.imageHint}
               />

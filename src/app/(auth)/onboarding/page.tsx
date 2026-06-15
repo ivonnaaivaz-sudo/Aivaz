@@ -383,7 +383,7 @@ export default function OnboardingPage() {
                 src={brandLogo.imageUrl} 
                 alt="Aivaz Logo" 
                 fill
-                className="object-contain p-3"
+                className="object-cover"
                 priority
               />
             )}
