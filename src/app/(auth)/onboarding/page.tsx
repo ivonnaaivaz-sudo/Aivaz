@@ -14,7 +14,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { 
   Shield, 
   Sparkles, 
@@ -34,7 +33,7 @@ import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 
-// Hartmann Seed Data
+// Hartmann Seed Data - The "Hartmann Standard"
 const HARTMANN_SEED = {
   dna: {
     personalProfile: {
@@ -64,20 +63,25 @@ const HARTMANN_SEED = {
         summary: "Founded in Munich by Dr. Markus Hartmann, the family wealth grew from a specialized chemicals firm into a diversified industrial and real estate empire.",
         keyHoldings: ["Hartmann Specialty Chem", "Munich-Singapore Real Estate Trust"],
         notableTransitions: ["1992 Foundation", "2008 Singapore Expansion", "2024 Institutional Pivot"]
-      }
-    },
-    initialTimeline: [
-      { title: "Foundation of Hartmann Specialty Chem", date: "1992", type: "financial", status: "completed", description: "Established our independent path in Munich." },
-      { title: "Singapore Strategic Pivot", date: "2008", type: "vision", status: "completed", description: "Expansion into Asian markets." },
-      { title: "Securing G2 Trusts", date: "2024", type: "succession", status: "completed", description: "Formal capitalization of family trusts." },
-      { title: "Family Council Formalization", date: "2026", type: "succession", status: "in-progress", description: "Transition to shared governance." }
-    ]
+      },
+      relationalDynamics: {
+        keyFrictionPoints: ["Succession transparency between G1 and G2", "Risk tolerance variance", "Geographic relocation"],
+        alignmentLevel: "Medium-High",
+        successionReadinessScore: 42
+      },
+      familyLegacyNarrative: "The Hartmann family represents the quintessential European industrial legacy facing the complexity of the 21st century. Their DNA is a blend of traditional German precision and emerging global impacts."
+    }
   },
   timeline: [
     { title: "Foundation of Hartmann Specialty Chem", date: "1992", type: "financial", status: "completed", description: "Established our independent path in Munich." },
     { title: "Singapore Strategic Pivot", date: "2008", type: "vision", status: "completed", description: "Expansion into Asian markets." },
     { title: "Securing G2 Trusts", date: "2024", type: "succession", status: "completed", description: "Formal capitalization of family trusts." },
-    { title: "Family Council Formalization", date: "2026", type: "succession", status: "in-progress", description: "Transition to shared governance." }
+    { title: "Family Council Formalization", date: "2026", type: "succession", status: "in-progress", description: "Transition to shared governance." },
+    { title: "Hartmann Heritage Foundation", date: "2027", type: "philanthropy", status: "target", description: "Establishment of a permanent philanthropic vehicle." }
+  ],
+  assets: [
+    { name: "Hartmann Specialty Chem", type: "Other", appraisalValue: 95000000, location: "Munich, Germany", description: "Core industrial business.", documentCount: 12 },
+    { name: "Munich-Singapore Property Trust", type: "Real Estate", appraisalValue: 171000000, location: "Global", description: "Diversified real estate holdings.", documentCount: 24 }
   ]
 };
 
@@ -128,7 +132,7 @@ const allSteps: Step[] = [
     question: "Authorize AI Synthesis?",
     type: "choice",
     options: [
-      { id: "authorized", label: "Authorize AI Analysis", icon: BrainCircuit, description: "Allow Aivaz to scan public records and digital footprints for your enterprise." },
+      { id: "authorized", label: "Authorize AI Analysis", icon: BrainCircuit, description: "Allow Aivaz to scan public records for your enterprise." },
       { id: "manual", label: "Manual Entry Only", icon: Shield, description: "Restrict AI logic to data provided strictly within this session." }
     ]
   },
@@ -170,6 +174,20 @@ const allSteps: Step[] = [
       { id: "risk", label: "Minimizing taxes and risks" }
     ]
   },
+  {
+    id: "q4A",
+    branch: "First Generation",
+    title: "Decision Logic",
+    question: "What usually guides your major financial decisions? (Top 2)",
+    type: "multi-select",
+    maxSelect: 2,
+    options: [
+      { id: "stability", label: "Capital preservation and stability" },
+      { id: "growth", label: "Long-term growth potential" },
+      { id: "control", label: "Maintaining family control and privacy" },
+      { id: "harmony", label: "Family harmony and unity" }
+    ]
+  },
   // Branch B: Second Gen
   {
     id: "q3B",
@@ -183,6 +201,14 @@ const allSteps: Step[] = [
       { id: "alignment", label: "Aligning with siblings" },
       { id: "identity", label: "Defining own financial identity" }
     ]
+  },
+  {
+    id: "q4B",
+    branch: "Second Generation",
+    title: "Reflections",
+    question: "Thinking about past decisions, what felt right and what felt difficult?",
+    type: "textarea",
+    placeholder: "Share your perspective..."
   },
   // Branch C: Third Gen
   {
@@ -202,7 +228,7 @@ const allSteps: Step[] = [
     branch: "Third Generation or Later",
     condition: (ans) => ans.q3C !== "good",
     title: "Friction Points",
-    question: "Which of these have you experienced? (Multi-select)",
+    question: "Which of these have you experienced?",
     type: "multi-select",
     options: [
       { id: "frustration", label: "Frustration with lack of transparency" },
@@ -215,7 +241,7 @@ const allSteps: Step[] = [
   {
     id: "q6",
     title: "Decision Architecture",
-    question: "How are major decisions typically made in your family?",
+    question: "How are major wealth decisions typically made in your family?",
     type: "radio",
     options: [
       { id: "One person", label: "One person decides most things" },
@@ -234,6 +260,13 @@ const allSteps: Step[] = [
       { id: "balanced", label: "Balanced – some growth with caution" },
       { id: "risk", label: "Comfortable with higher risk for higher returns" }
     ]
+  },
+  {
+    id: "q8",
+    title: "Objectives",
+    question: "What is one thing you hope AIVAZ will help your family with?",
+    type: "textarea",
+    placeholder: "e.g. Unified planning, smoother succession..."
   },
   {
     id: "personal_details",
@@ -357,10 +390,14 @@ export default function OnboardingPage() {
       setLoading(true);
       try {
         if (user && db) {
-          const dnaResult = await extractFamilyDNA({ 
-            surveyData: answers,
-            userName: answers.fullName || user.displayName || undefined
-          });
+          // Trigger synthesis for non-seed users
+          let dnaResult = null;
+          if (!joiningFamily?.isSeed) {
+            dnaResult = await extractFamilyDNA({ 
+              surveyData: answers,
+              userName: answers.fullName || user.displayName || undefined
+            });
+          }
 
           let profileUrl = null;
           let bgUrl = null;
@@ -384,7 +421,7 @@ export default function OnboardingPage() {
             const familyRef = doc(collection(db, "families"));
             targetFamilyId = familyRef.id;
             batch.set(familyRef, {
-              name: `${dnaResult.familyProfile.familyName || 'Family'} Heritage`,
+              name: `${dnaResult?.familyProfile?.familyName || 'Family'} Heritage`,
               inviteCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
               members: [user.uid],
               createdAt: new Date().toISOString()
@@ -411,7 +448,6 @@ export default function OnboardingPage() {
             familyId: targetFamilyId,
             role: answers.q2,
             dob: answers.dob,
-            generationalStage: dnaResult.personalProfile.generationalStage,
             onboardingData: answers,
             profilePhotoUrl: profileUrl,
             dashboardBackgroundUrl: bgUrl,
@@ -422,12 +458,17 @@ export default function OnboardingPage() {
           const finalDna = joiningFamily?.isSeed ? HARTMANN_SEED.dna : dnaResult;
           batch.set(dnaRef, finalDna);
 
+          // Seed sub-collections
           if (joiningFamily?.isSeed) {
             HARTMANN_SEED.timeline.forEach((event) => {
               const eventRef = doc(collection(db, "users", user.uid, "timeline"));
               batch.set(eventRef, event);
             });
-          } else if (dnaResult.initialTimeline) {
+            HARTMANN_SEED.assets.forEach((asset) => {
+              const assetRef = doc(collection(db, "users", user.uid, "assets"));
+              batch.set(assetRef, asset);
+            });
+          } else if (dnaResult?.initialTimeline) {
             dnaResult.initialTimeline.forEach((event) => {
               const eventRef = doc(collection(db, "users", user.uid, "timeline"));
               batch.set(eventRef, event);
@@ -438,7 +479,7 @@ export default function OnboardingPage() {
           router.push("/dashboard");
         }
       } catch (e) {
-        console.error("Discovery failed:", e);
+        console.error("Synthesis failed:", e);
         toast({ variant: "destructive", title: "Synthesis Error", description: "Could not finalize legacy profile." });
       } finally {
         setLoading(false);
@@ -462,20 +503,20 @@ export default function OnboardingPage() {
 
       <div className="max-w-2xl w-full space-y-8 relative z-10">
         <div className="flex flex-col items-center text-center space-y-6">
-          <div className="mx-auto w-24 h-24 rounded-full bg-white/[0.03] border border-white/10 flex items-center justify-center shadow-[0_0_40px_rgba(75,163,199,0.1)] overflow-hidden relative">
+          <div className="mx-auto w-24 h-24 rounded-full bg-[#020617] border border-white/10 flex items-center justify-center shadow-[0_0_40px_rgba(75,163,199,0.1)] overflow-hidden relative">
             {brandLogo && (
               <Image 
                 src={brandLogo.imageUrl} 
                 alt="Aivaz Logo" 
                 fill
-                className="object-cover"
+                className="object-cover scale-150"
                 priority
               />
             )}
           </div>
           <div className="space-y-2">
             <h1 className="text-3xl font-headline font-bold text-white tracking-tight">Legacy Discovery</h1>
-            <p className="text-slate-400 max-w-sm text-sm">Synchronizing your node with the family architecture.</p>
+            <p className="text-slate-400 max-w-sm text-sm">Let's get to know your family's unique architecture.</p>
           </div>
         </div>
 
@@ -660,7 +701,7 @@ export default function OnboardingPage() {
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <>
-                  {!nextStepPossible ? "Complete Synthesis" : (currentStep.optional && !answers[currentStep.id] ? "Skip this step" : "Continue")}
+                  {!nextStepPossible ? "Complete Synthesis" : (currentStep.optional && !answers[currentStep.id] ? "Skip for now" : "Continue")}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </>
               )}
