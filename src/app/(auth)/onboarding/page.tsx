@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useUser, useFirestore, useStorage } from "@/firebase";
 import { doc, collection, writeBatch, query, where, getDocs, arrayUnion } from "firebase/firestore";
@@ -22,11 +23,11 @@ import {
   Loader2, 
   Landmark, 
   Users, 
-  Info,
   Camera,
   ImagePlus,
   User,
-  Calendar
+  Calendar,
+  CheckCircle2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -64,13 +65,19 @@ const HARTMANN_SEED = {
         keyHoldings: ["Hartmann Specialty Chem", "Munich-Singapore Real Estate Trust"],
         notableTransitions: ["1992 Foundation", "2008 Singapore Expansion", "2024 Institutional Pivot"]
       }
-    }
+    },
+    initialTimeline: [
+      { title: "Foundation of Hartmann Specialty Chem", date: "1992", type: "financial", status: "completed", description: "Established our independent path in Munich." },
+      { title: "Singapore Strategic Pivot", date: "2008", type: "vision", status: "completed", description: "Expansion into Asian markets." },
+      { title: "Securing G2 Trusts", date: "2024", type: "succession", status: "completed", description: "Formal capitalization of family trusts." },
+      { title: "Family Council Formalization", date: "2026", type: "succession", status: "in-progress", description: "Transition to shared governance." }
+    ]
   },
   timeline: [
-    { year: "1992", title: "Foundation of Hartmann Specialty Chem", date: "1992-01-01", type: "financial", status: "completed", description: "Established our independent path in Munich." },
-    { year: "2008", title: "Singapore Strategic Pivot", date: "2008-05-12", type: "vision", status: "completed", description: "Expansion into Asian markets." },
-    { year: "2024", title: "Securing G2 Trusts", date: "2024-11-20", type: "succession", status: "completed", description: "Formal capitalization of family trusts." },
-    { year: "2026", title: "Family Council Formalization", date: "2026-06-01", type: "succession", status: "in-progress", description: "Transition to shared governance." }
+    { title: "Foundation of Hartmann Specialty Chem", date: "1992", type: "financial", status: "completed", description: "Established our independent path in Munich." },
+    { title: "Singapore Strategic Pivot", date: "2008", type: "vision", status: "completed", description: "Expansion into Asian markets." },
+    { title: "Securing G2 Trusts", date: "2024", type: "succession", status: "completed", description: "Formal capitalization of family trusts." },
+    { title: "Family Council Formalization", date: "2026", type: "succession", status: "in-progress", description: "Transition to shared governance." }
   ]
 };
 
@@ -133,8 +140,7 @@ const allSteps: Step[] = [
     options: [
       { id: "First Generation", label: "First Generation (Founder / Creator)" },
       { id: "Second Generation", label: "Second Generation" },
-      { id: "Third Generation or Later", label: "Third Generation or Later" },
-      { id: "Other", label: "Other" }
+      { id: "Third Generation or Later", label: "Third Generation or Later" }
     ]
   },
   {
@@ -149,6 +155,63 @@ const allSteps: Step[] = [
       { id: "Other", label: "Other" }
     ]
   },
+  // Branch A: Founder
+  {
+    id: "q3A",
+    branch: "First Generation",
+    title: "Strategic Focus",
+    question: "Which of these has taken up most of your mental energy recently? (Top 2)",
+    type: "multi-select",
+    maxSelect: 2,
+    options: [
+      { id: "preserving", label: "Protecting and preserving what we built" },
+      { id: "growing", label: "Growing the wealth further" },
+      { id: "succession", label: "Preparing the next gen for succession" },
+      { id: "risk", label: "Minimizing taxes and risks" }
+    ]
+  },
+  // Branch B: Second Gen
+  {
+    id: "q3B",
+    branch: "Second Generation",
+    title: "Role Dynamics",
+    question: "What has been the most challenging part of your role between generations?",
+    type: "multi-select",
+    options: [
+      { id: "respect", label: "Balancing respect for parents' views with own" },
+      { id: "visibility", label: "Getting sufficient visibility into assets" },
+      { id: "alignment", label: "Aligning with siblings" },
+      { id: "identity", label: "Defining own financial identity" }
+    ]
+  },
+  // Branch C: Third Gen
+  {
+    id: "q3C",
+    branch: "Third Generation or Later",
+    title: "Transparency",
+    question: "How much visibility do you currently have into the family wealth?",
+    type: "radio",
+    options: [
+      { id: "limited", label: "Very limited / Almost none" },
+      { id: "partial", label: "Partial visibility" },
+      { id: "good", label: "Good visibility" }
+    ]
+  },
+  {
+    id: "q4C",
+    branch: "Third Generation or Later",
+    condition: (ans) => ans.q3C !== "good",
+    title: "Friction Points",
+    question: "Which of these have you experienced? (Multi-select)",
+    type: "multi-select",
+    options: [
+      { id: "frustration", label: "Frustration with lack of transparency" },
+      { id: "views", label: "Different investment views from parents" },
+      { id: "involvement", label: "Desire for more involvement in decisions" },
+      { id: "inheritance", label: "Concerns about how inheritance is handled" }
+    ]
+  },
+  // Universal
   {
     id: "q6",
     title: "Decision Architecture",
@@ -159,6 +222,17 @@ const allSteps: Step[] = [
       { id: "Small group", label: "A small group discusses and decides" },
       { id: "Collaborative/Tense", label: "Collaborative but can be tense" },
       { id: "Fragmented", label: "Quite fragmented" }
+    ]
+  },
+  {
+    id: "q7",
+    title: "Risk Profile",
+    question: "How would you describe your comfort with investment risk?",
+    type: "radio",
+    options: [
+      { id: "stability", label: "Prefer stability and sleep-well-at-night" },
+      { id: "balanced", label: "Balanced – some growth with caution" },
+      { id: "risk", label: "Comfortable with higher risk for higher returns" }
     ]
   },
   {
@@ -234,12 +308,23 @@ export default function OnboardingPage() {
     reader.readAsDataURL(file);
   };
 
+  const toggleMultiSelect = (stepId: string, optionId: string, max?: number) => {
+    const current = answers[stepId] || [];
+    let next;
+    if (current.includes(optionId)) {
+      next = current.filter((id: string) => id !== optionId);
+    } else {
+      if (max && current.length >= max) return;
+      next = [...current, optionId];
+    }
+    setAnswers({ ...answers, [stepId]: next });
+  };
+
   const handleNext = async () => {
     if (currentStep.id === 'gateway' && answers.gateway === 'join' && !joiningFamily) {
       setLoading(true);
       try {
         const uppercaseCode = familyCode.toUpperCase();
-        // Check for Hartmann Override
         if (uppercaseCode === 'HARTMANN-1987') {
           setJoiningFamily({ id: 'legacy-hartmann-1987', name: 'Hartmann Heritage', isSeed: true });
           toast({ title: "Archival Code Accepted", description: "Synchronizing with the Hartmann Heritage vault." });
@@ -305,8 +390,8 @@ export default function OnboardingPage() {
               createdAt: new Date().toISOString()
             });
           } else if (targetFamilyId) {
+            const familyRef = doc(db, "families", targetFamilyId);
             if (joiningFamily?.isSeed) {
-               const familyRef = doc(db, "families", targetFamilyId);
                batch.set(familyRef, {
                  name: 'Hartmann Heritage',
                  inviteCode: 'HARTMANN-1987',
@@ -314,7 +399,6 @@ export default function OnboardingPage() {
                  createdAt: new Date().toISOString()
                }, { merge: true });
             } else {
-              const familyRef = doc(db, "families", targetFamilyId);
               batch.update(familyRef, { members: arrayUnion(user.uid) });
             }
           }
@@ -366,6 +450,7 @@ export default function OnboardingPage() {
     setCurrentStepIndex(getPrevValidStepIndex(currentStepIndex, answers));
   };
 
+  const nextStepPossible = getNextValidStepIndex(currentStepIndex, answers) !== -1;
   const progress = ((currentStepIndex + 1) / allSteps.length) * 100;
 
   return (
@@ -413,11 +498,6 @@ export default function OnboardingPage() {
               </div>
             </div>
             <CardTitle className="text-2xl font-headline text-white leading-tight mt-2">{currentStep.question}</CardTitle>
-            {joiningFamily && (
-              <p className="text-xs font-bold text-emerald-500 uppercase tracking-widest pt-2 flex items-center gap-2">
-                <Shield className="h-3 w-3" /> Linked to: {joiningFamily.name}
-              </p>
-            )}
           </CardHeader>
           <CardContent className="px-8 pb-8">
             {currentStep.type === "personal-details" ? (
@@ -524,6 +604,24 @@ export default function OnboardingPage() {
                   </div>
                 ))}
               </RadioGroup>
+            ) : currentStep.type === "multi-select" ? (
+               <div className="grid gap-3">
+                 {currentStep.options?.map((opt) => (
+                   <div 
+                    key={opt.id} 
+                    onClick={() => toggleMultiSelect(currentStep.id, opt.id, currentStep.maxSelect)}
+                    className={cn(
+                      "flex items-center justify-between p-4 rounded-xl border transition-all cursor-pointer",
+                      (answers[currentStep.id] || []).includes(opt.id) 
+                        ? "bg-primary/10 border-primary/50 text-white" 
+                        : "bg-white/[0.01] border-white/5 text-slate-400 hover:bg-white/[0.03]"
+                    )}
+                   >
+                     <span className="text-sm font-semibold">{opt.label}</span>
+                     {(answers[currentStep.id] || []).includes(opt.id) && <CheckCircle2 className="h-4 w-4 text-primary" />}
+                   </div>
+                 ))}
+               </div>
             ) : currentStep.type === "input" ? (
               <div className="space-y-4">
                 <Input 
@@ -553,6 +651,7 @@ export default function OnboardingPage() {
                 (currentStep.type === 'radio' && !answers[currentStep.id]) ||
                 (currentStep.type === 'choice' && !answers[currentStep.id]) ||
                 (currentStep.type === 'personal-details' && (!answers.fullName || !answers.dob)) ||
+                (currentStep.type === 'multi-select' && (!answers[currentStep.id] || answers[currentStep.id].length === 0)) ||
                 loading
               }
               className="px-8 rounded-xl shadow-lg bg-primary hover:bg-primary/90 text-white font-bold uppercase text-[11px] tracking-widest h-11"
@@ -561,7 +660,7 @@ export default function OnboardingPage() {
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <>
-                  {currentStep.optional && !answers[currentStep.id] ? "Skip this step" : (currentStepIndex === allSteps.length - 1 ? "Complete Synthesis" : "Continue")}
+                  {!nextStepPossible ? "Complete Synthesis" : (currentStep.optional && !answers[currentStep.id] ? "Skip this step" : "Continue")}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </>
               )}

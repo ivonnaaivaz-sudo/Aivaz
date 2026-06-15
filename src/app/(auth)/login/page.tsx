@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -67,13 +68,13 @@ export default function LoginPage() {
 
       <Card className="max-w-md w-full bg-white/[0.02] border-white/5 shadow-2xl backdrop-blur-xl relative z-10">
         <CardHeader className="text-center space-y-6 pt-10">
-          <div className="mx-auto w-24 h-24 rounded-full bg-white/[0.03] border border-white/10 flex items-center justify-center shadow-[0_0_40px_rgba(75,163,199,0.1)] overflow-hidden relative">
+          <div className="mx-auto w-24 h-24 rounded-full bg-[#020617] border border-white/10 flex items-center justify-center shadow-[0_0_40px_rgba(75,163,199,0.1)] overflow-hidden relative">
             {brandLogo && (
               <Image 
                 src={brandLogo.imageUrl} 
                 alt="Aivaz Logo" 
                 fill
-                className="object-cover"
+                className="object-cover scale-150"
                 priority
               />
             )}
