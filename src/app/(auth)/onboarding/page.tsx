@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef } from "react";
@@ -25,18 +26,60 @@ import {
   Info,
   Camera,
   ImagePlus,
-  Upload
+  User,
+  Calendar
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 
+// Hartmann Seed Data
+const HARTMANN_SEED = {
+  dna: {
+    personalProfile: {
+      roleInFamily: "Principal Founder",
+      generationalStage: "1st Generation (G1)",
+      primaryLocation: "Munich, Germany",
+      otherLocations: ["Singapore", "London", "Zurich"],
+      psychologicalProfile: {
+        biggestHeadache: "Fragmentation of authority and the tension between traditional industrial values and G3's push for ESG and tech-led growth.",
+        currentPriorities: ["Consolidation of €42M idle cash", "Formalizing the Hartmann Family Charter", "Resolving the Asia vs. Europe relocation debate"],
+        emotionalFrictionPoints: ["Dr. Markus's control-oriented management vs. Sophie's impact-driven autonomy", "Alexander's high-risk tech appetite vs. family capital preservation"],
+        advisorBlindSpots: ["Advisors focus on tax structures in Luxembourg but ignore the deep emotional rift regarding the family's geographic future."]
+      },
+      financialSnapshot: {
+        estimatedNetWorth: "€380M (Aggregated)",
+        primaryAssetClasses: ["Commercial Real Estate", "Chemical Manufacturing", "Private Equity"]
+      },
+      aiSummary: "The Hartmann legacy is at a pivotal crossroads. Dr. Markus Hartmann's industrial era is transitioning into a fragmented global portfolio, requiring a move from patriarch-led control to institutional governance."
+    },
+    familyProfile: {
+      familyName: "Hartmann Heritage",
+      currentGenerationalStage: "1st Generation Transitioning to 3rd",
+      geographicFootprint: ["Germany", "Singapore", "United Kingdom", "Switzerland", "Cayman Islands"],
+      wealthSource: "Specialty Chemicals & Industrial Infrastructure",
+      estimatedTotalNetWorth: "€380M",
+      history: {
+        summary: "Founded in Munich by Dr. Markus Hartmann, the family wealth grew from a specialized chemicals firm into a diversified industrial and real estate empire.",
+        keyHoldings: ["Hartmann Specialty Chem", "Munich-Singapore Real Estate Trust"],
+        notableTransitions: ["1992 Foundation", "2008 Singapore Expansion", "2024 Institutional Pivot"]
+      }
+    }
+  },
+  timeline: [
+    { year: "1992", title: "Foundation of Hartmann Specialty Chem", date: "1992-01-01", type: "financial", status: "completed", description: "Established our independent path in Munich." },
+    { year: "2008", title: "Singapore Strategic Pivot", date: "2008-05-12", type: "vision", status: "completed", description: "Expansion into Asian markets." },
+    { year: "2024", title: "Securing G2 Trusts", date: "2024-11-20", type: "succession", status: "completed", description: "Formal capitalization of family trusts." },
+    { year: "2026", title: "Family Council Formalization", date: "2026-06-01", type: "succession", status: "in-progress", description: "Transition to shared governance." }
+  ]
+};
+
 type Step = {
   id: string;
   title: string;
   question: string;
-  type: "choice" | "radio" | "multi-select" | "textarea" | "input" | "image-picker";
+  type: "choice" | "radio" | "multi-select" | "textarea" | "input" | "image-picker" | "personal-details";
   options?: { id: string; label: string; icon?: any; description?: string }[];
   placeholder?: string;
   branch?: string;
@@ -108,112 +151,6 @@ const allSteps: Step[] = [
     ]
   },
   {
-    id: "q3a",
-    branch: "First Generation",
-    title: "Strategic Focus",
-    question: "In the past 5 years, which of these has taken up most of your mental energy? (Choose top 2)",
-    type: "multi-select",
-    maxSelect: 2,
-    options: [
-      { id: "protecting", label: "Protecting and preserving what we built" },
-      { id: "growing", label: "Growing the wealth further" },
-      { id: "preparing", label: "Preparing the next generation for succession" },
-      { id: "minimizing", label: "Minimizing taxes and risks" },
-      { id: "other", label: "Other" }
-    ]
-  },
-  {
-    id: "q4a",
-    branch: "First Generation",
-    title: "Decision Drivers",
-    question: "When you’ve made major decisions, what usually guides you most? (Rank top 2)",
-    type: "multi-select",
-    maxSelect: 2,
-    options: [
-      { id: "preservation", label: "Stability and preservation" },
-      { id: "growth", label: "Long-term growth potential" },
-      { id: "control", label: "Maintaining control and privacy" },
-      { id: "harmony", label: "Family harmony and unity" },
-      { id: "impact", label: "Creating positive impact" }
-    ]
-  },
-  {
-    id: "q5a",
-    branch: "First Generation",
-    title: "Transition Readiness",
-    question: "Have you ever hesitated to transfer significant assets to the next generation?",
-    type: "radio",
-    options: [
-      { id: "Yes", label: "Yes" },
-      { id: "No", label: "No" }
-    ]
-  },
-  {
-    id: "q5a_followup",
-    branch: "First Generation",
-    condition: (ans) => ans.q5a === 'Yes',
-    title: "Transition Concerns",
-    question: "What were your main concerns regarding asset transfer?",
-    type: "textarea",
-    placeholder: "e.g., Readiness of children, preservation of values, tax efficiency..."
-  },
-  {
-    id: "q3b",
-    branch: "Second Generation",
-    title: "Generational Dynamics",
-    question: "What has been the most challenging part of your role between generations?",
-    type: "multi-select",
-    options: [
-      { id: "balancing", label: "Respecting heritage while forging a new path" },
-      { id: "visibility", label: "Getting sufficient visibility into family assets" },
-      { id: "aligning", label: "Aligning with siblings or other family nodes" },
-      { id: "identity", label: "Defining your own financial identity" }
-    ]
-  },
-  {
-    id: "q4b",
-    branch: "Second Generation",
-    title: "Historical Context",
-    question: "Thinking about past family decisions, what felt right and what felt difficult?",
-    type: "textarea",
-    placeholder: "Reflect on a decision that impacted family alignment..."
-  },
-  {
-    id: "q3c",
-    branch: "Third Generation or Later",
-    title: "Legacy Visibility",
-    question: "How much visibility do you currently have into the family legacy?",
-    type: "radio",
-    options: [
-      { id: "Very limited", label: "Very limited / Almost none" },
-      { id: "Partial", label: "Partial visibility" },
-      { id: "Good", label: "Good visibility" }
-    ]
-  },
-  {
-    id: "q4c",
-    branch: "Third Generation or Later",
-    condition: (ans) => ans.q3c !== 'Good',
-    title: "Personal Experience",
-    question: "Which of these have you experienced?",
-    type: "multi-select",
-    options: [
-      { id: "frustration", label: "Frustration with lack of transparency" },
-      { id: "divergence", label: "Different investment views from parents" },
-      { id: "desire", label: "Desire for more involvement in decisions" },
-      { id: "concerns", label: "Concerns about how heritage will be handled" }
-    ]
-  },
-  {
-    id: "q5c",
-    branch: "Third Generation or Later",
-    title: "Future Objectives",
-    question: "What is something you personally want to achieve with the family's support?",
-    type: "textarea",
-    placeholder: "e.g. buy a home, invest in a cause, relocate, etc. (Optional)",
-    optional: true
-  },
-  {
     id: "q6",
     title: "Decision Architecture",
     question: "How are major decisions typically made in your family?",
@@ -226,22 +163,10 @@ const allSteps: Step[] = [
     ]
   },
   {
-    id: "q7",
-    title: "Risk Appetite",
-    question: "How would you describe your comfort with risk?",
-    type: "radio",
-    options: [
-      { id: "Stability", label: "Prefer stability and preservation" },
-      { id: "Balanced", label: "Balanced – some growth with caution" },
-      { id: "High Risk", label: "Comfortable with higher risk for higher returns" }
-    ]
-  },
-  {
-    id: "q8",
-    title: "Vision",
-    question: "What is one thing you hope AIVAZ will help your family with?",
-    type: "textarea",
-    placeholder: "Describe your primary goal for using this platform..."
+    id: "personal_details",
+    title: "Identification",
+    question: "Finalize your Principal record.",
+    type: "personal-details"
   },
   {
     id: "visuals",
@@ -264,7 +189,6 @@ export default function OnboardingPage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  // Image Upload State
   const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
   const [dashboardBg, setDashboardBg] = useState<File | null>(null);
   const [profilePreview, setProfilePreview] = useState<string | null>(null);
@@ -298,7 +222,6 @@ export default function OnboardingPage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'bg') => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onloadend = () => {
       if (type === 'profile') {
@@ -316,17 +239,25 @@ export default function OnboardingPage() {
     if (currentStep.id === 'gateway' && answers.gateway === 'join' && !joiningFamily) {
       setLoading(true);
       try {
-        const q = query(collection(db, "families"), where("inviteCode", "==", familyCode.toUpperCase()));
-        const snapshot = await getDocs(q);
-        if (snapshot.empty) {
-          toast({ variant: "destructive", title: "Invalid Code", description: "This invite code does not match any existing heritage node." });
-          setLoading(false);
-          return;
+        const uppercaseCode = familyCode.toUpperCase();
+        // Check for Hartmann Override
+        if (uppercaseCode === 'HARTMANN-1987') {
+          setJoiningFamily({ id: 'legacy-hartmann-1987', name: 'Hartmann Heritage', isSeed: true });
+          toast({ title: "Archival Code Accepted", description: "Synchronizing with the Hartmann Heritage vault." });
+          setCurrentStepIndex(getNextValidStepIndex(currentStepIndex, answers));
+        } else {
+          const q = query(collection(db, "families"), where("inviteCode", "==", uppercaseCode));
+          const snapshot = await getDocs(q);
+          if (snapshot.empty) {
+            toast({ variant: "destructive", title: "Invalid Code", description: "This invite code does not match any existing heritage node." });
+            setLoading(false);
+            return;
+          }
+          const familyDoc = snapshot.docs[0];
+          setJoiningFamily({ id: familyDoc.id, ...familyDoc.data() });
+          toast({ title: "Node Located", description: `Synchronizing with the ${familyDoc.data().name} legacy.` });
+          setCurrentStepIndex(getNextValidStepIndex(currentStepIndex, answers));
         }
-        const familyDoc = snapshot.docs[0];
-        setJoiningFamily({ id: familyDoc.id, ...familyDoc.data() });
-        toast({ title: "Node Located", description: `Synchronizing with the ${familyDoc.data().name} legacy.` });
-        setCurrentStepIndex(getNextValidStepIndex(currentStepIndex, answers));
       } catch (e) {
         console.error(e);
       } finally {
@@ -342,13 +273,11 @@ export default function OnboardingPage() {
       setLoading(true);
       try {
         if (user && db) {
-          // 1. Extract DNA
           const dnaResult = await extractFamilyDNA({ 
             surveyData: answers,
-            userName: user.displayName || undefined
+            userName: answers.fullName || user.displayName || undefined
           });
 
-          // 2. Handle Image Uploads
           let profileUrl = null;
           let bgUrl = null;
 
@@ -364,7 +293,6 @@ export default function OnboardingPage() {
             bgUrl = await getDownloadURL(bgRef);
           }
 
-          // 3. Database Updates
           const batch = writeBatch(db);
           let targetFamilyId = joiningFamily?.id;
 
@@ -378,16 +306,28 @@ export default function OnboardingPage() {
               createdAt: new Date().toISOString()
             });
           } else if (targetFamilyId) {
-            const familyRef = doc(db, "families", targetFamilyId);
-            batch.update(familyRef, { members: arrayUnion(user.uid) });
+            if (joiningFamily?.isSeed) {
+               const familyRef = doc(db, "families", targetFamilyId);
+               batch.set(familyRef, {
+                 name: 'Hartmann Heritage',
+                 inviteCode: 'HARTMANN-1987',
+                 members: arrayUnion(user.uid),
+                 createdAt: new Date().toISOString()
+               }, { merge: true });
+            } else {
+              const familyRef = doc(db, "families", targetFamilyId);
+              batch.update(familyRef, { members: arrayUnion(user.uid) });
+            }
           }
           
           const userRef = doc(db, "users", user.uid);
           batch.set(userRef, {
             uid: user.uid,
+            displayName: answers.fullName || user.displayName,
             hasCompletedProfiling: true,
             familyId: targetFamilyId,
             role: answers.q2,
+            dob: answers.dob,
             generationalStage: dnaResult.personalProfile.generationalStage,
             onboardingData: answers,
             profilePhotoUrl: profileUrl,
@@ -396,9 +336,15 @@ export default function OnboardingPage() {
           }, { merge: true });
 
           const dnaRef = doc(db, "users", user.uid, "dna", "current");
-          batch.set(dnaRef, dnaResult);
+          const finalDna = joiningFamily?.isSeed ? HARTMANN_SEED.dna : dnaResult;
+          batch.set(dnaRef, finalDna);
 
-          if (dnaResult.initialTimeline) {
+          if (joiningFamily?.isSeed) {
+            HARTMANN_SEED.timeline.forEach((event) => {
+              const eventRef = doc(collection(db, "users", user.uid, "timeline"));
+              batch.set(eventRef, event);
+            });
+          } else if (dnaResult.initialTimeline) {
             dnaResult.initialTimeline.forEach((event) => {
               const eventRef = doc(collection(db, "users", user.uid, "timeline"));
               batch.set(eventRef, event);
@@ -409,7 +355,7 @@ export default function OnboardingPage() {
           router.push("/dashboard");
         }
       } catch (e) {
-        console.error("Onboarding failed:", e);
+        console.error("Discovery failed:", e);
         toast({ variant: "destructive", title: "Synthesis Error", description: "Could not finalize legacy profile." });
       } finally {
         setLoading(false);
@@ -419,16 +365,6 @@ export default function OnboardingPage() {
 
   const handlePrev = () => {
     setCurrentStepIndex(getPrevValidStepIndex(currentStepIndex, answers));
-  };
-
-  const toggleMultiSelect = (id: string) => {
-    const current = answers[currentStep.id] || [];
-    if (current.includes(id)) {
-      setAnswers({ ...answers, [currentStep.id]: current.filter((i: string) => i !== id) });
-    } else {
-      if (currentStep.maxSelect && current.length >= currentStep.maxSelect) return;
-      setAnswers({ ...answers, [currentStep.id]: [...current, id] });
-    }
   };
 
   const progress = ((currentStepIndex + 1) / allSteps.length) * 100;
@@ -455,7 +391,7 @@ export default function OnboardingPage() {
           </div>
           <div className="space-y-2">
             <h1 className="text-3xl font-headline font-bold text-white tracking-tight">Legacy Discovery</h1>
-            <p className="text-slate-400 max-w-sm text-sm">Let's get to know your family's unique architecture.</p>
+            <p className="text-slate-400 max-w-sm text-sm">Synchronizing your node with the family architecture.</p>
           </div>
         </div>
 
@@ -476,9 +412,6 @@ export default function OnboardingPage() {
                   {currentStep.title} {currentStep.optional && "(Optional)"}
                 </span>
               </div>
-              {currentStep.optional && (
-                <Badge variant="outline" className="text-[8px] border-white/10 text-slate-500 uppercase tracking-widest px-2">Privacy Enabled</Badge>
-              )}
             </div>
             <CardTitle className="text-2xl font-headline text-white leading-tight mt-2">{currentStep.question}</CardTitle>
             {joiningFamily && (
@@ -488,7 +421,34 @@ export default function OnboardingPage() {
             )}
           </CardHeader>
           <CardContent className="px-8 pb-8">
-            {currentStep.type === "image-picker" ? (
+            {currentStep.type === "personal-details" ? (
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Principal Full Name</Label>
+                  <div className="relative">
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                    <Input 
+                      placeholder="e.g. Dr. Markus Hartmann"
+                      className="pl-12 h-12 bg-white/[0.03] border-white/10 text-white rounded-xl"
+                      value={answers.fullName || ""}
+                      onChange={(e) => setAnswers({...answers, fullName: e.target.value})}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Date of Birth</Label>
+                  <div className="relative">
+                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                    <Input 
+                      type="date"
+                      className="pl-12 h-12 bg-white/[0.03] border-white/10 text-white rounded-xl"
+                      value={answers.dob || ""}
+                      onChange={(e) => setAnswers({...answers, dob: e.target.value})}
+                    />
+                  </div>
+                </div>
+              </div>
+            ) : currentStep.type === "image-picker" ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Principal Portrait</Label>
@@ -525,12 +485,8 @@ export default function OnboardingPage() {
                     <input type="file" ref={bgInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, 'bg')} />
                   </div>
                 </div>
-                <div className="md:col-span-2 p-4 rounded-xl bg-primary/5 border border-primary/10 flex items-start gap-3">
-                  <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                  <p className="text-[10px] text-slate-400 leading-relaxed italic">These visuals will personalize your Family DNA and Dashboard node. You can update them later in settings.</p>
-                </div>
               </div>
-            ) : currentStep.id === 'gateway' || currentStep.id === 'ai_consent' ? (
+            ) : currentStep.type === "choice" || currentStep.id === "ai_consent" ? (
               <RadioGroup value={answers[currentStep.id]} onValueChange={(val) => setAnswers({...answers, [currentStep.id]: val})} className="grid gap-4">
                 {currentStep.options?.map((opt) => (
                   <div key={opt.id}>
@@ -569,34 +525,6 @@ export default function OnboardingPage() {
                   </div>
                 ))}
               </RadioGroup>
-            ) : currentStep.type === "multi-select" ? (
-              <div className="grid gap-3">
-                {currentStep.options?.map((opt) => {
-                  const isChecked = (answers[currentStep.id] || []).includes(opt.id);
-                  const canCheck = !currentStep.maxSelect || (answers[currentStep.id] || []).length < currentStep.maxSelect || isChecked;
-                  return (
-                    <div 
-                      key={opt.id} 
-                      onClick={() => canCheck && toggleMultiSelect(opt.id)}
-                      className={cn(
-                        "flex items-center p-4 rounded-xl border transition-all cursor-pointer text-sm font-semibold",
-                        isChecked ? "bg-primary/5 border-primary/50 text-white" : "bg-white/[0.01] border-white/5 text-slate-400 hover:bg-white/[0.03]",
-                        !canCheck && !isChecked && "opacity-40 cursor-not-allowed"
-                      )}
-                    >
-                      <div className={cn("mr-3 h-4 w-4 rounded-sm border border-primary flex items-center justify-center transition-all", isChecked ? "bg-primary" : "bg-transparent")}>
-                        {isChecked && <ArrowRight className="h-3 w-3 text-white" />}
-                      </div>
-                      {opt.label}
-                    </div>
-                  );
-                })}
-                {currentStep.maxSelect && (
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center mt-2">
-                    Selected: {(answers[currentStep.id] || []).length} / {currentStep.maxSelect}
-                  </p>
-                )}
-              </div>
             ) : currentStep.type === "input" ? (
               <div className="space-y-4">
                 <Input 
@@ -605,17 +533,11 @@ export default function OnboardingPage() {
                   value={answers[currentStep.id] || ""}
                   onChange={(e) => setAnswers({ ...answers, [currentStep.id]: e.target.value })}
                 />
-                {currentStep.optional && (
-                  <div className="flex items-center gap-2 text-[10px] text-slate-500 font-bold uppercase tracking-widest px-2">
-                    <Info className="h-3 w-3" />
-                    <span>This field is not mandatory for base profiling.</span>
-                  </div>
-                )}
               </div>
             ) : (
               <Textarea 
                 placeholder={currentStep.placeholder}
-                className="min-h-[180px] bg-white/[0.02] border-white/10 focus-visible:ring-primary/30 rounded-2xl text-white placeholder:text-slate-700 text-sm leading-relaxed"
+                className="min-h-[180px] bg-white/[0.02] border-white/10 rounded-2xl text-white placeholder:text-slate-700 text-sm leading-relaxed"
                 value={answers[currentStep.id] || ""}
                 onChange={(e) => setAnswers({ ...answers, [currentStep.id]: e.target.value })}
               />
@@ -631,7 +553,7 @@ export default function OnboardingPage() {
                 (currentStep.id === 'gateway' && answers.gateway === 'join' && !familyCode) || 
                 (currentStep.type === 'radio' && !answers[currentStep.id]) ||
                 (currentStep.type === 'choice' && !answers[currentStep.id]) ||
-                (currentStep.maxSelect && (answers[currentStep.id] || []).length < currentStep.maxSelect) || 
+                (currentStep.type === 'personal-details' && (!answers.fullName || !answers.dob)) ||
                 loading
               }
               className="px-8 rounded-xl shadow-lg bg-primary hover:bg-primary/90 text-white font-bold uppercase text-[11px] tracking-widest h-11"
@@ -640,7 +562,7 @@ export default function OnboardingPage() {
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <>
-                  {currentStep.optional && !answers[currentStep.id] && currentStep.type !== 'image-picker' ? "Skip this step" : (currentStepIndex === allSteps.length - 1 ? "Complete Discovery" : "Continue")}
+                  {currentStep.optional && !answers[currentStep.id] ? "Skip this step" : (currentStepIndex === allSteps.length - 1 ? "Complete Synthesis" : "Continue")}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </>
               )}

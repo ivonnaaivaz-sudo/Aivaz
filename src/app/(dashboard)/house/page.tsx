@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useUser, useDoc } from "@/firebase";
@@ -16,7 +17,8 @@ import {
   BookOpen,
   Anchor,
   Compass,
-  Link2
+  Link2,
+  Calendar
 } from "lucide-react";
 
 const MOCK_DNA = {
@@ -35,26 +37,23 @@ const MOCK_DNA = {
       estimatedNetWorth: "€380M",
       primaryAssetClasses: ["Specialty Chemicals", "European Real Estate"]
     },
-    aiSummary: "Dr. Markus Hartmann is a high-conviction founder who built his wealth in industrial chemicals. Currently, he is focused on institutionalizing his legacy for the next generation while maintaining the stability that built the Hartmann name."
+    aiSummary: "The Hartmann legacy is at a pivotal crossroads. Dr. Markus Hartmann's industrial era is transitioning into a fragmented global portfolio, requiring a move from patriarch-led control to institutional governance."
   },
   familyProfile: {
     familyName: "Hartmann Heritage",
     wealthSource: "Specialty Chemicals & Industrial Infrastructure",
     estimatedTotalNetWorth: "€380M (Aggregated)",
     history: {
-      summary: "Founded in the late 1980s as a specialized industrial chemical firm in Munich, the Hartmann wealth was significantly expanded through strategic dominance in European infrastructure supply chains. The family has since transitioned into a multi-jurisdictional investment office with a strong presence in Singapore.",
+      summary: "Founded in the late 1980s as a specialized industrial chemical firm in Munich, the Hartmann wealth was significantly expanded through strategic dominance in European infrastructure supply chains.",
       keyHoldings: ["Hartmann Chemicals Global", "Alpine Strategic Real Estate"],
       notableTransitions: ["1992 Foundation", "2008 Singapore Expansion"]
-    },
-    relationalDynamics: {
-      alignmentLevel: "Medium",
-      successionReadinessScore: 42
     }
   }
 };
 
 export default function HousePage() {
   const { user } = useUser();
+  const { data: profile } = useDoc(user ? `users/${user.uid}` : null);
   const { data: realDna, loading } = useDoc(user ? `users/${user.uid}/dna/current` : null);
 
   if (loading) {
@@ -83,10 +82,10 @@ export default function HousePage() {
             </Badge>
           </div>
           <h1 className="font-headline text-5xl font-bold tracking-tighter">
-            Family DNA
+            Principal Node
           </h1>
         </div>
-        <Badge className="bg-white/5 border-white/10 text-muted-foreground px-4 py-1">Profile: Dr. Markus Hartmann</Badge>
+        <Badge className="bg-white/5 border-white/10 text-muted-foreground px-4 py-1">Identity: {profile?.displayName || "Dr. Markus Hartmann"}</Badge>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
@@ -94,20 +93,19 @@ export default function HousePage() {
           <Card className="glass-panel border-white/10 overflow-hidden sticky top-8">
             <div className="aspect-square relative bg-gradient-to-br from-primary/10 via-background to-secondary/10 flex items-center justify-center border-b border-white/5 overflow-hidden">
               <Fingerprint className="h-32 w-32 text-primary/30" />
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.6)_100%)]" />
             </div>
             <div className="p-6 space-y-6">
               <div>
-                <h3 className="text-[10px] font-bold uppercase tracking-widest text-primary mb-4 border-b border-primary/20 pb-1">Core Identity Info</h3>
+                <h3 className="text-[10px] font-bold uppercase tracking-widest text-primary mb-4 border-b border-primary/20 pb-1">Archive ID</h3>
                 <div className="space-y-3">
                   {[
-                    { label: "Principal", value: user?.displayName || "Dr. Markus Hartmann", icon: User },
-                    { label: "Role", value: p.roleInFamily, icon: Anchor },
-                    { label: "Gen Stage", value: p.generationalStage, icon: History },
-                    { label: "Base", value: p.primaryLocation, icon: Globe },
-                    { label: "Risk Appetite", value: p.riskAppetite, icon: Compass },
-                    { label: "Wealth Source", value: f.wealthSource, icon: Landmark },
-                    { label: "Net Worth", value: p.financialSnapshot.estimatedNetWorth, icon: Landmark },
+                    { label: "Principal", value: profile?.displayName || "Dr. Markus Hartmann", icon: User },
+                    { label: "Born", value: profile?.dob || "1964-08-12", icon: Calendar },
+                    { label: "Role", value: p.roleInFamily || "Principal Founder", icon: Anchor },
+                    { label: "Gen Stage", value: p.generationalStage || "G1", icon: History },
+                    { label: "Base", value: p.primaryLocation || "Munich, Germany", icon: Globe },
+                    { label: "Wealth Source", value: f.wealthSource || "Chemicals", icon: Landmark },
+                    { label: "Net Worth", value: p.financialSnapshot?.estimatedNetWorth || "€380M", icon: Landmark },
                   ].map((item, i) => (
                     <div key={i} className="flex items-center justify-between text-[11px] py-1">
                       <div className="flex items-center gap-2 text-muted-foreground">
@@ -147,12 +145,12 @@ export default function HousePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="p-5 rounded-xl bg-white/[0.02] border border-white/5">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Primary Friction Point</p>
-                <p className="text-base font-medium leading-relaxed">{p.psychologicalProfile.biggestHeadache}</p>
+                <p className="text-base font-medium leading-relaxed">{p.psychologicalProfile?.biggestHeadache || "Fragmentation of authority."}</p>
               </div>
               <div className="p-5 rounded-xl bg-white/[0.02] border border-white/5">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-primary mb-3">Legacy Priorities</p>
                 <ul className="space-y-3">
-                  {p.psychologicalProfile.currentPriorities.map((item: string, i: number) => (
+                  {(p.psychologicalProfile?.currentPriorities || ["Succession", "Consolidation"]).map((item: string, i: number) => (
                     <li key={i} className="text-sm flex items-start gap-3">
                       <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
                       {item}
@@ -163,51 +161,12 @@ export default function HousePage() {
             </div>
           </section>
 
-          <section className="space-y-8">
-            <h2 className="text-2xl font-headline font-bold flex items-center gap-2 border-b border-white/5 pb-2">
-              <History className="h-5 w-5 text-primary" />
-              3. Family Origin & Heritage
-            </h2>
-            <Card className="glass-panel border-white/5 shadow-none bg-white/[0.01]">
-              <CardContent className="p-10 space-y-8">
-                <div className="prose prose-invert max-w-none">
-                  <p className="text-lg text-muted-foreground leading-relaxed first-letter:text-5xl first-letter:font-bold first-letter:mr-3 first-letter:float-left first-letter:text-primary">
-                    {f.history.summary}
-                  </p>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-10 border-t border-white/5">
-                  <div>
-                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-primary mb-5">Primary Entities & Holdings</h4>
-                    <div className="flex flex-wrap gap-3">
-                      {f.history.keyHoldings.map((h: string) => (
-                        <Badge key={h} variant="outline" className="bg-white/5 border-white/10 px-3 py-1">
-                          {h}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-primary mb-5">Historical Transitions</h4>
-                    <ul className="space-y-3">
-                      {f.history.notableTransitions.map((t: string, i: number) => (
-                        <li key={i} className="text-sm text-muted-foreground flex items-center gap-3">
-                          <Compass className="h-4 w-4 text-primary/40 shrink-0" />
-                          {t}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </section>
-
           <div className="bg-white/[0.02] p-10 rounded-3xl border border-white/5 relative text-center">
             <div className="absolute top-6 left-6 opacity-10">
               <BookOpen className="h-12 w-12" />
             </div>
             <p className="text-lg text-foreground/80 leading-relaxed font-body italic max-w-2xl mx-auto">
-              The Hartmann legacy is defined by industrial excellence and a deep commitment to precision as a means of wealth preservation.
+              "We preserve not just the capital, but the character that created it."
             </p>
             <div className="mt-12 flex items-center justify-center gap-6 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/30">
               <Link2 className="h-4 w-4" />
