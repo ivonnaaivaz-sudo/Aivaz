@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { 
   Shield, 
   Sparkles, 
@@ -159,7 +160,6 @@ const allSteps: Step[] = [
       { id: "Other", label: "Other" }
     ]
   },
-  // Branch A: Founder
   {
     id: "q3A",
     branch: "First Generation",
@@ -188,7 +188,6 @@ const allSteps: Step[] = [
       { id: "harmony", label: "Family harmony and unity" }
     ]
   },
-  // Branch B: Second Gen
   {
     id: "q3B",
     branch: "Second Generation",
@@ -210,7 +209,6 @@ const allSteps: Step[] = [
     type: "textarea",
     placeholder: "Share your perspective..."
   },
-  // Branch C: Third Gen
   {
     id: "q3C",
     branch: "Third Generation or Later",
@@ -237,7 +235,6 @@ const allSteps: Step[] = [
       { id: "inheritance", label: "Concerns about how inheritance is handled" }
     ]
   },
-  // Universal
   {
     id: "q6",
     title: "Decision Architecture",
@@ -390,7 +387,6 @@ export default function OnboardingPage() {
       setLoading(true);
       try {
         if (user && db) {
-          // Trigger synthesis for non-seed users
           let dnaResult = null;
           if (!joiningFamily?.isSeed) {
             dnaResult = await extractFamilyDNA({ 
@@ -458,7 +454,6 @@ export default function OnboardingPage() {
           const finalDna = joiningFamily?.isSeed ? HARTMANN_SEED.dna : dnaResult;
           batch.set(dnaRef, finalDna);
 
-          // Seed sub-collections
           if (joiningFamily?.isSeed) {
             HARTMANN_SEED.timeline.forEach((event) => {
               const eventRef = doc(collection(db, "users", user.uid, "timeline"));
