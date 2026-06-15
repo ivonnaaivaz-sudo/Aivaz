@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
@@ -28,6 +29,8 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError, type SecurityRuleContext } from "@/firebase/errors";
 
 type Thread = {
   id: string;
@@ -94,20 +97,30 @@ export default function WardroomPage() {
     }
   }, [messages, activeThreadId, mounted]);
 
-  const handleSendMessage = async () => {
+  const handleSendMessage = () => {
     if (!inputText.trim() || !user || !db) return;
-    try {
-      const msgRef = collection(db, "users", user.uid, "messages");
-      await addDoc(msgRef, {
-        senderId: user.uid,
-        senderName: "Dr. Markus Hartmann",
-        text: inputText,
-        type: "text",
-        threadId: activeThreadId,
-        timestamp: new Date().toISOString()
+    
+    const messageData = {
+      senderId: user.uid,
+      senderName: user.displayName || "Dr. Markus Hartmann",
+      text: inputText,
+      type: "text",
+      threadId: activeThreadId,
+      timestamp: new Date().toISOString()
+    };
+
+    setInputText("");
+
+    // NO await here. Chain the .catch() block.
+    addDoc(collection(db, "users", user.uid, "messages"), messageData)
+      .catch(async (error) => {
+        const permissionError = new FirestorePermissionError({
+          path: `users/${user.uid}/messages`,
+          operation: 'create',
+          requestResourceData: messageData,
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
       });
-      setInputText("");
-    } catch (e) { console.error(e); }
   };
 
   const startVideoMeeting = () => {

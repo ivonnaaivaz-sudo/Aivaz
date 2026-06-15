@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -52,6 +53,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError, type SecurityRuleContext } from "@/firebase/errors";
 
 interface InputItem {
   id: string;
@@ -243,25 +246,33 @@ export default function ChartroomPage() {
     toast({ title: "Strategic Pair Created", description: "Your manual pairing has been ranked and added to the strategic list." });
   };
 
-  const handleSendToWardroom = async () => {
+  const handleSendToWardroom = () => {
     if (!user || !db || !activePairing) return;
+    
+    const messageData = {
+      senderId: user.uid,
+      senderName: user.displayName || "Dr. Markus Hartmann",
+      text: `Shared Strategic Pairing: ${activePairing.title}. This proposal balances ${activePairing.components.opportunities.length} opportunities against ${activePairing.components.needs.length + activePairing.components.blindspots.length} priorities. View full diagnostic in Chartroom.`,
+      type: "recommendation",
+      track: "governance",
+      timestamp: new Date().toISOString()
+    };
+
     setIsSubmitting(true);
-    try {
-      const msgRef = collection(db, "users", user.uid, "messages");
-      await addDoc(msgRef, {
-        senderId: user.uid,
-        senderName: user.displayName || "Dr. Markus Hartmann",
-        text: `Shared Strategic Pairing: ${activePairing.title}. This proposal balances ${activePairing.components.opportunities.length} opportunities against ${activePairing.components.needs.length + activePairing.components.blindspots.length} priorities. View full diagnostic in Chartroom.`,
-        type: "recommendation",
-        track: "governance",
-        timestamp: new Date().toISOString()
+    
+    // NO await here. Chain the .catch() block.
+    addDoc(collection(db, "users", user.uid, "messages"), messageData)
+      .catch(async (error) => {
+        const permissionError = new FirestorePermissionError({
+          path: `users/${user.uid}/messages`,
+          operation: 'create',
+          requestResourceData: messageData,
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
       });
-      toast({ title: "Shared with Wardroom", description: "This pairing has been broadcast to the family group chat." });
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsSubmitting(false);
-    }
+    
+    toast({ title: "Shared with Wardroom", description: "This pairing has been broadcast to the family group chat." });
+    setIsSubmitting(false);
   };
 
   const handleAddNewInput = () => {

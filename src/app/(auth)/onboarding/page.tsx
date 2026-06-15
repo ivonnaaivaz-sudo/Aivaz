@@ -33,6 +33,8 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError, type SecurityRuleContext } from "@/firebase/errors";
 
 // Hartmann Seed Data - The "Hartmann Standard"
 const HARTMANN_SEED = {
@@ -464,13 +466,23 @@ export default function OnboardingPage() {
               batch.set(assetRef, asset);
             });
           } else if (dnaResult?.initialTimeline) {
-            dnaResult.initialTimeline.forEach((event) => {
+            dnaResult.initialTimeline.forEach((event: any) => {
               const eventRef = doc(collection(db, "users", user.uid, "timeline"));
               batch.set(eventRef, event);
             });
           }
 
-          await batch.commit();
+          // NO await here. Chain the .catch() block.
+          batch.commit()
+            .catch(async (serverError) => {
+              const permissionError = new FirestorePermissionError({
+                path: 'multiple (onboarding batch)',
+                operation: 'write',
+              } satisfies SecurityRuleContext);
+              errorEmitter.emit('permission-error', permissionError);
+            });
+          
+          // Proceed with immediate redirect as the write updates local cache instantly
           router.push("/dashboard");
         }
       } catch (e) {

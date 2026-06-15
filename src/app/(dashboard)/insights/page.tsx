@@ -3,7 +3,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useUser, useFirestore, useDoc, useCollection } from "@/firebase";
-import { collection, doc, setDoc, query, orderBy, writeBatch } from "firebase/firestore";
+import { collection, doc, setDoc, query, orderBy, writeBatch, addDoc } from "firebase/firestore";
 import { generateFamilyRecommendations } from "@/ai/flows/family-recommendations";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Sparkles, Loader2, ShieldAlert, CheckCircle2, RefreshCw, MessageSquare, ExternalLink, Info, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError, type SecurityRuleContext } from "@/firebase/errors";
 
 const MOCK_RECOMMENDATIONS = [
   {
@@ -102,7 +104,16 @@ export default function InsightsPage() {
           createdAt: new Date().toISOString()
         });
       });
-      await batch.commit();
+      
+      // NO await here. Chain the .catch() block.
+      batch.commit()
+        .catch(async (error) => {
+          const permissionError = new FirestorePermissionError({
+            path: `users/${user.uid}/recommendations`,
+            operation: 'write',
+          } satisfies SecurityRuleContext);
+          errorEmitter.emit('permission-error', permissionError);
+        });
 
       toast({
         title: "Intelligence Updated",
@@ -120,30 +131,36 @@ export default function InsightsPage() {
     }
   };
 
-  const handleDiscuss = async (rec: any) => {
+  const handleDiscuss = (rec: any) => {
     if (!user || !db) return;
     
-    try {
-      const msgRef = collection(db, "users", user.uid, "messages");
-      await addDoc(msgRef, {
-        senderId: user.uid,
-        senderName: user.displayName || "Dr. Markus Hartmann",
-        text: `Proposed a strategic track for council review: ${rec.title}. Target: ${rec.targetMember}. Focus: ${rec.impact}`,
-        type: "recommendation",
-        track: "governance",
-        recommendationId: rec.id || rec.title,
-        timestamp: new Date().toISOString()
+    const messageData = {
+      senderId: user.uid,
+      senderName: user.displayName || "Dr. Markus Hartmann",
+      text: `Proposed a strategic track for council review: ${rec.title}. Target: ${rec.targetMember}. Focus: ${rec.impact}`,
+      type: "recommendation",
+      track: "governance",
+      recommendationId: rec.id || rec.title,
+      timestamp: new Date().toISOString()
+    };
+
+    // NO await here. Chain the .catch() block.
+    addDoc(collection(db, "users", user.uid, "messages"), messageData)
+      .catch(async (error) => {
+        const permissionError = new FirestorePermissionError({
+          path: `users/${user.uid}/messages`,
+          operation: 'create',
+          requestResourceData: messageData,
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
       });
 
-      toast({
-        title: "Shared with Council",
-        description: "This recommendation has been opened as a strategic track in the Wardroom.",
-      });
-      
-      router.push("/wardroom");
-    } catch (e) {
-      console.error(e);
-    }
+    toast({
+      title: "Shared with Council",
+      description: "This recommendation has been opened as a strategic track in the Wardroom.",
+    });
+    
+    router.push("/wardroom");
   };
 
   const formatDate = (dateStr: string) => {
