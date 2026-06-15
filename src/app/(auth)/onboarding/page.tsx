@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useRef } from "react";
@@ -378,7 +377,7 @@ export default function OnboardingPage() {
 
       <div className="max-w-2xl w-full space-y-8 relative z-10">
         <div className="flex flex-col items-center text-center space-y-6">
-          <div className="mx-auto w-24 h-24 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center shadow-[0_0_40px_rgba(75,163,199,0.1)] overflow-hidden relative">
+          <div className="mx-auto w-24 h-24 rounded-full bg-white/[0.03] border border-white/10 flex items-center justify-center shadow-[0_0_40px_rgba(75,163,199,0.1)] overflow-hidden relative">
             {brandLogo && (
               <Image 
                 src={brandLogo.imageUrl} 
