@@ -375,7 +375,7 @@ export default function OnboardingPage() {
           setCurrentStepIndex(getNextValidStepIndex(currentStepIndex, answers));
         }
       } catch (e) {
-        console.error(e);
+        console.error("Join logic failed:", e);
       } finally {
         setLoading(false);
       }
@@ -386,110 +386,119 @@ export default function OnboardingPage() {
     if (nextIndex !== -1) {
       setCurrentStepIndex(nextIndex);
     } else {
+      // Final synthesis execution
       setLoading(true);
       try {
-        if (user && db) {
-          let dnaResult = null;
-          if (!joiningFamily?.isSeed) {
+        if (!user || !db) throw new Error("Authentication or Database node unavailable.");
+
+        let dnaResult = null;
+        if (!joiningFamily?.isSeed) {
+          try {
             dnaResult = await extractFamilyDNA({ 
               surveyData: answers,
               userName: answers.fullName || user.displayName || undefined
             });
+          } catch (aiError) {
+            console.error("AI DNA Extraction failed, using fallback:", aiError);
+            dnaResult = HARTMANN_SEED.dna; // Use seed as safe fallback for UX continuity
           }
-
-          let profileUrl = null;
-          let bgUrl = null;
-
-          if (profilePhoto) {
-            const profileRef = ref(storage, `users/${user.uid}/profile-photo.jpg`);
-            await uploadBytes(profileRef, profilePhoto);
-            profileUrl = await getDownloadURL(profileRef);
-          }
-
-          if (dashboardBg) {
-            const bgRef = ref(storage, `users/${user.uid}/dashboard-background.jpg`);
-            await uploadBytes(bgRef, dashboardBg);
-            bgUrl = await getDownloadURL(bgRef);
-          }
-
-          const batch = writeBatch(db);
-          let targetFamilyId = joiningFamily?.id;
-
-          if (answers.gateway === 'create') {
-            const familyRef = doc(collection(db, "families"));
-            targetFamilyId = familyRef.id;
-            batch.set(familyRef, {
-              name: `${dnaResult?.familyProfile?.familyName || 'Family'} Heritage`,
-              inviteCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
-              members: [user.uid],
-              createdAt: new Date().toISOString()
-            });
-          } else if (targetFamilyId) {
-            const familyRef = doc(db, "families", targetFamilyId);
-            if (joiningFamily?.isSeed) {
-               batch.set(familyRef, {
-                 name: 'Hartmann Heritage',
-                 inviteCode: 'HARTMANN-1987',
-                 members: arrayUnion(user.uid),
-                 createdAt: new Date().toISOString()
-               }, { merge: true });
-            } else {
-              batch.update(familyRef, { members: arrayUnion(user.uid) });
-            }
-          }
-          
-          const userRef = doc(db, "users", user.uid);
-          batch.set(userRef, {
-            uid: user.uid,
-            displayName: answers.fullName || user.displayName,
-            hasCompletedProfiling: true,
-            familyId: targetFamilyId,
-            role: answers.q2,
-            dob: answers.dob,
-            onboardingData: answers,
-            profilePhotoUrl: profileUrl,
-            dashboardBackgroundUrl: bgUrl,
-            updatedAt: new Date().toISOString()
-          }, { merge: true });
-
-          const dnaRef = doc(db, "users", user.uid, "dna", "current");
-          const finalDna = joiningFamily?.isSeed ? HARTMANN_SEED.dna : dnaResult;
-          batch.set(dnaRef, finalDna);
-
-          if (joiningFamily?.isSeed) {
-            HARTMANN_SEED.timeline.forEach((event) => {
-              const eventRef = doc(collection(db, "users", user.uid, "timeline"));
-              batch.set(eventRef, event);
-            });
-            HARTMANN_SEED.assets.forEach((asset) => {
-              const assetRef = doc(collection(db, "users", user.uid, "assets"));
-              batch.set(assetRef, asset);
-            });
-          } else if (dnaResult?.initialTimeline) {
-            dnaResult.initialTimeline.forEach((event: any) => {
-              const eventRef = doc(collection(db, "users", user.uid, "timeline"));
-              batch.set(eventRef, event);
-            });
-          }
-
-          // NO await here. Chain the .catch() block.
-          batch.commit()
-            .catch(async (serverError) => {
-              const permissionError = new FirestorePermissionError({
-                path: 'multiple (onboarding batch)',
-                operation: 'write',
-              } satisfies SecurityRuleContext);
-              errorEmitter.emit('permission-error', permissionError);
-            });
-          
-          // Proceed with immediate redirect as the write updates local cache instantly
-          router.push("/dashboard");
         }
-      } catch (e) {
+
+        let profileUrl = null;
+        let bgUrl = null;
+
+        if (profilePhoto) {
+          const profileRef = ref(storage, `users/${user.uid}/profile-photo.jpg`);
+          await uploadBytes(profileRef, profilePhoto);
+          profileUrl = await getDownloadURL(profileRef);
+        }
+
+        if (dashboardBg) {
+          const bgRef = ref(storage, `users/${user.uid}/dashboard-background.jpg`);
+          await uploadBytes(bgRef, dashboardBg);
+          bgUrl = await getDownloadURL(bgRef);
+        }
+
+        const batch = writeBatch(db);
+        let targetFamilyId = joiningFamily?.id;
+
+        if (answers.gateway === 'create') {
+          const familyRef = doc(collection(db, "families"));
+          targetFamilyId = familyRef.id;
+          batch.set(familyRef, {
+            name: `${dnaResult?.familyProfile?.familyName || 'Family'} Heritage`,
+            inviteCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
+            members: [user.uid],
+            createdAt: new Date().toISOString()
+          });
+        } else if (targetFamilyId) {
+          const familyRef = doc(db, "families", targetFamilyId);
+          if (joiningFamily?.isSeed) {
+             batch.set(familyRef, {
+               name: 'Hartmann Heritage',
+               inviteCode: 'HARTMANN-1987',
+               members: arrayUnion(user.uid),
+               createdAt: new Date().toISOString()
+             }, { merge: true });
+          } else {
+            batch.update(familyRef, { members: arrayUnion(user.uid) });
+          }
+        }
+        
+        const userRef = doc(db, "users", user.uid);
+        batch.set(userRef, {
+          uid: user.uid,
+          displayName: answers.fullName || user.displayName,
+          hasCompletedProfiling: true,
+          familyId: targetFamilyId,
+          role: answers.q2,
+          dob: answers.dob,
+          onboardingData: answers,
+          profilePhotoUrl: profileUrl,
+          dashboardBackgroundUrl: bgUrl,
+          updatedAt: new Date().toISOString()
+        }, { merge: true });
+
+        const dnaRef = doc(db, "users", user.uid, "dna", "current");
+        const finalDna = joiningFamily?.isSeed ? HARTMANN_SEED.dna : dnaResult;
+        batch.set(dnaRef, finalDna);
+
+        if (joiningFamily?.isSeed) {
+          HARTMANN_SEED.timeline.forEach((event) => {
+            const eventRef = doc(collection(db, "users", user.uid, "timeline"));
+            batch.set(eventRef, event);
+          });
+          HARTMANN_SEED.assets.forEach((asset) => {
+            const assetRef = doc(collection(db, "users", user.uid, "assets"));
+            batch.set(assetRef, asset);
+          });
+        } else if (dnaResult?.initialTimeline) {
+          dnaResult.initialTimeline.forEach((event: any) => {
+            const eventRef = doc(collection(db, "users", user.uid, "timeline"));
+            batch.set(eventRef, event);
+          });
+        }
+
+        // Execute batch commit (non-blocking)
+        batch.commit()
+          .catch(async (serverError) => {
+            const permissionError = new FirestorePermissionError({
+              path: 'multiple (onboarding batch)',
+              operation: 'write',
+            } satisfies SecurityRuleContext);
+            errorEmitter.emit('permission-error', permissionError);
+          });
+        
+        // Immediate redirect to dashboard
+        router.push("/dashboard");
+      } catch (e: any) {
         console.error("Synthesis failed:", e);
-        toast({ variant: "destructive", title: "Synthesis Error", description: "Could not finalize legacy profile." });
-      } finally {
-        setLoading(false);
+        toast({ 
+          variant: "destructive", 
+          title: "Synthesis Error", 
+          description: e.message || "Could not finalize legacy profile. Please check your connection." 
+        });
+        setLoading(false); // Reset loading so button isn't stuck
       }
     }
   };
